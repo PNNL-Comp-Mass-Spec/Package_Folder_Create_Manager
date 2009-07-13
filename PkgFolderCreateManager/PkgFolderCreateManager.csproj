@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="clsBroadcastCmd.cs" />
     <Compile Include="clsFolderTools.cs" />
     <Compile Include="clsLogTools.cs" />
     <Compile Include="clsMainProg.cs" />

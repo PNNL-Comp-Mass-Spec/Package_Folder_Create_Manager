@@ -23,12 +23,22 @@ namespace PkgFolderCreateManager
 		// Main program class for application
 		//**********************************************************************************************************
 
+		#region "Enums"
+			private enum BroadcastCmdType
+			{
+				Shutdown,
+				ReadConfig,
+				Invalid
+			}
+		#endregion
+
 		#region "Class variables"
-			private clsMgrSettings m_MgrSettings;
+		private clsMgrSettings m_MgrSettings;
 			private IStatusFile m_StatusFile;
 			private clsMessageHandler m_MsgHandler;
 			private bool m_Running = false;
 			private bool m_MgrActive = false;
+			private BroadcastCmdType m_BroadcastCmdType;
 		#endregion
 
 		#region "Methods"
@@ -111,12 +121,52 @@ namespace PkgFolderCreateManager
 			{
 				string Msg = "clsMainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.DEBUG,Msg);
-				if (cmdText == "shutdown")
+
+				clsBroadcastCmd recvCmd;
+
+				// Parse the received message
+				try
 				{
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, "Shutdown message received");
-					m_Running = false;
+					recvCmd = clsXMLTools.ParseBroadcastXML(cmdText);
 				}
-			}
+				catch (Exception Ex)
+				{
+					Msg = "Exception while parsing broadcast data";
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, Msg,Ex);
+					return;
+				}
+
+				// Determine if the message applies to this machine
+				if (!recvCmd.MachineList.Contains(m_MgrSettings.GetParam("MgrName")))
+				{
+					// Received command doesn't apply to this manager
+					Msg = "Received command not applicable to this manager instance";
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+					return;
+				}
+
+				// Get the command and take appropriate action
+				switch (recvCmd.MachCmd.ToLower())
+				{
+					case "shutdown":
+						Msg = "Shutdown message received";
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
+						m_BroadcastCmdType = BroadcastCmdType.Shutdown;
+						m_Running = false;
+						break;
+					case "readconfig":
+						Msg = "Reload config message received";
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
+						m_BroadcastCmdType = BroadcastCmdType.ReadConfig;
+						m_Running = false;
+						break;
+					default:
+						// Invalid command received; do nothing except log it
+						Msg = "Invalid broadcast command received: " + cmdText;
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, Msg);
+						break;
+				}
+			}	// End sub
 			
 			/// <summary>
 			/// Handles receipt of command to make a directory
@@ -173,6 +223,8 @@ namespace PkgFolderCreateManager
 			public void DoFolderCreation()
 			{
 				string logMsg;
+				DateTime lastLoopRun = DateTime.Now;
+
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Starting DoFolderCreation()");
 				m_MgrActive = Convert.ToBoolean(m_MgrSettings.GetParam("mgractive"));
 				m_Running = m_MgrActive;
@@ -185,6 +237,15 @@ namespace PkgFolderCreateManager
 						// Update status every 60 seconds
 						m_StatusFile.WriteStatusFile();
 						logCount = 0;
+
+						// If it has been > 24 hours since last log entry, tell the log that everything's OK.
+						//	Otherwise, it might be seveal days between log entries.
+						if (DateTime.Compare(DateTime.Now, lastLoopRun.AddHours(24)) > 0)
+						{
+							lastLoopRun = DateTime.Now;
+							logMsg = "Manager running";
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, logMsg);
+						}
 					}
 					// Pause 1 second
 					System.Threading.Thread.Sleep(1000);
@@ -192,26 +253,40 @@ namespace PkgFolderCreateManager
 
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Exiting DoFolderCreation()");
 
-				if (m_MgrActive)
+				// Determine what caused exit from folder creation loop and take appropriate action
+				switch (m_BroadcastCmdType)
 				{
-					// Exit command was received
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Shutdown cmd received");
-					SetNormalShutdownStatus();
-					m_StatusFile.WriteStatusFile();
-					m_MsgHandler.Dispose();
-				}
-				else
-				{
-					// Manager is disabled through MC database
-					logMsg = "Disabled via Manager Control database";
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, logMsg);
-					SetMCDisabledStatus();
-					m_StatusFile.WriteStatusFile();
-					m_MsgHandler.Dispose();
-				}
+					case BroadcastCmdType.ReadConfig:
+						// TODO: Add code for reloading the configuration
+						break;
+					case BroadcastCmdType.Shutdown:
+						// Shutdown command was received
+						if (m_MgrActive)
+						{
+							// Exit command was received
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Shutdown cmd received");
+							SetNormalShutdownStatus();
+							m_StatusFile.WriteStatusFile();
+							m_MsgHandler.Dispose();
+						}
+						else
+						{
+							// Manager is disabled through MC database
+							logMsg = "Disabled via Manager Control database";
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, logMsg);
+							SetMCDisabledStatus();
+							m_StatusFile.WriteStatusFile();
+							m_MsgHandler.Dispose();
+						}
 
-				logMsg = "=== Exiting Package Folder Creation Manager ===";
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, logMsg);
+						logMsg = "=== Exiting Package Folder Creation Manager ===";
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, logMsg);
+						break;
+					default:
+						logMsg="clsMainProg.DoFolderCreation(); Invalid command type received: " + m_BroadcastCmdType.ToString();
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, logMsg);
+						break;
+				}
 			}	// End sub
 
 			/// <summary>

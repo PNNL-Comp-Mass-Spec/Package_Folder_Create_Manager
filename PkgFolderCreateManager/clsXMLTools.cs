@@ -59,9 +59,31 @@ namespace PkgFolderCreateManager
 			/// </summary>
 			/// <param name="InputXML">XML string to parse</param>
 			/// <returns>String dictionary of broadcast sections</returns>
-			public static StringDictionary ParseBroadcast(string InputXML)
+			public static clsBroadcastCmd ParseBroadcastXML(string InputXML)
 			{
-				return null;
+				clsBroadcastCmd returnedData = new clsBroadcastCmd();
+
+				try
+				{
+					XmlDocument doc = new XmlDocument();
+					doc.LoadXml(InputXML);
+
+					// Get list of managers this command applies to
+					foreach (XmlNode xn in doc.SelectNodes("//Managers/*"))
+					{
+						returnedData.MachineList.Add(xn.InnerText);
+					}
+
+					// Get command contained in message
+					returnedData.MachCmd = doc.SelectSingleNode("//Message").InnerText;
+
+					// Return the parsing results
+					return returnedData;
+				}
+				catch (Exception Ex)
+				{
+					throw new Exception("Exception while parsing broadcast string", Ex);
+				}
 			}	// End sub
 		#endregion
 	}	// End class
