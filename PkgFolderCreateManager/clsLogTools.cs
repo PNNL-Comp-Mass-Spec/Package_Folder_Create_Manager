@@ -133,6 +133,13 @@ namespace PkgFolderCreateManager
 						break;
 					case LoggerTypes.LogFile:
 						MyLogger = m_FileLogger;
+						// Check to determine if a new file should be started
+						string TestFileDate = DateTime.Now.ToString("MM-dd-yyyy");
+						if (TestFileDate != m_FileDate)
+						{
+							m_FileDate = TestFileDate;
+							ChangeLogFileName();
+						}
 						break;
 					case LoggerTypes.LogSystem:
 						MyLogger = m_SysLogger;
