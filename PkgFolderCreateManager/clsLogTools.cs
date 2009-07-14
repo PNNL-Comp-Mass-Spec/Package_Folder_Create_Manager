@@ -46,6 +46,8 @@ namespace PkgFolderCreateManager
 			private static readonly ILog m_FileLogger = LogManager.GetLogger("FileLogger");
 			private static readonly ILog m_DbLogger = LogManager.GetLogger("DbLogger");
 			private static readonly ILog m_SysLogger = LogManager.GetLogger("SysLogger");
+			private static string m_FileDate;
+			private static string m_BaseFileName;
 		#endregion
 
 		#region "Properties"
@@ -74,6 +76,13 @@ namespace PkgFolderCreateManager
 						break;
 					case LoggerTypes.LogFile:
 						MyLogger = m_FileLogger;
+						// Check to determine if a new file should be started
+						string TestFileDate = DateTime.Now.ToString("MM-dd-yyyy");
+						if (TestFileDate != m_FileDate)
+						{
+							m_FileDate = TestFileDate;
+							ChangeLogFileName();
+						}
 						break;
 					case LoggerTypes.LogSystem:
 						MyLogger = m_SysLogger;
@@ -159,10 +168,10 @@ namespace PkgFolderCreateManager
 			/// Changes the base log file name
 			/// </summary>
 			/// <param name="FileName">Log file base name and path (relative to program folder)</param>
-			public static void ChangeLogFileName(string FileName)
+			public static void ChangeLogFileName()
 			{
 				//Get a list of appenders
-				List<log4net.Appender.IAppender> AppendList = FindAppenders("RollingFileAppender");
+				List<log4net.Appender.IAppender> AppendList = FindAppenders("FileAppender");
 				if (AppendList == null)
 				{
 					WriteLog(LoggerTypes.LogSystem, LogLevels.WARN, "Unable to change file name. No appender found");
@@ -171,15 +180,15 @@ namespace PkgFolderCreateManager
 
 				foreach (log4net.Appender.IAppender SelectedAppender in AppendList)
 				{
-					//Convert the IAppender object to a RollingFileAppender
-					log4net.Appender.RollingFileAppender AppenderToChange = SelectedAppender as log4net.Appender.RollingFileAppender;
+					//Convert the IAppender object to a FileAppender
+					log4net.Appender.FileAppender AppenderToChange = SelectedAppender as log4net.Appender.FileAppender;
 					if (AppenderToChange == null)
 					{
 						WriteLog(LoggerTypes.LogSystem, LogLevels.ERROR, "Unable to convert appender");
 						return;
 					}
 					//Change the file name and activate change
-					AppenderToChange.File = FileName;
+					AppenderToChange.File = m_BaseFileName + "_" + m_FileDate + ".txt";
 					AppenderToChange.ActivateOptions();
 				}
 			}	// End sub
@@ -263,7 +272,40 @@ namespace PkgFolderCreateManager
 						LogRepo.Level = LogRepo.Hierarchy.LevelMap["WARN"];
 						break;
 				}
-			}
+			}	// End sub
+
+			/// <summary>
+			/// Creates a file appender
+			/// </summary>
+			/// <param name="LogfileName">Log file name for the appender to use</param>
+			/// <returns>A configured file appender</returns>
+			private static log4net.Appender.FileAppender CreateFileAppender(string LogfileName)
+			{
+				log4net.Appender.FileAppender ReturnAppender = new log4net.Appender.FileAppender();
+
+				ReturnAppender.Name = "FileAppender";
+				m_FileDate = DateTime.Now.ToString("MM-dd-yyyy");
+				m_BaseFileName = LogfileName;
+				ReturnAppender.File = m_BaseFileName + "_" + m_FileDate + ".txt";
+				ReturnAppender.AppendToFile = true;
+				log4net.Layout.PatternLayout Layout = new log4net.Layout.PatternLayout();
+				Layout.ConversionPattern = "%date{MM/dd/yyyy HH:mm:ss}, %message, %level,%newline";
+				Layout.ActivateOptions();
+				ReturnAppender.Layout = Layout;
+				ReturnAppender.ActivateOptions();
+
+				return ReturnAppender;
+			}	// End sub
+
+			/// <summary>
+			/// Configures a file logger
+			/// </summary>
+			public static void CreateFileLogger(string LogFileName, int LogLevel)
+			{
+				log4net.Repository.Hierarchy.Logger curLogger = (log4net.Repository.Hierarchy.Logger)m_FileLogger.Logger;
+				curLogger.AddAppender(CreateFileAppender(LogFileName));
+				SetFileLogLevel(LogLevel);
+			}	// End sub
 		#endregion
 	}	// End class
 }	// End namespace

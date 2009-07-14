@@ -61,16 +61,17 @@ namespace PkgFolderCreateManager
 
 				//Setup the logger
 				string LogFileName = m_MgrSettings.GetParam("logfilename");
-				clsLogTools.ChangeLogFileName(LogFileName);
+				int LogLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
+				clsLogTools.CreateFileLogger(LogFileName,LogLevel);
 
 				//Make the initial log entry
 				string MyMsg = "=== Started Package Folder Creation Manager V" + Application.ProductVersion + " ===== ";
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, MyMsg);
 
-				//Set the debug level
-				int DebugLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
-				clsLogTools.SetFileLogLevel(DebugLevel);
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Debug level set");
+				////Set the debug level
+				//int LogLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
+				//clsLogTools.SetFileLogLevel(LogLevel);
+				//clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Debug level set");
 
 				//Setup the message queue
 				m_MsgHandler = new clsMessageHandler();
