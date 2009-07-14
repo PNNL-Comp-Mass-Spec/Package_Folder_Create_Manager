@@ -174,7 +174,6 @@ namespace PkgFolderCreateManager
 			/// <summary>
 			/// Changes the base log file name
 			/// </summary>
-			/// <param name="FileName">Log file base name and path (relative to program folder)</param>
 			public static void ChangeLogFileName()
 			{
 				//Get a list of appenders
