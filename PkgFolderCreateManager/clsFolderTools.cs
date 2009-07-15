@@ -34,18 +34,23 @@ namespace PkgFolderCreateManager
 			/// <param name="FolderParams">String dictionary containing parameters for folder creation</param>
 			public static void CreatePkgFolder(string Perspective, StringDictionary FolderParams)
 			{
-				string Msg = "Creating folder for package " + FolderParams["package"];
+				string Msg = "Processing command for package " + FolderParams["package"];
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
 
 				// Test for add or update
 				if (FolderParams["cmd"].ToLower() != "add")
 				{
 					// Ignore the command if it isn't an "add"
-					Msg = "Package " + FolderParams["package"] + " command invalid. Message ignored";
+					Msg = "Package " + FolderParams["package"] + ", command '" + FolderParams["cmd"] + "' not supported. Message ignored";
 					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, Msg);
 					return;
 				}
-
+				else
+				{
+					Msg = "Creating folder for package " + FolderParams["package"];
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
+				}
+				
 				// Determine if client or server perspective and initialize path
 				string FolderPath;
 				if (Perspective.ToLower() == "client")

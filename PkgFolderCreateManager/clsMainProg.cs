@@ -190,7 +190,7 @@ namespace PkgFolderCreateManager
 				}
 				catch (Exception Ex)
 				{
-					Msg = "Exception parsing XML command string: " + cmdText;
+					Msg = "Exception parsing XML command string: " + cmdText + Environment.NewLine;
 					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, Msg, Ex);
 					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
 					m_StatusFile.WriteStatusFile();

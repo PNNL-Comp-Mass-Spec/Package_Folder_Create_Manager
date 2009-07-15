@@ -25,7 +25,7 @@ namespace PkgFolderCreateManager.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public string MgrActive_Local {
             get {
                 return ((string)(this["MgrActive_Local"]));

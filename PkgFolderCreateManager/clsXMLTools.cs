@@ -50,7 +50,7 @@ namespace PkgFolderCreateManager
 				}
 				catch (Exception Ex)
 				{
-					throw new Exception("Exception parsing command string", Ex);
+					throw new Exception("", Ex);	// Message parameter left blank because it is handled at higher level
 				}
 			}	// End sub
 
