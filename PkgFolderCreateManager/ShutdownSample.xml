@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<root>
+	<Managers>
+		<Mgr>WE16081_FolderCreate</Mgr>
+	</Managers>
+	<Message>shutdown</Message>
+</root>
