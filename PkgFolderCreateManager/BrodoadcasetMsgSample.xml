@@ -1,8 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<Root>
-	<Managers>
-		<Manager>Proto-3_FolderCreate</Manager>
-		<Manager>Dummy</Manager>
-	</Managers>
-	<Message>Shutdown</Message>
-</Root>

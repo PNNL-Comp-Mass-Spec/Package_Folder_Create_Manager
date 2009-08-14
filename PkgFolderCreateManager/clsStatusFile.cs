@@ -6,13 +6,12 @@
 // Created 06/18/2009
 //
 // Last modified 06/18/2009
+//						- 08/14/2009 (DAC) - Added additional parameters and methods for status reporting
 //*********************************************************************************************************
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml;
 using System.IO;
+using System.Collections.Generic;
 
 namespace PkgFolderCreateManager
 {
@@ -21,9 +20,6 @@ namespace PkgFolderCreateManager
 		//*********************************************************************************************************
 		// Provides tools for creating and updating a task status file
 		//**********************************************************************************************************
-
-		#region "Constants"
-		#endregion
 
 		#region "Class variables"
 			string m_FileNamePath;
@@ -66,7 +62,7 @@ namespace PkgFolderCreateManager
 			public bool LogToMsgQueue { get; set; }
 		#endregion
 
-		#region "Methods"
+		#region "Constructors"
 			/// <summary>
 			/// Constructor
 			/// </summary>
@@ -81,7 +77,9 @@ namespace PkgFolderCreateManager
 				JobNumber = 0;
 				Tool = "";
 			}	// End sub
+		#endregion
 
+		#region "Methods"
 			/// <summary>
 			/// Converts the manager status enum to a string value
 			/// </summary>
@@ -150,13 +148,13 @@ namespace PkgFolderCreateManager
 					XWriter.WriteElementString("LastStartTime", LastStartTime.ToString());
 					XWriter.WriteElementString("CPUUtilization", CpuUtilization.ToString());
 					XWriter.WriteElementString("FreeMemoryMB", "0");
-					//TODO: Figure out how to retrieve recent error messages
 					XWriter.WriteStartElement("RecentErrorMessages");
-					XWriter.WriteElementString("ErrMsg", "MysteryError");
-					XWriter.WriteEndElement();
-					//Error messages
-					XWriter.WriteEndElement();
-					//Manager section
+					foreach (string ErrMsg in clsStatusData.ErrorQueue)
+					{
+						XWriter.WriteElementString("ErrMsg", ErrMsg);
+					}
+					XWriter.WriteEndElement();		//Error messages
+					XWriter.WriteEndElement();		//Manager section
 
 					XWriter.WriteStartElement("Task");
 					XWriter.WriteElementString("Tool", Tool);
@@ -169,16 +167,12 @@ namespace PkgFolderCreateManager
 					XWriter.WriteElementString("Job", JobNumber.ToString());
 					XWriter.WriteElementString("Step", JobStep.ToString());
 					XWriter.WriteElementString("Dataset", Dataset);
-					//TODO: Figure out how to get the most recent message
-					XWriter.WriteElementString("MostRecentLogMessage", "Some log message");
+					XWriter.WriteElementString("MostRecentLogMessage", clsStatusData.MostRecentLogMessage);
 					XWriter.WriteElementString("MostRecentJobInfo", MostRecentJobInfo);
 					XWriter.WriteElementString("SpectrumCount", SpectrumCount.ToString());
-					XWriter.WriteEndElement();
-					//Task details section
-					XWriter.WriteEndElement();
-					//Task section
-					XWriter.WriteEndElement();
-					//Root section
+					XWriter.WriteEndElement();		//Task details section
+					XWriter.WriteEndElement();		//Task section
+					XWriter.WriteEndElement();		//Root section
 
 					//Close the document, but don't close the writer yet
 					XWriter.WriteEndDocument();
@@ -328,6 +322,44 @@ namespace PkgFolderCreateManager
 				{
 					string msg = "Exception sending status message to broker";
 					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,msg,Ex);
+				}
+			}	// End sub
+
+			/// <summary>
+			/// Initializes the status from a file, if file exists
+			/// </summary>
+			public void InitStatusFromFile()
+			{
+				string XmlStr;
+				XmlDocument Doc;
+
+				//Verify status file exists
+				if (!File.Exists(m_FileNamePath)) return;
+
+				//Get data from status file
+				try
+				{
+					XmlStr = File.ReadAllText(m_FileNamePath);
+					//Convert to an XML document
+					Doc = new XmlDocument();
+					Doc.LoadXml(XmlStr);
+
+					//Get the most recent log message
+					clsStatusData.MostRecentLogMessage = Doc.SelectSingleNode("//Task/TaskDetails/MostRecentLogMessage").InnerText;
+
+					//Get the most recent job info
+					MostRecentJobInfo = Doc.SelectSingleNode("//Task/TaskDetails/MostRecentJobInfo").InnerText;
+
+					//Get the error messsages
+					foreach (XmlNode Xn in Doc.SelectNodes("//Manager/RecentErrorMessages/ErrMsg"))
+					{
+						clsStatusData.AddErrorMessage(Xn.InnerText);
+					}
+				}
+				catch (Exception ex)
+				{
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Exception reading status file", ex);
+					return;
 				}
 			}	// End sub
 		#endregion

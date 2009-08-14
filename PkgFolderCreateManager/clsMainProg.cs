@@ -6,11 +6,9 @@
 // Created 06/16/2009
 //
 // Last modified 06/16/2009
+//						- 08/14/2009 (DAC) - Modified logging and status reporting
 //*********************************************************************************************************
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Collections.Specialized;
@@ -33,7 +31,7 @@ namespace PkgFolderCreateManager
 		#endregion
 
 		#region "Class variables"
-		private clsMgrSettings m_MgrSettings;
+			private clsMgrSettings m_MgrSettings;
 			private IStatusFile m_StatusFile;
 			private clsMessageHandler m_MsgHandler;
 			private bool m_Running = false;
@@ -61,17 +59,15 @@ namespace PkgFolderCreateManager
 
 				//Setup the logger
 				string LogFileName = m_MgrSettings.GetParam("logfilename");
-				int LogLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
-				clsLogTools.CreateFileLogger(LogFileName,LogLevel);
+				int debugLevel=int.Parse(m_MgrSettings.GetParam("debuglevel"));
+				clsLogTools.CreateFileLogger(LogFileName,debugLevel);
+				string logCnStr=m_MgrSettings.GetParam("connectionstring");
+				string moduleName=m_MgrSettings.GetParam("modulename");
+				clsLogTools.CreateDbLogger(logCnStr,moduleName);
 
 				//Make the initial log entry
 				string MyMsg = "=== Started Package Folder Creation Manager V" + Application.ProductVersion + " ===== ";
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, MyMsg);
-
-				////Set the debug level
-				//int LogLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
-				//clsLogTools.SetFileLogLevel(LogLevel);
-				//clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Debug level set");
 
 				//Setup the message queue
 				m_MsgHandler = new clsMessageHandler();
@@ -102,6 +98,7 @@ namespace PkgFolderCreateManager
 				{
 					m_StatusFile.LogToMsgQueue = bool.Parse(m_MgrSettings.GetParam("LogStatusToMessageQueue"));
 					m_StatusFile.MgrName = m_MgrSettings.GetParam("MgrName");
+					m_StatusFile.InitStatusFromFile();
 					SetStartupStatus();
 					m_StatusFile.WriteStatusFile();
 				}
@@ -208,6 +205,8 @@ namespace PkgFolderCreateManager
 				}
 				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.Running_Tool;
 				m_StatusFile.JobNumber=Int32.Parse(cmdParams["package"]);
+				string dumStr = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
+				m_StatusFile.MostRecentJobInfo = dumStr;
 				m_StatusFile.WriteStatusFile();
 				
 				clsFolderTools.CreatePkgFolder(m_MgrSettings.GetParam("perspective"), cmdParams);
@@ -236,7 +235,7 @@ namespace PkgFolderCreateManager
 					if (logCount > 60)
 					{
 						// Update status every 60 seconds
-						m_StatusFile.WriteStatusFile();
+						 m_StatusFile.WriteStatusFile();
 						logCount = 0;
 
 						// If it has been > 24 hours since last log entry, tell the log that everything's OK.
@@ -299,7 +298,7 @@ namespace PkgFolderCreateManager
 				m_StatusFile.Tool = "NA";
 				m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
 				m_StatusFile.Dataset = "NA";
-				m_StatusFile.CurrentOperation = "Just chillin'";
+				m_StatusFile.CurrentOperation = "";
 				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
 			}	// End sub
 
@@ -312,7 +311,7 @@ namespace PkgFolderCreateManager
 				m_StatusFile.Tool = "NA";
 				m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
 				m_StatusFile.Dataset = "NA";
-				m_StatusFile.CurrentOperation = "Just chillin'";
+				m_StatusFile.CurrentOperation = "";
 				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
 			}	// End sub
 
@@ -325,7 +324,7 @@ namespace PkgFolderCreateManager
 				m_StatusFile.Tool = "NA";
 				m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
 				m_StatusFile.Dataset = "NA";
-				m_StatusFile.CurrentOperation = "Just chillin'";
+				m_StatusFile.CurrentOperation = "";
 				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
 			}	// End sub
 		#endregion

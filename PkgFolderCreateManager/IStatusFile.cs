@@ -6,6 +6,7 @@
 // Created 06/18/2009
 //
 // Last modified 06/18/2009
+//						- 08/14/2009 (DAC) - Added additional properties and methods for status reporting
 //*********************************************************************************************************
 using System;
 using System.Collections.Generic;
@@ -57,7 +58,7 @@ namespace PkgFolderCreateManager
 			string FileNamePath { get;set; }
 			string MgrName { get; set; }
 			EnumMgrStatus MgrStatus { get; set; }
-			DateTime LastStartTime { get; set; }
+//			DateTime LastStartTime { get; set; }
 			int CpuUtilization { get; set; }
 			string Tool { get; set; }
 			EnumTaskStatus TaskStatus { get; set; }
@@ -80,6 +81,7 @@ namespace PkgFolderCreateManager
 			void UpdateAndWrite(EnumTaskStatusDetail Status, Single PercentComplete, int DTACount);
 			void UpdateStopped(bool MgrError);
 			void UpdateDisabled(bool Local);
+			void InitStatusFromFile();
 		#endregion
 	}	// End interface
 }	// End namespace

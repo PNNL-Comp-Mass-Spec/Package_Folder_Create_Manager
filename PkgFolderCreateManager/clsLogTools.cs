@@ -6,12 +6,12 @@
 // Created 06/16/2009
 //
 // Last modified 06/16/2009
+//						- 08/14/2009 (DAC) - Loads logger via code instead of config file, Added storage of voalues for status reporting
 //*********************************************************************************************************
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using log4net;
+using System.Data;
 
 // Configure log4net using the .log4net file
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "Logging.config", Watch = true)]
@@ -48,6 +48,7 @@ namespace PkgFolderCreateManager
 			private static readonly ILog m_SysLogger = LogManager.GetLogger("SysLogger");
 			private static string m_FileDate;
 			private static string m_BaseFileName;
+			private static log4net.Appender.FileAppender m_FileAppender;
 		#endregion
 
 		#region "Properties"
@@ -91,6 +92,10 @@ namespace PkgFolderCreateManager
 						throw new Exception("Invalid logger type specified");
 				}
 
+				//Update the status file data
+				clsStatusData.MostRecentLogMessage = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; "
+						+ InpMsg + "; " + LogLevel.ToString();
+				
 				//Send the log message
 				switch (LogLevel)
 				{
@@ -98,6 +103,8 @@ namespace PkgFolderCreateManager
 						if (MyLogger.IsDebugEnabled) MyLogger.Debug(InpMsg);
 						break;
 					case LogLevels.ERROR:
+						clsStatusData.AddErrorMessage(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; " + InpMsg
+								+ "; " + LogLevel.ToString());
 						if (MyLogger.IsErrorEnabled) MyLogger.Error(InpMsg);
 						break;
 					case LogLevels.FATAL:
@@ -148,6 +155,10 @@ namespace PkgFolderCreateManager
 						throw new Exception("Invalid logger type specified");
 				}
 
+				//Update the status file data
+				clsStatusData.MostRecentLogMessage = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; "
+						+ InpMsg + "; " + LogLevel.ToString();
+				
 				//Send the log message
 				switch (LogLevel)
 				{
@@ -155,6 +166,9 @@ namespace PkgFolderCreateManager
 						if (MyLogger.IsDebugEnabled) MyLogger.Debug(InpMsg, Ex);
 						break;
 					case LogLevels.ERROR:
+						clsStatusData.AddErrorMessage(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; " + InpMsg
+							 + "; " + LogLevel.ToString());
+
 						if (MyLogger.IsErrorEnabled) MyLogger.Error(InpMsg, Ex);
 						break;
 					case LogLevels.FATAL:
@@ -304,13 +318,89 @@ namespace PkgFolderCreateManager
 			}	// End sub
 
 			/// <summary>
-			/// Configures a file logger
+			/// Configures the file logger
 			/// </summary>
+			/// <param name="LogFileName">Base name for log file</param>
+			/// <param name="LogLevel">Debug level for file logger</param>
 			public static void CreateFileLogger(string LogFileName, int LogLevel)
 			{
 				log4net.Repository.Hierarchy.Logger curLogger = (log4net.Repository.Hierarchy.Logger)m_FileLogger.Logger;
-				curLogger.AddAppender(CreateFileAppender(LogFileName));
+				m_FileAppender = CreateFileAppender(LogFileName);
+				curLogger.AddAppender(m_FileAppender);
 				SetFileLogLevel(LogLevel);
+			}	// End sub
+
+			/// <summary>
+			/// Configures the Db logger
+			/// </summary>
+			/// <param name="ConnStr">Database connection string</param>
+			/// <param name="ModuleName">Module name used by logger</param></param>
+			public static void CreateDbLogger(string ConnStr, string ModuleName)
+			{
+				log4net.Repository.Hierarchy.Logger curLogger = (log4net.Repository.Hierarchy.Logger)m_DbLogger.Logger;
+				curLogger.Level = log4net.Core.Level.Info;
+				curLogger.AddAppender(CreateDbAppender(ConnStr,ModuleName));
+				curLogger.AddAppender(m_FileAppender);
+			}	// End sub
+
+			/// <summary>
+			/// Creates a database appender
+			/// </summary>
+			/// <param name="ConnStr">Database connection string</param>
+			/// <param name="ModuleName">Module name used by logger</param>
+			/// <returns>ADONet database appender</returns>
+			public static log4net.Appender.AdoNetAppender CreateDbAppender(string ConnStr, string ModuleName)
+			{
+				log4net.Appender.AdoNetAppender ReturnAppender = new log4net.Appender.AdoNetAppender();
+
+				ReturnAppender.BufferSize = 1;
+				ReturnAppender.ConnectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version=1.0.3300.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";
+				ReturnAppender.ConnectionString = ConnStr;
+				ReturnAppender.CommandType = CommandType.StoredProcedure;
+				ReturnAppender.CommandText = "PostLogEntry";
+
+				//Type parameter
+				log4net.Appender.AdoNetAppenderParameter TypeParam = new log4net.Appender.AdoNetAppenderParameter();
+				TypeParam.ParameterName = "@type";
+				TypeParam.DbType = DbType.String;
+				TypeParam.Size = 50;
+				TypeParam.Layout = CreateLayout("%level");
+				ReturnAppender.AddParameter(TypeParam);
+
+				//Message parameter
+				log4net.Appender.AdoNetAppenderParameter MsgParam = new log4net.Appender.AdoNetAppenderParameter();
+				MsgParam.ParameterName = "@message";
+				MsgParam.DbType = DbType.String;
+				MsgParam.Size = 4000;
+				MsgParam.Layout = CreateLayout("%message");
+				ReturnAppender.AddParameter(MsgParam);
+
+				//PostedBy parameter
+				log4net.Appender.AdoNetAppenderParameter PostByParam = new log4net.Appender.AdoNetAppenderParameter();
+				PostByParam.ParameterName = "@postedBy";
+				PostByParam.DbType = DbType.String;
+				PostByParam.Size = 128;
+				PostByParam.Layout = CreateLayout(ModuleName);
+				ReturnAppender.AddParameter(PostByParam);
+
+				ReturnAppender.ActivateOptions();
+
+				return ReturnAppender;
+			}	// End sub
+
+			/// <summary>
+			/// Creates a layout object for a Db appender parameter
+			/// </summary>
+			/// <param name="LayoutStr">Name of parameter</param>
+			/// <returns></returns>
+			private static log4net.Layout.IRawLayout CreateLayout(string LayoutStr)
+			{
+				log4net.Layout.RawLayoutConverter LayoutConvert = new log4net.Layout.RawLayoutConverter();
+				log4net.Layout.PatternLayout ReturnLayout = new log4net.Layout.PatternLayout();
+				ReturnLayout.ConversionPattern = LayoutStr;
+				ReturnLayout.ActivateOptions();
+				log4net.Layout.IRawLayout retItem = (log4net.Layout.IRawLayout)LayoutConvert.ConvertFrom(ReturnLayout);
+				return retItem;
 			}	// End sub
 		#endregion
 	}	// End class

@@ -61,6 +61,7 @@
     <Compile Include="clsMainProg.cs" />
     <Compile Include="clsMessageHandler.cs" />
     <Compile Include="clsMgrSettings.cs" />
+    <Compile Include="clsStatusData.cs" />
     <Compile Include="clsStatusFile.cs" />
     <Compile Include="clsXMLTools.cs" />
     <Compile Include="IMgrParams.cs" />
@@ -91,7 +92,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BrodoadcasetMsgSample.xml" />
     <Content Include="ShutdownSample.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
