@@ -7,6 +7,7 @@
 //
 // Last modified 06/18/2009
 //						- 08/14/2009 (DAC) - Added additional parameters and methods for status reporting
+//						- 08/21/2009 (DAC) - Added duration in minutes to status output
 //*********************************************************************************************************
 using System;
 using System.Xml;
@@ -160,6 +161,7 @@ namespace PkgFolderCreateManager
 					XWriter.WriteElementString("Tool", Tool);
 					XWriter.WriteElementString("Status", ConvertTaskStatusToString(TaskStatus));
 					XWriter.WriteElementString("Duration", Duration.ToString("##0.0"));
+					XWriter.WriteElementString("DurationMinutes", (60.0F * Duration).ToString("##0.0"));
 					XWriter.WriteElementString("Progress", Progress.ToString("##0.00"));
 					XWriter.WriteElementString("CurrentOperation", CurrentOperation);
 					XWriter.WriteStartElement("TaskDetails");
