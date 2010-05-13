@@ -31,63 +31,58 @@ namespace PkgFolderCreateManager
 			/// <summary>
 			/// Creates specified folder
 			/// </summary>
-			/// <param name="FolderParams">String dictionary containing parameters for folder creation</param>
-			public static void CreatePkgFolder(string Perspective, StringDictionary FolderParams)
+			/// <param name="folderParams">String dictionary containing parameters for folder creation</param>
+			public static void CreateFolder(string perspective, StringDictionary folderParams)
 			{
-				string Msg = "Processing command for package " + FolderParams["package"];
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
+				string msg = "Processing command for package " + folderParams["package"];
+				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
 
-				// Test for add or update
-				if (FolderParams["cmd"].ToLower() != "add")
-				{
-					// Ignore the command if it isn't an "add"
-					Msg = "Package " + FolderParams["package"] + ", command '" + FolderParams["cmd"] + "' not supported. Message ignored";
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, Msg);
-					return;
-				}
-				else
-				{
-					Msg = "Creating folder for package " + FolderParams["package"];
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
-				}
+				//// Test for add or update
+				//if (folderParams["cmd"].ToLower() != "add")
+				//{
+				//   // Ignore the command if it isn't an "add"
+				//   msg = "Package " + folderParams["package"] + ", command '" + folderParams["cmd"] + "' not supported. Message ignored";
+				//   clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, msg);
+				//   return;
+				//}
+				//else
+				//{
+				//   msg = "Creating folder for package " + folderParams["package"];
+				//   clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
+				//}
 				
 				// Determine if client or server perspective and initialize path
-				string FolderPath;
-				if (Perspective.ToLower() == "client")
+				string folderPath;
+				if (perspective.ToLower() == "client")
 				{
-					FolderPath = FolderParams["share"];
+					folderPath = folderParams["path_shared_root"];
 				}
 				else
 				{
-					FolderPath=FolderParams["local"];
+					folderPath = folderParams["path_local_root"];
 				}
 
-				// Determine if team-level folder exists; create if necessary
-				FolderPath = Path.Combine(FolderPath, FolderParams["team"]);
-				if (!CreateFolderIfNotFound(FolderPath, NO_WARN_IF_FOLDER_EXISTS))
+				// Determine if root-level folder exists; error out if not present
+				if (!Directory.Exists(folderPath))
 				{
-					// Couldn't create folder, so exit
-					// Error reporting handled within called function
+					msg = "Root folder " + folderPath + " not found";
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
 					return;
 				}
 
-				// Determine if year-level folder exists; create if necessary
-				FolderPath = Path.Combine(FolderPath, FolderParams["year"]);
-				if (!CreateFolderIfNotFound(FolderPath, NO_WARN_IF_FOLDER_EXISTS))
-				{
-					// Couldn't create folder, so exit
-					// Error reporting handled within called function
-					return;
-				}
+				// Parse folder string
+				string[] pathParts = folderParams["path_folder"].Split(new string[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
 
-				// Create the package folder
-				//TODO: Does the pakage need to be padded with zeroes?
-				FolderPath = Path.Combine(FolderPath, FolderParams["folder"]);
-				if (!CreateFolderIfNotFound(FolderPath, WARN_IF_FOLDER_EXISTS))
+				// Create desired path, one subfolder at a time
+				for (int indx = 0; indx < pathParts.Length; indx++)
 				{
-					// Couldn't create folder, so exit
-					// Error reporting handled within called function
-					return;
+					folderPath = Path.Combine(folderPath, pathParts[indx]);
+					if (!CreateFolderIfNotFound(folderPath, NO_WARN_IF_FOLDER_EXISTS))
+					{
+						// Couldn't create folder, so exit
+						// Error reporting handled within called function
+						return;
+					}
 				}
 			}	// End sub
 

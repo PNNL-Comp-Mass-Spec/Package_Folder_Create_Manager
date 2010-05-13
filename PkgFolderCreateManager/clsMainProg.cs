@@ -58,16 +58,16 @@ namespace PkgFolderCreateManager
 				}
 
 				//Setup the logger
-				string LogFileName = m_MgrSettings.GetParam("logfilename");
+				string logFileName = m_MgrSettings.GetParam("logfilename");
 				int debugLevel=int.Parse(m_MgrSettings.GetParam("debuglevel"));
-				clsLogTools.CreateFileLogger(LogFileName,debugLevel);
+				clsLogTools.CreateFileLogger(logFileName,debugLevel);
 				string logCnStr=m_MgrSettings.GetParam("connectionstring");
 				string moduleName=m_MgrSettings.GetParam("modulename");
 				clsLogTools.CreateDbLogger(logCnStr,moduleName);
 
 				//Make the initial log entry
-				string MyMsg = "=== Started Package Folder Creation Manager V" + Application.ProductVersion + " ===== ";
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, MyMsg);
+				string myMsg = "=== Started Package Folder Creation Manager V" + Application.ProductVersion + " ===== ";
+				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, myMsg);
 
 				//Setup the message queue
 				m_MsgHandler = new clsMessageHandler();
@@ -92,9 +92,9 @@ namespace PkgFolderCreateManager
 				m_MsgHandler.BroadcastReceived += new MessageProcessorDelegate(OnMsgHandler_BroadcastReceived);
 
 				//Setup the status file class
-				FileInfo FInfo = new FileInfo(Application.ExecutablePath);
-				string StatusFileNameLoc = Path.Combine(FInfo.DirectoryName, "Status.xml");
-				m_StatusFile = new clsStatusFile(StatusFileNameLoc,m_MsgHandler);
+				FileInfo fInfo = new FileInfo(Application.ExecutablePath);
+				string statusFileNameLoc = Path.Combine(fInfo.DirectoryName, "Status.xml");
+				m_StatusFile = new clsStatusFile(statusFileNameLoc,m_MsgHandler);
 				{
 					m_StatusFile.LogToMsgQueue = bool.Parse(m_MgrSettings.GetParam("LogStatusToMessageQueue"));
 					m_StatusFile.MgrName = m_MgrSettings.GetParam("MgrName");
@@ -117,8 +117,8 @@ namespace PkgFolderCreateManager
 			/// <param name="cmdText">Text of received message</param>
 			void OnMsgHandler_BroadcastReceived(string cmdText)
 			{
-				string Msg = "clsMainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.DEBUG,Msg);
+				string msg = "clsMainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
+				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.DEBUG,msg);
 
 				clsBroadcastCmd recvCmd;
 
@@ -129,8 +129,8 @@ namespace PkgFolderCreateManager
 				}
 				catch (Exception Ex)
 				{
-					Msg = "Exception while parsing broadcast data";
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, Msg,Ex);
+					msg = "Exception while parsing broadcast data";
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg,Ex);
 					return;
 				}
 
@@ -138,8 +138,8 @@ namespace PkgFolderCreateManager
 				if (!recvCmd.MachineList.Contains(m_MgrSettings.GetParam("MgrName")))
 				{
 					// Received command doesn't apply to this manager
-					Msg = "Received command not applicable to this manager instance";
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+					msg = "Received command not applicable to this manager instance";
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
 					return;
 				}
 
@@ -147,21 +147,21 @@ namespace PkgFolderCreateManager
 				switch (recvCmd.MachCmd.ToLower())
 				{
 					case "shutdown":
-						Msg = "Shutdown message received";
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
+						msg = "Shutdown message received";
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
 						m_BroadcastCmdType = BroadcastCmdType.Shutdown;
 						m_Running = false;
 						break;
 					case "readconfig":
-						Msg = "Reload config message received";
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
+						msg = "Reload config message received";
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
 						m_BroadcastCmdType = BroadcastCmdType.ReadConfig;
 						m_Running = false;
 						break;
 					default:
 						// Invalid command received; do nothing except log it
-						Msg = "Invalid broadcast command received: " + cmdText;
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, Msg);
+						msg = "Invalid broadcast command received: " + cmdText;
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, msg);
 						break;
 				}
 			}	// End sub
@@ -172,8 +172,8 @@ namespace PkgFolderCreateManager
 			/// <param name="cmdText">XML string containing command</param>
 			void OnMsgHandler_CommandReceived(string cmdText)
 			{
-				string Msg = "clsMainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+				string msg = "clsMainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
+				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
 
 				StringDictionary cmdParams = null;
 
@@ -187,8 +187,8 @@ namespace PkgFolderCreateManager
 				}
 				catch (Exception Ex)
 				{
-					Msg = "Exception parsing XML command string: " + cmdText + Environment.NewLine;
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, Msg, Ex);
+					msg = "Exception parsing XML command string: " + cmdText + Environment.NewLine;
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, Ex);
 					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
 					m_StatusFile.WriteStatusFile();
 					return;
@@ -197,19 +197,19 @@ namespace PkgFolderCreateManager
 				// Make the folder
 				if (cmdParams == null)
 				{
-					Msg = "cmdParams is null; Cannot create folder for string " + cmdText;
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,Msg);
+					msg = "cmdParams is null; Cannot create folder for string " + cmdText;
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,msg);
 					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
 					m_StatusFile.WriteStatusFile();
 					return;
 				}
 				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.Running_Tool;
-				m_StatusFile.JobNumber=Int32.Parse(cmdParams["package"]);
+				//m_StatusFile.JobNumber=Int32.Parse(cmdParams["package"]);
 				string dumStr = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
 				m_StatusFile.MostRecentJobInfo = dumStr;
 				m_StatusFile.WriteStatusFile();
 				
-				clsFolderTools.CreatePkgFolder(m_MgrSettings.GetParam("perspective"), cmdParams);
+				clsFolderTools.CreateFolder(m_MgrSettings.GetParam("perspective"), cmdParams);
 
 				m_StatusFile.JobNumber = 0;
 				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;

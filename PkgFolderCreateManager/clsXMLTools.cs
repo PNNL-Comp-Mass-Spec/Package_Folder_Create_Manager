@@ -39,12 +39,10 @@ namespace PkgFolderCreateManager
 				try
 				{
 					returnDict.Add("package",doc.SelectSingleNode("//package").InnerText);
-					returnDict.Add("local", doc.SelectSingleNode("//local").InnerText);
-					returnDict.Add("share", doc.SelectSingleNode("//share").InnerText);
-					returnDict.Add("year", doc.SelectSingleNode("//year").InnerText);
-					returnDict.Add("team", doc.SelectSingleNode("//team").InnerText);
-					returnDict.Add("folder", doc.SelectSingleNode("//folder").InnerText);
-					returnDict.Add("cmd", doc.SelectSingleNode("//cmd").InnerText);
+					returnDict.Add("path_local_root", doc.SelectSingleNode("//path_local_root").InnerText);
+					returnDict.Add("path_shared_root", doc.SelectSingleNode("//path_shared_root").InnerText);
+					returnDict.Add("path_folder", doc.SelectSingleNode("//path_folder").InnerText);
+					//returnDict.Add("cmd", doc.SelectSingleNode("//cmd").InnerText);
 
 					return returnDict;
 				}
