@@ -87,7 +87,7 @@ namespace PkgFolderCreateManager
 			}	// End sub
 
 			/// <summary>
-			/// Creates spacified folder
+			/// Creates specified folder
 			/// </summary>
 			/// <param name="FolderName">Name of folder to create</param>
 			/// <returns>TRUE for success; FALSE otherwise</returns>
