@@ -223,7 +223,7 @@ namespace PkgFolderCreateManager
 			public void DoFolderCreation()
 			{
 				string logMsg;
-				DateTime lastLoopRun = DateTime.Now;
+				DateTime lastLoopRun = DateTime.UtcNow;
 
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Starting DoFolderCreation()");
 				m_MgrActive = Convert.ToBoolean(m_MgrSettings.GetParam("mgractive"));
@@ -240,9 +240,9 @@ namespace PkgFolderCreateManager
 
 						// If it has been > 24 hours since last log entry, tell the log that everything's OK.
 						//	Otherwise, it might be seveal days between log entries.
-						if (DateTime.Compare(DateTime.Now, lastLoopRun.AddHours(24)) > 0)
+						if (DateTime.Compare(DateTime.UtcNow, lastLoopRun.AddHours(24)) > 0)
 						{
-							lastLoopRun = DateTime.Now;
+							lastLoopRun = DateTime.UtcNow;
 							logMsg = "Manager running";
 							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, logMsg);
 						}
