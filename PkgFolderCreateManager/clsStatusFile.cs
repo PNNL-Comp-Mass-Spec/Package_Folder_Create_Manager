@@ -323,7 +323,7 @@ namespace PkgFolderCreateManager
 				catch (Exception Ex)
 				{
 					string msg = "Exception sending status message to broker";
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,msg,Ex);
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,msg);
 				}
 			}	// End sub
 
