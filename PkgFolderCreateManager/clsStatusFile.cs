@@ -25,6 +25,7 @@ namespace PkgFolderCreateManager
 		#region "Class variables"
 			string m_FileNamePath;
 			clsMessageHandler m_MsgHandler;
+			int m_MessageQueueExceptionCount = 0;
 		#endregion
 
 		#region "Properties"
@@ -319,18 +320,20 @@ namespace PkgFolderCreateManager
 				try
 				{
 					m_MsgHandler.SendMessage(strStatusXML);
+					m_MessageQueueExceptionCount = 0;
 				}
 				catch (Exception ex)
 				{
-					string msg = "Exception sending status message to broker";
+					m_MessageQueueExceptionCount += 1;
+					string msg = "Exception sending status message to broker; count = " + m_MessageQueueExceptionCount.ToString();
 
-					if (System.DateTime.Now.TimeOfDay.Hours == 0 && System.DateTime.Now.TimeOfDay.Minutes >= 0 && System.DateTime.Now.TimeOfDay.Minutes <= 10) {
+					if (System.DateTime.Now.TimeOfDay.Hours == 0 && System.DateTime.Now.TimeOfDay.Minutes >= 0 && System.DateTime.Now.TimeOfDay.Minutes <= 5) {
 						// The time of day is between 12:00 am and 12:10 am, so write the full exception to the log
 						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
 					} else {
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
+						if (m_MessageQueueExceptionCount < 5 || m_MessageQueueExceptionCount % 20 == 0)
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
 					}
-					
 				}
 			}	// End sub
 
