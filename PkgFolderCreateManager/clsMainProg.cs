@@ -43,7 +43,16 @@ namespace PkgFolderCreateManager
 		#endregion
 
 		#region "Methods"
-		
+
+			private bool CBoolSafe(string Value, bool bDefaultValue) {
+				bool bValue;
+
+				if (bool.TryParse(Value, out bValue))
+					return bValue;
+				else
+					return bDefaultValue;
+			}
+
 			public bool CheckDBQueue() {
 				bool success = true;
 				bool bContinueLooping = true;
@@ -69,7 +78,7 @@ namespace PkgFolderCreateManager
 
 								string sErrorMessage = string.Empty;
 
-								success = CreateFolder(m_Task.TaskParametersXML, out sErrorMessage);
+								success = CreateFolder(m_Task.TaskParametersXML, out sErrorMessage, "T_Data_Folder_Create_Queue");
 
 								if (success) {
 									m_Task.CloseTask(clsDbTask.EnumCloseOutType.CLOSEOUT_SUCCESS);
@@ -101,7 +110,7 @@ namespace PkgFolderCreateManager
 				return success;
 			}
 
-			protected bool CreateFolder(string cmdText, out string sErrorMessage) {
+			protected bool CreateFolder(string cmdText, out string sErrorMessage, string Source) {
 
 				StringDictionary cmdParams = null;
 				sErrorMessage = string.Empty;
@@ -136,7 +145,7 @@ namespace PkgFolderCreateManager
 					m_StatusFile.MostRecentJobInfo = dumStr;
 					m_StatusFile.WriteStatusFile();
 
-					clsFolderTools.CreateFolder(m_MgrSettings.GetParam("perspective"), cmdParams);
+					clsFolderTools.CreateFolder(m_MgrSettings.GetParam("perspective"), cmdParams, Source);
 
 					m_StatusFile.JobNumber = 0;
 					m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
@@ -175,10 +184,10 @@ namespace PkgFolderCreateManager
 
 				//Setup the logger
 				string logFileName = m_MgrSettings.GetParam("logfilename");
-				int debugLevel=int.Parse(m_MgrSettings.GetParam("debuglevel"));
+				int debugLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
 				clsLogTools.CreateFileLogger(logFileName,debugLevel);
-				string logCnStr=m_MgrSettings.GetParam("connectionstring");
-				string moduleName=m_MgrSettings.GetParam("modulename");
+				string logCnStr = m_MgrSettings.GetParam("connectionstring");
+				string moduleName = m_MgrSettings.GetParam("modulename");
 				clsLogTools.CreateDbLogger(logCnStr,moduleName);
 
 				//Make the initial log entry
@@ -212,7 +221,7 @@ namespace PkgFolderCreateManager
 				string statusFileNameLoc = Path.Combine(fInfo.DirectoryName, "Status.xml");
 				m_StatusFile = new clsStatusFile(statusFileNameLoc,m_MsgHandler);
 				{
-					m_StatusFile.LogToMsgQueue = bool.Parse(m_MgrSettings.GetParam("LogStatusToMessageQueue"));
+					m_StatusFile.LogToMsgQueue = CBoolSafe(m_MgrSettings.GetParam("LogStatusToMessageQueue"), false);
 					m_StatusFile.MgrName = m_MgrSettings.GetParam("MgrName");
 					m_StatusFile.InitStatusFromFile();
 					SetStartupStatus();
@@ -299,7 +308,7 @@ namespace PkgFolderCreateManager
 					string sErrorMessage;
 					bool bSuccess;
 
-					bSuccess = CreateFolder(cmdText, out sErrorMessage);
+					bSuccess = CreateFolder(cmdText, out sErrorMessage, "ActiveMQ Broker");
 
 					if (!bSuccess) {
 						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error calling CreateFolder: " + sErrorMessage);
@@ -325,7 +334,9 @@ namespace PkgFolderCreateManager
 				m_Task = new clsFolderCreateTask(m_MgrSettings);
 
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Starting DoFolderCreation()");
-				m_MgrActive = Convert.ToBoolean(m_MgrSettings.GetParam("mgractive"));
+				m_MgrActive = CBoolSafe(m_MgrSettings.GetParam("mgractive"), false);
+
+				bool bCheckDBQueue = CBoolSafe(m_MgrSettings.GetParam("CheckDataFolderCreateQueue"), false);
 
 				m_Running = m_MgrActive;
 				int logCount = 0;
@@ -348,7 +359,7 @@ namespace PkgFolderCreateManager
 						}
 					}
 
-					if (DateTime.UtcNow.Subtract(lastDBQuery).TotalSeconds >= DB_Query_Interval_Seconds) {
+					if (bCheckDBQueue && DateTime.UtcNow.Subtract(lastDBQuery).TotalSeconds >= DB_Query_Interval_Seconds) {
 						CheckDBQueue();
 						lastDBQuery = System.DateTime.UtcNow;
 					}

@@ -32,9 +32,9 @@ namespace PkgFolderCreateManager
 			/// Creates specified folder
 			/// </summary>
 			/// <param name="folderParams">String dictionary containing parameters for folder creation</param>
-			public static void CreateFolder(string perspective, StringDictionary folderParams)
+			public static void CreateFolder(string perspective, StringDictionary folderParams, string Source)
 			{
-				string msg = "Processing command for package " + folderParams["package"];
+				string msg = "Processing command for package " + folderParams["package"] + " (Source = " + Source + ")";
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
 
 				//// Test for add or update
@@ -101,11 +101,18 @@ namespace PkgFolderCreateManager
 					pathParts[2] = folderParams["folder"];
 				}
 
+				bool bLogIfAlreadyExists;
+
 				// Create desired path, one subfolder at a time
 				for (int indx = 0; indx < pathParts.Length; indx++)
 				{
 					folderPath = Path.Combine(folderPath, pathParts[indx]);
-					if (!CreateFolderIfNotFound(folderPath, NO_WARN_IF_FOLDER_EXISTS))
+					if (indx == pathParts.Length - 1)
+						bLogIfAlreadyExists = true;
+					else
+						bLogIfAlreadyExists = false;
+
+					if (!CreateFolderIfNotFound(folderPath, NO_WARN_IF_FOLDER_EXISTS, bLogIfAlreadyExists))
 					{
 						// Couldn't create folder, so exit
 						// Error reporting handled within called function
@@ -119,7 +126,7 @@ namespace PkgFolderCreateManager
 			/// </summary>
 			/// <param name="FolderName">Name of folder to create</param>
 			/// <returns>TRUE for success; FALSE otherwise</returns>
-			private static bool CreateFolderIfNotFound(string FolderName, bool WarnIfExists)
+			private static bool CreateFolderIfNotFound(string FolderName, bool WarnIfExists, bool LogIfExists)
 			{
 				if (Directory.Exists(FolderName))
 				{
@@ -128,7 +135,8 @@ namespace PkgFolderCreateManager
 					if (WarnIfExists) {
 						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, Msg);
 					} else {
-						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
+						if (LogIfExists)
+							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
 					}
 					return true;
 				}

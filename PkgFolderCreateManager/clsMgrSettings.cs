@@ -251,13 +251,15 @@ namespace PkgFolderCreateManager
 
 			public string GetParam(string ItemKey)
 			{
-				string RetStr = m_MgrParams[ItemKey];
-				return RetStr;
+				if (m_MgrParams.ContainsKey(ItemKey))
+					return m_MgrParams[ItemKey];
+				else
+					return String.Empty;
 			}
 
 			public void SetParam(string ItemKey, string ItemValue)
 			{
-				m_MgrParams[ItemKey]=ItemValue;
+				m_MgrParams[ItemKey] = ItemValue;
 			}
 
 			private string DbCStr(object InpObj)
