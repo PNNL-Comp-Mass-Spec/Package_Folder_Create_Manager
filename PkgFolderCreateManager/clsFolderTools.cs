@@ -124,10 +124,11 @@ namespace PkgFolderCreateManager
 				if (Directory.Exists(FolderName))
 				{
 					// Folder exists
-					if (WarnIfExists)
-					{
-						string Msg = "Folder " + FolderName + " already exists";
+					string Msg = "Folder " + FolderName + " already exists";
+					if (WarnIfExists) {
 						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, Msg);
+					} else {
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
 					}
 					return true;
 				}

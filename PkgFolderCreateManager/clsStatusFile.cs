@@ -202,14 +202,14 @@ namespace PkgFolderCreateManager
 						OutFile.WriteLine(XMLText);
 						OutFile.Close();
 					}
-					catch (Exception ex)
+					catch
 					{
-						//TODO: Figure out appropriate action
+						// Ignore errors here
 					}
 				}
 				catch
 				{
-					//TODO: Figure out appropriate action
+					// Ignore errors here
 				}
 
 				//Log to a message queue
@@ -320,10 +320,17 @@ namespace PkgFolderCreateManager
 				{
 					m_MsgHandler.SendMessage(strStatusXML);
 				}
-				catch (Exception Ex)
+				catch (Exception ex)
 				{
 					string msg = "Exception sending status message to broker";
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,msg);
+
+					if (System.DateTime.Now.TimeOfDay.Hours == 0 && System.DateTime.Now.TimeOfDay.Minutes >= 0 && System.DateTime.Now.TimeOfDay.Minutes <= 10) {
+						// The time of day is between 12:00 am and 12:10 am, so write the full exception to the log
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
+					} else {
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
+					}
+					
 				}
 			}	// End sub
 
