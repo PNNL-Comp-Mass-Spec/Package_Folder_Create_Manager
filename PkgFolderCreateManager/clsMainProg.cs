@@ -37,9 +37,125 @@ namespace PkgFolderCreateManager
 			private bool m_Running = false;
 			private bool m_MgrActive = false;
 			private BroadcastCmdType m_BroadcastCmdType;
+			clsFolderCreateTask m_Task;
+
+			private int m_TaskRequestErrorCount = 0;
 		#endregion
 
 		#region "Methods"
+		
+			public bool CheckDBQueue() {
+				bool success = true;
+				bool bContinueLooping = true;
+
+				try {
+
+					while (bContinueLooping) {
+
+						clsDbTask.EnumRequestTaskResult taskReturn = m_Task.RequestTask();
+						switch (taskReturn) {
+							case clsDbTask.EnumRequestTaskResult.NoTaskFound:
+								bContinueLooping = false;
+								break;
+
+							case clsDbTask.EnumRequestTaskResult.ResultError:
+								// Problem with task request; Errors are logged by request method
+								m_TaskRequestErrorCount++;
+								bContinueLooping = false;
+								success = false;
+								break;
+
+							case clsDbTask.EnumRequestTaskResult.TaskFound:
+
+								string sErrorMessage = string.Empty;
+
+								success = CreateFolder(m_Task.TaskParametersXML, out sErrorMessage);
+
+								if (success) {
+									m_Task.CloseTask(clsDbTask.EnumCloseOutType.CLOSEOUT_SUCCESS);
+									bContinueLooping = true;
+								} else {
+									m_Task.CloseTask(clsDbTask.EnumCloseOutType.CLOSEOUT_FAILED, sErrorMessage);
+									bContinueLooping = false;
+								}
+
+								break;
+
+							default:
+								//Shouldn't ever get here!
+								success = false;
+								bContinueLooping = false;
+								break;
+
+						}	// End switch (taskReturn)
+
+					} // While Loop
+
+				} catch (Exception ex) {
+					string msg = "Exception requesting and processing task";
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
+
+					return false;
+				}
+
+				return success;
+			}
+
+			protected bool CreateFolder(string cmdText, out string sErrorMessage) {
+
+				StringDictionary cmdParams = null;
+				sErrorMessage = string.Empty;
+
+				// Parse the received string
+				try {
+					cmdParams = clsXMLTools.ParseCommandXML(cmdText);
+				} catch (Exception ex) {
+					sErrorMessage = "Exception parsing XML command string";
+					string msg = sErrorMessage + ": " + cmdText + Environment.NewLine;
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
+					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
+					m_StatusFile.WriteStatusFile();
+					return false;
+				}
+
+				// Make the folder
+				if (cmdParams == null) {
+					sErrorMessage = "cmdParams is null; Cannot create folder";
+					string msg = sErrorMessage + " for string " + cmdText;
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
+					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
+					m_StatusFile.WriteStatusFile();
+					return false;
+				}
+
+				try {
+			
+					m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.Running_Tool;
+
+					string dumStr = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
+					m_StatusFile.MostRecentJobInfo = dumStr;
+					m_StatusFile.WriteStatusFile();
+
+					clsFolderTools.CreateFolder(m_MgrSettings.GetParam("perspective"), cmdParams);
+
+					m_StatusFile.JobNumber = 0;
+					m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
+					m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
+					m_StatusFile.WriteStatusFile();
+
+				} catch (Exception ex) {
+					sErrorMessage = "Exception calling clsFolderTools.CreateFolder";
+					string msg = sErrorMessage + " with XML command string: " + cmdText;
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
+					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
+					m_StatusFile.WriteStatusFile();
+					return false;
+				}
+
+				return true;
+
+			}
+
 			/// <summary>
 			/// Initializes the manager
 			/// </summary>
@@ -172,49 +288,27 @@ namespace PkgFolderCreateManager
 			/// <param name="cmdText">XML string containing command</param>
 			void OnMsgHandler_CommandReceived(string cmdText)
 			{
-				string msg = "clsMainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
-				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
+				try {
 
-				StringDictionary cmdParams = null;
+					string msg = "clsMainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
 
-				m_StatusFile.TaskStatus = EnumTaskStatus.Running;
-				m_StatusFile.WriteStatusFile();
-
-				// Parse the received string
-				try
-				{
-					cmdParams = clsXMLTools.ParseCommandXML(cmdText);
-				}
-				catch (Exception Ex)
-				{
-					msg = "Exception parsing XML command string: " + cmdText + Environment.NewLine;
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, Ex);
-					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
+					m_StatusFile.TaskStatus = EnumTaskStatus.Running;
 					m_StatusFile.WriteStatusFile();
-					return;
+
+					string sErrorMessage;
+					bool bSuccess;
+
+					bSuccess = CreateFolder(cmdText, out sErrorMessage);
+
+					if (!bSuccess) {
+						clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error calling CreateFolder: " + sErrorMessage);
+					}
+
+				} catch (Exception ex) {
+					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Error in OnMsgHandler_CommandReceived", ex);
 				}
 
-				// Make the folder
-				if (cmdParams == null)
-				{
-					msg = "cmdParams is null; Cannot create folder for string " + cmdText;
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,msg);
-					m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
-					m_StatusFile.WriteStatusFile();
-					return;
-				}
-				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.Running_Tool;
-				//m_StatusFile.JobNumber=Int32.Parse(cmdParams["package"]);
-				string dumStr = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
-				m_StatusFile.MostRecentJobInfo = dumStr;
-				m_StatusFile.WriteStatusFile();
-				
-				clsFolderTools.CreateFolder(m_MgrSettings.GetParam("perspective"), cmdParams);
-
-				m_StatusFile.JobNumber = 0;
-				m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
-				m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
-				m_StatusFile.WriteStatusFile();
 			}	// End sub
 
 			/// <summary>
@@ -222,11 +316,17 @@ namespace PkgFolderCreateManager
 			/// </summary>
 			public void DoFolderCreation()
 			{
+				const int DB_Query_Interval_Seconds = 30;
+
 				string logMsg;
 				DateTime lastLoopRun = DateTime.UtcNow;
+				DateTime lastDBQuery = DateTime.UtcNow.Subtract(new TimeSpan(0, 0, DB_Query_Interval_Seconds));
+
+				m_Task = new clsFolderCreateTask(m_MgrSettings);
 
 				clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Starting DoFolderCreation()");
 				m_MgrActive = Convert.ToBoolean(m_MgrSettings.GetParam("mgractive"));
+
 				m_Running = m_MgrActive;
 				int logCount = 0;
 				while (m_Running)
@@ -247,6 +347,12 @@ namespace PkgFolderCreateManager
 							clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, logMsg);
 						}
 					}
+
+					if (DateTime.UtcNow.Subtract(lastDBQuery).TotalSeconds >= DB_Query_Interval_Seconds) {
+						CheckDBQueue();
+						lastDBQuery = System.DateTime.UtcNow;
+					}
+
 					// Pause 1 second
 					System.Threading.Thread.Sleep(1000);
 				}

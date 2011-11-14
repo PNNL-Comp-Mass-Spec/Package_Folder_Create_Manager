@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<params>
+  <package>334</package>
+  <local>F:\DataPkgs</local>
+  <share>\\protoapps\DataPkgs\</share>
+  <year>2011</year>
+  <team>Public</team>
+  <folder>334_glycopeptide_identification</folder>
+  <ID>334</ID>
+  <cmd>add</cmd>
+</params>

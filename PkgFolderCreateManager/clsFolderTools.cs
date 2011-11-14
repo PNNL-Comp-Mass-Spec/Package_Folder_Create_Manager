@@ -53,13 +53,34 @@ namespace PkgFolderCreateManager
 				
 				// Determine if client or server perspective and initialize path
 				string folderPath;
-				if (perspective.ToLower() == "client")
-				{
-					folderPath = folderParams["path_shared_root"];
-				}
-				else
-				{
-					folderPath = folderParams["path_local_root"];
+				string[] pathParts;
+				int XMLParamVersion = 0;
+
+				if (folderParams.ContainsKey("Path_Shared_Root")) {
+					// New-style XML
+					// folderParams will have entries named: package, Path_Local_Root, Path_Shared_Root, and Path_Folder
+
+					XMLParamVersion = 1;
+
+					if (perspective.ToLower() == "client") {
+						folderPath = folderParams["Path_Shared_Root"];
+					} else {
+						folderPath = folderParams["Path_Local_Root"];
+					}
+
+
+				} else {
+					// Old-style XML
+					// folderParams will have entries named: package, local, share, year, team, folder, and ID
+
+					XMLParamVersion = 0;
+
+					if (perspective.ToLower() == "client") {
+						folderPath = folderParams["share"];
+					} else {
+						folderPath = folderParams["local"];
+					}
+
 				}
 
 				// Determine if root-level folder exists; error out if not present
@@ -70,8 +91,15 @@ namespace PkgFolderCreateManager
 					return;
 				}
 
-				// Parse folder string
-				string[] pathParts = folderParams["path_folder"].Split(new string[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
+				if (XMLParamVersion == 1) {
+					// Parse folder string
+					pathParts = folderParams["Path_Folder"].Split(new string[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
+				} else {
+					pathParts = new string[3];
+					pathParts[0] = folderParams["team"];
+					pathParts[1] = folderParams["year"];
+					pathParts[2] = folderParams["folder"];
+				}
 
 				// Create desired path, one subfolder at a time
 				for (int indx = 0; indx < pathParts.Length; indx++)

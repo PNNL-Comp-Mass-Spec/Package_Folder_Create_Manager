@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+	<package>1234</package>
+	<Path_Local_Root>\D:\PAST\Dave</Path_Local_Root>
+	<Path_Shared_Root>\\prismdevii\PAST\Dave</Path_Shared_Root>
+	<Path_Folder>Level1\Level2\Level3</Path_Folder>
+	<cmd>add</cmd>
+</root> 

@@ -30,7 +30,7 @@ namespace PkgFolderCreateManager
 		//**********************************************************************************************************
 
 		#region "Class variables"
-			StringDictionary m_ParamDictionary = null;
+			StringDictionary m_MgrParams = null;
 			string m_ErrMsg = "";
 			bool m_MCParamsLoaded = false;
 		#endregion
@@ -59,24 +59,24 @@ namespace PkgFolderCreateManager
 				m_ErrMsg = "";
 
 				// If the param dictionary exists, it needs to be cleared out
-				if (m_ParamDictionary != null)
+				if (m_MgrParams != null)
 				{
-					m_ParamDictionary.Clear();
-					m_ParamDictionary = null;
+					m_MgrParams.Clear();
+					m_MgrParams = null;
 				}
 
 				// Get settings from config file
-				m_ParamDictionary = LoadMgrSettingsFromFile();
+				m_MgrParams = LoadMgrSettingsFromFile();
 
 				//Test the settings retrieved from the config file
-				if ( !CheckInitialSettings(m_ParamDictionary) )
+				if ( !CheckInitialSettings(m_MgrParams) )
 				{
 					//Error logging handled by CheckInitialSettings
 					return false;
 				}
 
 				//Determine if manager is deactivated locally
-				if (!bool.Parse( m_ParamDictionary["MgrActive_Local"]))
+				if (!bool.Parse( m_MgrParams["MgrActive_Local"]))
 				{
 					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogSystem, clsLogTools.LogLevels.WARN, "Manager deactivated locally");
 					m_ErrMsg = "Manager deactivated locally";
@@ -84,7 +84,7 @@ namespace PkgFolderCreateManager
 				}
 
 				//Get remaining settings from database
-				if ( !LoadMgrSettingsFromDB(ref m_ParamDictionary) )
+				if ( !LoadMgrSettingsFromDB(ref m_MgrParams) )
 				{
 					//Error logging handled by LoadMgrSettingsFromDB
 					return false;
@@ -149,7 +149,7 @@ namespace PkgFolderCreateManager
 
 			private bool LoadMgrSettingsFromDB()
 			{
-				return LoadMgrSettingsFromDB(ref m_ParamDictionary);
+				return LoadMgrSettingsFromDB(ref m_MgrParams);
 			}	// End sub
 
 			public bool LoadMgrSettingsFromDB(ref StringDictionary MgrSettingsDict)
@@ -161,7 +161,7 @@ namespace PkgFolderCreateManager
 				string ParamVal = null;
 
 				string SqlStr = "SELECT ParameterName, ParameterValue FROM V_MgrParams WHERE ManagerName = '" 
-											+ m_ParamDictionary["MgrName"] + "'";
+											+ m_MgrParams["MgrName"] + "'";
 
 				//Get a table containing data for job
 				 DataTable Dt = null;
@@ -226,13 +226,13 @@ namespace PkgFolderCreateManager
 						//Add the column heading and value to the dictionary
 						ParamKey = DbCStr(TestRow[Dt.Columns["ParameterName"]]);
 						ParamVal = DbCStr(TestRow[Dt.Columns["ParameterValue"]]);
-						if (m_ParamDictionary.ContainsKey(ParamKey))
+						if (m_MgrParams.ContainsKey(ParamKey))
 						{
-							m_ParamDictionary[ParamKey] = ParamVal;
+							m_MgrParams[ParamKey] = ParamVal;
 						}
 						else
 						{
-							m_ParamDictionary.Add(ParamKey, ParamVal);
+							m_MgrParams.Add(ParamKey, ParamVal);
 						}
 					}
 					return true;
@@ -251,13 +251,13 @@ namespace PkgFolderCreateManager
 
 			public string GetParam(string ItemKey)
 			{
-				string RetStr = m_ParamDictionary[ItemKey];
+				string RetStr = m_MgrParams[ItemKey];
 				return RetStr;
 			}
 
 			public void SetParam(string ItemKey, string ItemValue)
 			{
-				m_ParamDictionary[ItemKey]=ItemValue;
+				m_MgrParams[ItemKey]=ItemValue;
 			}
 
 			private string DbCStr(object InpObj)

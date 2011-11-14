@@ -1,0 +1,5 @@
+Package Folder Create Manager History
+
+Version 2.0.4334; November 13, 2011
+	- Updated to support both the old-style and new-style XML tags
+	- Now calling RequestFolderCreateTask in the DMS_Pipeline database every 30 seconds to query for data packages that need to have a folder created

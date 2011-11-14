@@ -32,6 +32,8 @@ namespace PkgFolderCreateManager
 			public static StringDictionary ParseCommandXML(string InputXML)
 			{
 				StringDictionary returnDict = new StringDictionary();
+				System.Xml.XmlNode oNode;
+				int XMLParamVersion = -1;
 
 				XmlDocument doc = new XmlDocument();
 				doc.LoadXml(InputXML);
@@ -39,10 +41,37 @@ namespace PkgFolderCreateManager
 				try
 				{
 					returnDict.Add("package",doc.SelectSingleNode("//package").InnerText);
-					returnDict.Add("path_local_root", doc.SelectSingleNode("//path_local_root").InnerText);
-					returnDict.Add("path_shared_root", doc.SelectSingleNode("//path_shared_root").InnerText);
-					returnDict.Add("path_folder", doc.SelectSingleNode("//path_folder").InnerText);
-					//returnDict.Add("cmd", doc.SelectSingleNode("//cmd").InnerText);
+
+					oNode = doc.SelectSingleNode("//Path_Local_Root");
+					if (oNode != null)
+						XMLParamVersion = 1;
+
+					if (XMLParamVersion == -1) {
+						oNode = doc.SelectSingleNode("//local");
+
+						if (oNode != null)
+							XMLParamVersion = 0;
+					}
+
+					if (XMLParamVersion == -1)
+						throw new Exception("Unrecognized XML Format; should contain node Path_Local_Root or node local");
+
+					if (XMLParamVersion == 0) {
+						returnDict.Add("local", doc.SelectSingleNode("//local").InnerText);
+						returnDict.Add("share", doc.SelectSingleNode("//share").InnerText);
+						returnDict.Add("year", doc.SelectSingleNode("//year").InnerText);
+						returnDict.Add("team", doc.SelectSingleNode("//team").InnerText);
+						returnDict.Add("folder", doc.SelectSingleNode("//folder").InnerText);
+						//returnDict.Add("ID", doc.SelectSingleNode("//ID").InnerText);
+						//returnDict.Add("cmd", doc.SelectSingleNode("//cmd").InnerText);
+					}
+
+					if (XMLParamVersion == 1) {
+						returnDict.Add("Path_Local_Root", doc.SelectSingleNode("//Path_Local_Root").InnerText);
+						returnDict.Add("Path_Shared_Root", doc.SelectSingleNode("//Path_Shared_Root").InnerText);
+						returnDict.Add("Path_Folder", doc.SelectSingleNode("//Path_Folder").InnerText);
+						//returnDict.Add("cmd", doc.SelectSingleNode("//cmd").InnerText);
+					}
 
 					return returnDict;
 				}

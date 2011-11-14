@@ -84,6 +84,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="clsBroadcastCmd.cs" />
+    <Compile Include="clsDbTask.cs" />
+    <Compile Include="clsFolderCreateTask.cs" />
     <Compile Include="clsFolderTools.cs" />
     <Compile Include="clsLogTools.cs" />
     <Compile Include="clsMainProg.cs" />
@@ -94,6 +96,7 @@
     <Compile Include="clsXMLTools.cs" />
     <Compile Include="IMgrParams.cs" />
     <Compile Include="IStatusFile.cs" />
+    <Compile Include="ITaskParams.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
