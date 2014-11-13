@@ -1,5 +1,8 @@
 Package Folder Create Manager History
 
+Version 2.0.5413; November 12, 2014
+	- Added comment that LogStatusToMessageQueue is now False in the Manager Control database
+
 Version 2.0.4335; November 14, 2011
 	- Added parameter CheckDataFolderCreateQueue to the Manager Control DB to configure
 	  whether or not a manager should call stored procedure RequestFolderCreateTask

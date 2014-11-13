@@ -350,7 +350,7 @@ namespace PkgFolderCreateManager
 						logCount = 0;
 
 						// If it has been > 24 hours since last log entry, tell the log that everything's OK.
-						//	Otherwise, it might be seveal days between log entries.
+						//	Otherwise, it might be several days between log entries.
 						if (DateTime.Compare(DateTime.UtcNow, lastLoopRun.AddHours(24)) > 0)
 						{
 							lastLoopRun = DateTime.UtcNow;
