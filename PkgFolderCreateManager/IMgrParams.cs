@@ -14,14 +14,14 @@ using System.Text;
 
 namespace PkgFolderCreateManager
 {
-	interface IMgrParams
-	{
-		//*********************************************************************************************************
-		// Defines interface for manager parameter handling
-		//**********************************************************************************************************
+    interface IMgrParams
+    {
+        //*********************************************************************************************************
+        // Defines interface for manager parameter handling
+        //**********************************************************************************************************
 
-		string GetParam(string ItemKey);
-		void SetParam(string ItemKey, string ItemValue);
+        string GetParam(string ItemKey);
+        void SetParam(string ItemKey, string ItemValue);
 
-	}	// End interface
-}	// End namespace
+    }    // End interface
+}    // End namespace

@@ -18,95 +18,95 @@ using MQCore;
 
 namespace PkgFolderCreateManager
 {
-	class clsControlMessageTools
-	{
-		//*********************************************************************************************************
-		// Handles receiving control commands from message broker
-		//**********************************************************************************************************
+    class clsControlMessageTools
+    {
+        //*********************************************************************************************************
+        // Handles receiving control commands from message broker
+        //**********************************************************************************************************
 
-		#region "Constants"
-		#endregion
+        #region "Constants"
+        #endregion
 
-		#region "Class variables"
-			private IMgrParams m_MgrSettings = null;
-			private SimpleTopicSubscriber m_TopSubscribe;
-		#endregion
+        #region "Class variables"
+            private IMgrParams m_MgrSettings = null;
+            private SimpleTopicSubscriber m_TopSubscribe;
+        #endregion
 
-		#region "Events"
-		#endregion
+        #region "Events"
+        #endregion
 
-		#region "Event handlers"
-			private void subscriber_OnMessageReceived(string processor, string message)
-			{
-				//TODO: Parse the message and take appropriate action
-			}
+        #region "Event handlers"
+            private void subscriber_OnMessageReceived(string processor, string message)
+            {
+                //TODO: Parse the message and take appropriate action
+            }
 
-			void connection_OnConnectionException(Exception e)
-			{
-				string s = "=== Connection Exception ===" + Environment.NewLine;
-				MessageBox.Show(s + e.Message);
-			}
-		#endregion
+            void connection_OnConnectionException(Exception e)
+            {
+                string s = "=== Connection Exception ===" + Environment.NewLine;
+                MessageBox.Show(s + e.Message);
+            }
+        #endregion
 
-		#region "Properties"
-		#endregion
+        #region "Properties"
+        #endregion
 
-		#region "Methods"
-			/// <summary>
-			/// Constructor
-			/// </summary>
-			/// <param name="MgrSettings">Mgr settings object</param>
-			public clsControlMessageTools(clsMgrSettings MgrSettings)
-			{
-				m_MgrSettings = MgrSettings;
-			}	// End sub
+        #region "Methods"
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="MgrSettings">Mgr settings object</param>
+            public clsControlMessageTools(clsMgrSettings MgrSettings)
+            {
+                m_MgrSettings = MgrSettings;
+            }    // End sub
 
-			public bool Initialize()
-			{
-				// Set up a message broker connection for receiving folder creation commands
-				if (!InitializeMessageConnection())
-				{
-					return false;
-				}
+            public bool Initialize()
+            {
+                // Set up a message broker connection for receiving folder creation commands
+                if (!InitializeMessageConnection())
+                {
+                    return false;
+                }
 
-				// Initialization successful
-				return true;
-			}	// End sub
+                // Initialization successful
+                return true;
+            }    // End sub
 
-			/// <summary>
-			/// Initializes a connection to the control command message broker
-			/// </summary>
-			private bool InitializeMessageConnection()
-			{
-				// initialize the connection parameter fields
-				string msgBrokerURL = m_MgrSettings.GetParam("ControlQueueURI");
-				string msgTopicName = m_MgrSettings.GetParam("ControlQueueTopic");
+            /// <summary>
+            /// Initializes a connection to the control command message broker
+            /// </summary>
+            private bool InitializeMessageConnection()
+            {
+                // initialize the connection parameter fields
+                string msgBrokerURL = m_MgrSettings.GetParam("ControlQueueURI");
+                string msgTopicName = m_MgrSettings.GetParam("ControlQueueTopic");
 
-				// get a unique name for the message client
-				DateTime tn = DateTime.Now; // Alternative: System.Guid.NewGuid().ToString();
-				string strClientID = System.Net.Dns.GetHostEntry("localhost").HostName + '_' + tn.Ticks.ToString();
+                // get a unique name for the message client
+                DateTime tn = DateTime.Now; // Alternative: System.Guid.NewGuid().ToString();
+                string strClientID = System.Net.Dns.GetHostEntry("localhost").HostName + '_' + tn.Ticks.ToString();
 
-				if (this.m_TopSubscribe != null)
-				{
-					this.m_TopSubscribe.Dispose();
-				}
-				try
-				{
-					this.m_TopSubscribe = new SimpleTopicSubscriber(msgTopicName, msgBrokerURL, ref strClientID);
-					this.m_TopSubscribe.OnMessageReceived += new MessageReceivedDelegate(subscriber_OnMessageReceived);
-					this.m_TopSubscribe.OnConnectionException += new ConnectionExceptionDelegate(connection_OnConnectionException);
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.INFO,"Control broker connected");
+                if (this.m_TopSubscribe != null)
+                {
+                    this.m_TopSubscribe.Dispose();
+                }
+                try
+                {
+                    this.m_TopSubscribe = new SimpleTopicSubscriber(msgTopicName, msgBrokerURL, ref strClientID);
+                    this.m_TopSubscribe.OnMessageReceived += new MessageReceivedDelegate(subscriber_OnMessageReceived);
+                    this.m_TopSubscribe.OnConnectionException += new ConnectionExceptionDelegate(connection_OnConnectionException);
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.INFO,"Control broker connected");
 
-					// Everything worked!
-					return true;
-				}
-				catch (Exception Ex)
-				{
-					string ErrMsg = "Exception initializing connection to control broker";
-					clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, ErrMsg, Ex);
-					return false;
-				}
-			}	// End sub
-		#endregion
-	}	// End class
-}	// End namespace
+                    // Everything worked!
+                    return true;
+                }
+                catch (Exception Ex)
+                {
+                    string ErrMsg = "Exception initializing connection to control broker";
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, ErrMsg, Ex);
+                    return false;
+                }
+            }    // End sub
+        #endregion
+    }    // End class
+}    // End namespace

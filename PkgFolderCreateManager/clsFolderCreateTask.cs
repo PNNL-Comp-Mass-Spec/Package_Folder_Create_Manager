@@ -328,5 +328,5 @@ namespace PkgFolderCreateManager
                 return Outcome;
             }
         #endregion
-    }	// End class
-}	// End namespace
+    }    // End class
+}    // End namespace

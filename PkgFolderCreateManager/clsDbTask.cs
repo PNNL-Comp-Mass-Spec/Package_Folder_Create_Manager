@@ -68,7 +68,7 @@ namespace PkgFolderCreateManager
             }
 
             public StringDictionary TaskDictionary 
-            {	get 
+            {    get 
                 { 
                     return m_JobParams;
                 } 
@@ -81,7 +81,7 @@ namespace PkgFolderCreateManager
                 m_MgrParams = MgrParams;
                 m_ConnStr = m_MgrParams.GetParam("ConnectionString");
                 m_BrokerConnStr = m_MgrParams.GetParam("brokerconnectionstring");
-            }	// End sub
+            }    // End sub
         #endregion
 
         #region "Methods"
@@ -126,7 +126,7 @@ namespace PkgFolderCreateManager
                 {
                     clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, s);
                 }
-            }	// End sub
+            }    // End sub
 
             /// <summary>
             /// Method for executing a db stored procedure, assuming no data table is returned
@@ -137,9 +137,9 @@ namespace PkgFolderCreateManager
             protected virtual int ExecuteSP(SqlCommand spCmd, string connStr)
             {
                 DataTable dummyTable = null;
-                return ExecuteSP(spCmd, ref dummyTable, connStr);				
+                return ExecuteSP(spCmd, ref dummyTable, connStr);                
 
-            }	// End sub
+            }    // End sub
 
             /// <summary>
             /// Method for executing a db stored procedure if a data table is to be returned
@@ -179,10 +179,10 @@ namespace PkgFolderCreateManager
                                     myTimer.Stop();
                                     resCode = (int)da.SelectCommand.Parameters["@Return"].Value;
                                     if ((outTable != null) && (ds.Tables.Count>0)) outTable = ds.Tables[0];
-                                }	// ds
-                            }	//de
+                                }    // ds
+                            }    //de
                             cn.InfoMessage -= OnInfoMessage;
-                        }	// cn
+                        }    // cn
                         LogErrorEvents();
                         break;
                     }
@@ -217,7 +217,7 @@ namespace PkgFolderCreateManager
                 }
 
                 return resCode;
-            }	// End sub
+            }    // End sub
 
             /// <summary>
             /// Debugging routine for printing SP calling params
@@ -238,7 +238,7 @@ namespace PkgFolderCreateManager
                 }
 
                 clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Parameter list:" + myMsg);
-            }	// End sub
+            }    // End sub
 
             protected virtual bool FillParamDict(DataTable dt)
             {
@@ -279,7 +279,7 @@ namespace PkgFolderCreateManager
                     clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
                     return false;
                 }
-            }	// End sub
+            }    // End sub
 
             protected string DbCStr(object InpObj)
             {
@@ -292,7 +292,7 @@ namespace PkgFolderCreateManager
                 {
                     return InpObj.ToString();
                 }
-            }	// End sub
+            }    // End sub
 
             protected float DbCSng(object InpObj)
             {
@@ -305,7 +305,7 @@ namespace PkgFolderCreateManager
                 {
                     return (float)InpObj;
                 }
-            }	// End sub
+            }    // End sub
 
             protected double DbCDbl(object InpObj)
             {
@@ -318,7 +318,7 @@ namespace PkgFolderCreateManager
                 {
                     return (double)InpObj;
                 }
-            }	// End sub
+            }    // End sub
 
             protected int DbCInt(object InpObj)
             {
@@ -331,7 +331,7 @@ namespace PkgFolderCreateManager
                 {
                     return (int)InpObj;
                 }
-            }	// End sub
+            }    // End sub
 
             protected long DbCLng(object InpObj)
             {
@@ -344,7 +344,7 @@ namespace PkgFolderCreateManager
                 {
                     return (long)InpObj;
                 }
-            }	// End sub
+            }    // End sub
 
             protected decimal DbCDec(object InpObj)
             {
@@ -357,7 +357,7 @@ namespace PkgFolderCreateManager
                 {
                     return (decimal)InpObj;
                 }
-            }	// End sub
+            }    // End sub
 
             protected short DbCShort(object InpObj)
             {
@@ -370,7 +370,7 @@ namespace PkgFolderCreateManager
                 {
                     return (short)InpObj;
                 }
-            }	// End sub
+            }    // End sub
         #endregion
 
         #region "Event handlers"
@@ -395,7 +395,7 @@ namespace PkgFolderCreateManager
                     errString.Append(", Server: " + err.Server);
                     m_ErrorList.Add(errString.ToString());
                 }
-            }	// End sub
+            }    // End sub
         #endregion
-    }	// End class
-}	// End namespace
+    }    // End class
+}    // End namespace

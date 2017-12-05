@@ -14,34 +14,34 @@ using System.Text;
 
 namespace PkgFolderCreateManager
 {
-	public class clsBroadcastCmd
-	{
-		//*********************************************************************************************************
-		// Class to hold data receieved from Broadcast command queue for control of manager
-		//**********************************************************************************************************
+    public class clsBroadcastCmd
+    {
+        //*********************************************************************************************************
+        // Class to hold data receieved from Broadcast command queue for control of manager
+        //**********************************************************************************************************
 
-		#region "Class variables"
-			private List<string> m_MachineList = new List<string>();
-		#endregion
+        #region "Class variables"
+            private List<string> m_MachineList = new List<string>();
+        #endregion
 
-		#region "Properties"
-			/// <summary>
-			/// List of machines the received message applies to
-			/// </summary>
-			public List<string> MachineList
-			{
-				get
-				{
-					return m_MachineList;
-				}
-				set
-				{
-					m_MachineList = value;
-				}
-			}
+        #region "Properties"
+            /// <summary>
+            /// List of machines the received message applies to
+            /// </summary>
+            public List<string> MachineList
+            {
+                get
+                {
+                    return m_MachineList;
+                }
+                set
+                {
+                    m_MachineList = value;
+                }
+            }
 
-			// The command that was broadcast
-			public string MachCmd { get; set; }
-		#endregion
-	}	// End class
-}	// End namespace
+            // The command that was broadcast
+            public string MachCmd { get; set; }
+        #endregion
+    }    // End class
+}    // End namespace

@@ -15,20 +15,20 @@ using System.Collections.Specialized;
 
 namespace PkgFolderCreateManager
 {
-	public interface ITaskParams
-	{
-		//*********************************************************************************************************
-		// Interface for step task parameters
-		//**********************************************************************************************************
+    public interface ITaskParams
+    {
+        //*********************************************************************************************************
+        // Interface for step task parameters
+        //**********************************************************************************************************
 
-		#region "Properties"
-			StringDictionary TaskDictionary { get; }
-		#endregion
+        #region "Properties"
+            StringDictionary TaskDictionary { get; }
+        #endregion
 
-		#region "Methods"
-		string GetParam(string name);
-			bool AddAdditionalParameter(string paramName, string paramValue);
-			void SetParam(string keyName, string value);
-		#endregion
-	}	// End interface
-}	// End namespace
+        #region "Methods"
+        string GetParam(string name);
+            bool AddAdditionalParameter(string paramName, string paramValue);
+            void SetParam(string keyName, string value);
+        #endregion
+    }    // End interface
+}    // End namespace

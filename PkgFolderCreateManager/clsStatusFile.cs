@@ -6,8 +6,8 @@
 // Created 06/18/2009
 //
 // Last modified 06/18/2009
-//						- 08/14/2009 (DAC) - Added additional parameters and methods for status reporting
-//						- 08/21/2009 (DAC) - Added duration in minutes to status output
+//                        - 08/14/2009 (DAC) - Added additional parameters and methods for status reporting
+//                        - 08/21/2009 (DAC) - Added duration in minutes to status output
 //*********************************************************************************************************
 using System;
 using System.Xml;
@@ -79,7 +79,7 @@ namespace PkgFolderCreateManager
             Dataset = "";
             JobNumber = 0;
             Tool = "";
-        }	// End sub
+        }    // End sub
         #endregion
 
         #region "Methods"
@@ -91,7 +91,7 @@ namespace PkgFolderCreateManager
         private string ConvertMgrStatusToString(EnumMgrStatus StatusEnum)
         {
             return StatusEnum.ToString("G");
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Converts the task status enum to a string value
@@ -101,7 +101,7 @@ namespace PkgFolderCreateManager
         private string ConvertTaskStatusToString(EnumTaskStatus StatusEnum)
         {
             return StatusEnum.ToString("G");
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Converts the task detail status enum to a string value
@@ -111,7 +111,7 @@ namespace PkgFolderCreateManager
         private string ConvertTaskDetailStatusToString(EnumTaskStatusDetail StatusEnum)
         {
             return StatusEnum.ToString("G");
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Writes the status file
@@ -150,8 +150,8 @@ namespace PkgFolderCreateManager
                 {
                     XWriter.WriteElementString("ErrMsg", ErrMsg);
                 }
-                XWriter.WriteEndElement();		//Error messages
-                XWriter.WriteEndElement();		//Manager section
+                XWriter.WriteEndElement();        //Error messages
+                XWriter.WriteEndElement();        //Manager section
 
                 XWriter.WriteStartElement("Task");
                 XWriter.WriteElementString("Tool", Tool);
@@ -168,9 +168,9 @@ namespace PkgFolderCreateManager
                 XWriter.WriteElementString("MostRecentLogMessage", clsStatusData.MostRecentLogMessage);
                 XWriter.WriteElementString("MostRecentJobInfo", MostRecentJobInfo);
                 XWriter.WriteElementString("SpectrumCount", SpectrumCount.ToString());
-                XWriter.WriteEndElement();		//Task details section
-                XWriter.WriteEndElement();		//Task section
-                XWriter.WriteEndElement();		//Root section
+                XWriter.WriteEndElement();        //Task details section
+                XWriter.WriteEndElement();        //Task section
+                XWriter.WriteEndElement();        //Root section
 
                 //Close the document, but don't close the writer yet
                 XWriter.WriteEndDocument();
@@ -228,7 +228,7 @@ namespace PkgFolderCreateManager
             Progress = PercentComplete;
 
             this.WriteStatusFile();
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Updates status file (Overloaded)
@@ -241,7 +241,7 @@ namespace PkgFolderCreateManager
             Progress = PercentComplete;
 
             this.WriteStatusFile();
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Updates status file (Overloaded)
@@ -256,7 +256,7 @@ namespace PkgFolderCreateManager
             SpectrumCount = DTACount;
 
             this.WriteStatusFile();
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Sets status file to show mahager not running
@@ -281,7 +281,7 @@ namespace PkgFolderCreateManager
             TaskStatusDetail = EnumTaskStatusDetail.No_Task;
 
             this.WriteStatusFile();
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Updates status file to show manager disabled
@@ -306,7 +306,7 @@ namespace PkgFolderCreateManager
             TaskStatusDetail = EnumTaskStatusDetail.No_Task;
 
             this.WriteStatusFile();
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Writes the status to the message queue
@@ -348,7 +348,7 @@ namespace PkgFolderCreateManager
                         clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
                 }
             }
-        }	// End sub
+        }    // End sub
 
         /// <summary>
         /// Initializes the status from a file, if file exists
@@ -385,5 +385,5 @@ namespace PkgFolderCreateManager
         }
 
         #endregion
-    }	// End class
-}	// End namespace
+    }    // End class
+}    // End namespace
