@@ -206,6 +206,8 @@ namespace PkgFolderCreateManager
             var moduleName = m_MgrSettings.GetParam("modulename");
             clsLogTools.CreateDbLogger(logCnStr, moduleName);
 
+            clsLogTools.MessageLogged += MessageLoggedHandler;
+
             // Make the initial log entry
             var myMsg = "=== Started Package Folder Creation Manager V" + Application.ProductVersion + " ===== ";
             clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, myMsg);
@@ -460,6 +462,20 @@ namespace PkgFolderCreateManager
                 clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
             else
                 clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
+
+        }
+
+        private void MessageLoggedHandler(string message, clsLogTools.LogLevels logLevel)
+        {
+            var timeStamp = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+
+            // Update the status file data
+            clsStatusData.MostRecentLogMessage = timeStamp + "; " + message + "; " + logLevel;
+
+            if (logLevel <= clsLogTools.LogLevels.ERROR)
+            {
+                clsStatusData.AddErrorMessage(timeStamp + "; " + message + "; " + logLevel);
+            }
 
         }
 
