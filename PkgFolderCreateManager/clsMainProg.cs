@@ -194,10 +194,14 @@ namespace PkgFolderCreateManager
                 return false;
             }
 
-            // Setup the logger
-            var logFileName = m_MgrSettings.GetParam("logfilename");
+            // Setup the loggers
+            var logFileNameBase = m_MgrSettings.GetParam("logfilename");
+            if (string.IsNullOrWhiteSpace(logFileNameBase))
+                logFileNameBase = "FolderCreate";
+
             var debugLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
-            clsLogTools.CreateFileLogger(logFileName, debugLevel);
+            clsLogTools.CreateFileLogger(logFileNameBase, debugLevel);
+
             var logCnStr = m_MgrSettings.GetParam("connectionstring");
             var moduleName = m_MgrSettings.GetParam("modulename");
             clsLogTools.CreateDbLogger(logCnStr, moduleName);
