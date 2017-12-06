@@ -243,7 +243,7 @@ namespace PkgFolderCreateManager
             if (m_MgrParams.ContainsKey(itemKey))
                 return m_MgrParams[itemKey];
 
-            return String.Empty;
+            return string.Empty;
         }
 
         public void SetParam(string itemKey, string itemValue)

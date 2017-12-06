@@ -1,6 +1,11 @@
 Package Folder Create Manager History
 
-Version 2.1.6548; December 15, 2017
+Version 2.1.6549; December 6, 2017
+	- Synchronize clsLogTools with other projects
+		- Initialize the log file with CreateFileLogger
+		- Archives old log files daily
+
+Version 2.1.6548; December 5, 2017
 	- Update to .NET 4.6.2
 	- Use PRISM.dll
 	- Auto archive old log files
