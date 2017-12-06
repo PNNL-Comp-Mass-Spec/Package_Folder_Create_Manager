@@ -1,161 +1,202 @@
 ﻿
 //*********************************************************************************************************
-// Written by Dave Clark for the US Department of Energy 
+// Written by Dave Clark for the US Department of Energy
 // Pacific Northwest National Laboratory, Richland, WA
 // Copyright 2009, Battelle Memorial Institute
 // Created 07/07/2009
-//
-// Last modified 07/07/2009
 //*********************************************************************************************************
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Collections.Specialized;
 
 namespace PkgFolderCreateManager
 {
+    /// <summary>
+    /// Performs folder creation
+    /// </summary>
     public class clsFolderTools
     {
-        //*********************************************************************************************************
-        // Performs folder creation
-        //**********************************************************************************************************
 
         #region "Constants"
-            private const bool WARN_IF_FOLDER_EXISTS = true;
-            private const bool NO_WARN_IF_FOLDER_EXISTS = false;
+
+        private const bool WARN_IF_FOLDER_EXISTS = true;
+        private const bool NO_WARN_IF_FOLDER_EXISTS = false;
+
         #endregion
 
         #region "Methods"
-            /// <summary>
-            /// Creates specified folder
-            /// </summary>
-            /// <param name="folderParams">String dictionary containing parameters for folder creation</param>
-            public static void CreateFolder(string perspective, StringDictionary folderParams, string Source)
+
+        /// <summary>
+        /// Creates specified folder
+        /// </summary>
+        /// <param name="perspective"></param>
+        /// <param name="folderParams">String dictionary containing parameters for folder creation</param>
+        /// <param name="source"></param>
+        public static void CreateFolder(string perspective, StringDictionary folderParams, string source)
+        {
+            var msg = "Processing command for package " + folderParams["package"] + " (Source = " + source + ")";
+            LogInfo(msg);
+
+            // // Test for add or update
+            // if (folderParams["cmd"].ToLower() != "add")
+            // {
+            //   // Ignore the command if it isn't an "add"
+            //   msg = "Package " + folderParams["package"] + ", command '" + folderParams["cmd"] + "' not supported. Message ignored";
+            //   LogWarning(msg);
+            //   return;
+            // }
+            // else
+            // {
+            //   msg = "Creating folder for package " + folderParams["package"];
+            //   LogInfo(msg);
+            // }
+
+            // Determine if client or server perspective and initialize path
+            string folderPath;
+            string[] pathParts;
+            int XMLParamVersion;
+
+            if (folderParams.ContainsKey("Path_Shared_Root"))
             {
-                string msg = "Processing command for package " + folderParams["package"] + " (Source = " + Source + ")";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
+                // New-style XML
+                // folderParams will have entries named: package, Path_Local_Root, Path_Shared_Root, and Path_Folder
 
-                //// Test for add or update
-                //if (folderParams["cmd"].ToLower() != "add")
-                //{
-                //   // Ignore the command if it isn't an "add"
-                //   msg = "Package " + folderParams["package"] + ", command '" + folderParams["cmd"] + "' not supported. Message ignored";
-                //   clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, msg);
-                //   return;
-                //}
-                //else
-                //{
-                //   msg = "Creating folder for package " + folderParams["package"];
-                //   clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
-                //}
-                
-                // Determine if client or server perspective and initialize path
-                string folderPath;
-                string[] pathParts;
-                int XMLParamVersion = 0;
+                XMLParamVersion = 1;
 
-                if (folderParams.ContainsKey("Path_Shared_Root")) {
-                    // New-style XML
-                    // folderParams will have entries named: package, Path_Local_Root, Path_Shared_Root, and Path_Folder
-
-                    XMLParamVersion = 1;
-
-                    if (perspective.ToLower() == "client") {
-                        folderPath = folderParams["Path_Shared_Root"];
-                    } else {
-                        folderPath = folderParams["Path_Local_Root"];
-                    }
-
-
-                } else {
-                    // Old-style XML
-                    // folderParams will have entries named: package, local, share, year, team, folder, and ID
-
-                    XMLParamVersion = 0;
-
-                    if (perspective.ToLower() == "client") {
-                        folderPath = folderParams["share"];
-                    } else {
-                        folderPath = folderParams["local"];
-                    }
-
+                if (perspective.ToLower() == "client")
+                {
+                    folderPath = folderParams["Path_Shared_Root"];
+                }
+                else
+                {
+                    folderPath = folderParams["Path_Local_Root"];
                 }
 
-                // Determine if root-level folder exists; error out if not present
-                if (!Directory.Exists(folderPath))
+
+            }
+            else
+            {
+                // Old-style XML
+                // folderParams will have entries named: package, local, share, year, team, folder, and ID
+
+                XMLParamVersion = 0;
+
+                if (perspective.ToLower() == "client")
                 {
-                    msg = "Root folder " + folderPath + " not found";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
+                    folderPath = folderParams["share"];
+                }
+                else
+                {
+                    folderPath = folderParams["local"];
+                }
+
+            }
+
+            // Determine if root-level folder exists; error out if not present
+            if (!Directory.Exists(folderPath))
+            {
+                msg = "Root folder " + folderPath + " not found";
+                LogError(msg);
+                return;
+            }
+
+            if (XMLParamVersion == 1)
+            {
+                // Parse folder string
+                pathParts = folderParams["Path_Folder"].Split(new[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
+            }
+            else
+            {
+                pathParts = new string[3];
+                pathParts[0] = folderParams["team"];
+                pathParts[1] = folderParams["year"];
+                pathParts[2] = folderParams["folder"];
+            }
+
+            // Create desired path, one subfolder at a time
+            for (var indx = 0; indx < pathParts.Length; indx++)
+            {
+                folderPath = Path.Combine(folderPath, pathParts[indx]);
+                bool bLogIfAlreadyExists;
+                if (indx == pathParts.Length - 1)
+                    bLogIfAlreadyExists = true;
+                else
+                    bLogIfAlreadyExists = false;
+
+                if (!CreateFolderIfNotFound(folderPath, NO_WARN_IF_FOLDER_EXISTS, bLogIfAlreadyExists))
+                {
+                    // Couldn't create folder, so exit
+                    // Error reporting handled within called function
                     return;
                 }
+            }
+        }
 
-                if (XMLParamVersion == 1) {
-                    // Parse folder string
-                    pathParts = folderParams["Path_Folder"].Split(new string[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
-                } else {
-                    pathParts = new string[3];
-                    pathParts[0] = folderParams["team"];
-                    pathParts[1] = folderParams["year"];
-                    pathParts[2] = folderParams["folder"];
-                }
-
-                bool bLogIfAlreadyExists;
-
-                // Create desired path, one subfolder at a time
-                for (int indx = 0; indx < pathParts.Length; indx++)
-                {
-                    folderPath = Path.Combine(folderPath, pathParts[indx]);
-                    if (indx == pathParts.Length - 1)
-                        bLogIfAlreadyExists = true;
-                    else
-                        bLogIfAlreadyExists = false;
-
-                    if (!CreateFolderIfNotFound(folderPath, NO_WARN_IF_FOLDER_EXISTS, bLogIfAlreadyExists))
-                    {
-                        // Couldn't create folder, so exit
-                        // Error reporting handled within called function
-                        return;
-                    }
-                }
-            }    // End sub
-
-            /// <summary>
-            /// Creates specified folder
-            /// </summary>
-            /// <param name="FolderName">Name of folder to create</param>
-            /// <returns>TRUE for success; FALSE otherwise</returns>
-            private static bool CreateFolderIfNotFound(string FolderName, bool WarnIfExists, bool LogIfExists)
+        /// <summary>
+        /// Creates specified folder
+        /// </summary>
+        /// <param name="folderPath">Path to the folder to create</param>
+        /// <param name="warnIfExists">When true, log a warning if the directory exiss</param>
+        /// <param name="logIfExists">When true, log a status message if the directory exists</param>
+        /// <returns>TRUE for success; FALSE otherwise</returns>
+        private static bool CreateFolderIfNotFound(string folderPath, bool warnIfExists, bool logIfExists)
+        {
+            if (Directory.Exists(folderPath))
             {
-                if (Directory.Exists(FolderName))
+                // Folder exists
+                var msg = "Folder " + folderPath + " already exists";
+                if (warnIfExists)
                 {
-                    // Folder exists
-                    string Msg = "Folder " + FolderName + " already exists";
-                    if (WarnIfExists) {
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, Msg);
-                    } else {
-                        if (LogIfExists)
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
-                    }
-                    return true;
+                    LogWarning(msg);
                 }
+                else
+                {
+                    if (logIfExists)
+                        LogInfo(msg);
+                }
+                return true;
+            }
 
-                // Folder not found, so try to create it
-                try
-                {
-                    Directory.CreateDirectory(FolderName);
-                    string Msg = "Folder " + FolderName + " created";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, Msg);
-                    return true;
-                }
-                catch (Exception Ex)
-                {
-                    string Msg = "Exception creating folder " + FolderName;
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, Msg, Ex);
-                    return false;
-                }
-            }    // End sub
+            // Folder not found, so try to create it
+            try
+            {
+                Directory.CreateDirectory(folderPath);
+                var msg = "Folder " + folderPath + " created";
+                LogInfo(msg);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var msg = "Exception creating folder " + folderPath;
+                LogError(msg, ex);
+                return false;
+            }
+        }
+
+        private static void LogInfo(string message)
+        {
+            Console.WriteLine(message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, message);
+        }
+
+        private static void LogWarning(string message)
+        {
+            PRISM.ConsoleMsgUtils.ShowWarning(message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, message);
+        }
+
+        private static void LogError(string message, Exception ex = null)
+        {
+            PRISM.ConsoleMsgUtils.ShowError(message);
+
+            if (ex == null)
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
+            else
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
+
+        }
+
         #endregion
-    }    // End class
-}    // End namespace
+    }
+}

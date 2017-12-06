@@ -1,12 +1,13 @@
 
 //*********************************************************************************************************
-// Written by Dave Clark for the US Department of Energy 
+// Written by Dave Clark for the US Department of Energy
 // Pacific Northwest National Laboratory, Richland, WA
 // Copyright 2009, Battelle Memorial Institute
 // Created 09/10/2009
-//
 //*********************************************************************************************************
+
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Data.SqlClient;
 using System.Collections.Specialized;
@@ -14,13 +15,14 @@ using System.Data;
 
 namespace PkgFolderCreateManager
 {
+    /// <summary>
+    ///  Base class for handling task-related data
+    /// </summary>
     abstract class clsDbTask
     {
-        //*********************************************************************************************************
-        // Base class for handling task-related data
-        //**********************************************************************************************************
 
         #region "Enums"
+
         public enum EnumCloseOutType : short
         {
             CLOSEOUT_SUCCESS = 0,
@@ -42,360 +44,368 @@ namespace PkgFolderCreateManager
             NoTaskFound = 1,
             ResultError = 2
         }
+
         #endregion
 
         #region "Constants"
-            protected const int RET_VAL_OK = 0;
-            protected const int RET_VAL_TASK_NOT_AVAILABLE = 53000;
+
+        protected const int RET_VAL_OK = 0;
+        protected const int RET_VAL_TASK_NOT_AVAILABLE = 53000;
+
         #endregion
 
         #region "Class variables"
-            protected IMgrParams m_MgrParams;
-            protected string m_ConnStr;
-            protected string m_BrokerConnStr;
-            protected StringCollection m_ErrorList = new StringCollection();
-            protected bool m_TaskWasAssigned = false;
-            protected StringDictionary m_JobParams = new StringDictionary();
+
+        protected IMgrParams m_MgrParams;
+        protected string m_ConnStr;
+        protected string m_BrokerConnStr;
+        protected StringCollection m_ErrorList = new StringCollection();
+        protected bool m_TaskWasAssigned = false;
+        protected Dictionary<string, string> m_JobParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         #endregion
 
         #region "Properties"
-            public bool TaskWasAssigned
-            {
-                get
-                {
-                    return m_TaskWasAssigned;
-                }
-            }
 
-            public StringDictionary TaskDictionary 
-            {    get 
-                { 
-                    return m_JobParams;
-                } 
-            }
-        #endregion
+        public bool TaskWasAssigned => m_TaskWasAssigned;
 
-        #region "Constructors"
-            protected clsDbTask(IMgrParams MgrParams)
-            {
-                m_MgrParams = MgrParams;
-                m_ConnStr = m_MgrParams.GetParam("ConnectionString");
-                m_BrokerConnStr = m_MgrParams.GetParam("brokerconnectionstring");
-            }    // End sub
+        public Dictionary<string, string> TaskDictionary => m_JobParams;
+
         #endregion
 
         #region "Methods"
-            /// <summary>
-            /// Requests a capture pipeline task
-            /// </summary>
-            /// <returns>RequestTaskResult enum specifying call result</returns>
-            public abstract EnumRequestTaskResult RequestTask();
 
-            /// <summary>
-            /// Closes a capture pipeline task (Overloaded)
-            /// </summary>
-            /// <param name="taskResult">Enum representing task state</param>
-            public abstract void CloseTask(EnumCloseOutType taskResult);
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="MgrParams"></param>
+        protected clsDbTask(IMgrParams MgrParams)
+        {
+            m_MgrParams = MgrParams;
+            m_ConnStr = m_MgrParams.GetParam("ConnectionString");
+            m_BrokerConnStr = m_MgrParams.GetParam("brokerconnectionstring");
+        }
 
-            /// <summary>
-            /// Closes a capture pipeline task (Overloaded)
-            /// </summary>
-            /// <param name="taskResult">Enum representing task state</param>
-            /// <param name="closeoutMsg">Message related to task closeout</param>
-            public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg);
+        /// <summary>
+        /// Requests a capture pipeline task
+        /// </summary>
+        /// <returns>RequestTaskResult enum specifying call result</returns>
+        public abstract EnumRequestTaskResult RequestTask();
 
-            /// <summary>
-            /// Closes a capture pipeline task (Overloaded)
-            /// </summary>
-            /// <param name="taskResult">Enum representing task state</param>
-            /// <param name="closeoutMsg">Message related to task closeout</param>
-            /// <param name="evalCode">Enum representing evaluation results</param>
-            public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode);
+        /// <summary>
+        /// Closes a capture pipeline task (Overloaded)
+        /// </summary>
+        /// <param name="taskResult">Enum representing task state</param>
+        public abstract void CloseTask(EnumCloseOutType taskResult);
 
-            /// <summary>
-            /// Reports database errors to local log
-            /// </summary>
-            protected virtual void LogErrorEvents()
+        /// <summary>
+        /// Closes a capture pipeline task (Overloaded)
+        /// </summary>
+        /// <param name="taskResult">Enum representing task state</param>
+        /// <param name="closeoutMsg">Message related to task closeout</param>
+        public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg);
+
+        /// <summary>
+        /// Closes a capture pipeline task (Overloaded)
+        /// </summary>
+        /// <param name="taskResult">Enum representing task state</param>
+        /// <param name="closeoutMsg">Message related to task closeout</param>
+        /// <param name="evalCode">Enum representing evaluation results</param>
+        public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode);
+
+        /// <summary>
+        /// Reports database errors to local log
+        /// </summary>
+        protected virtual void LogErrorEvents()
+        {
+            if (m_ErrorList.Count == 0)
             {
-                if (m_ErrorList.Count > 0)
-                {
-                    string msg = "Warning messages were posted to local log";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.WARN,msg);
-                }
-                foreach (string s in m_ErrorList)
-                {
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, s);
-                }
-            }    // End sub
+                return;
+            }
 
-            /// <summary>
-            /// Method for executing a db stored procedure, assuming no data table is returned
-            /// </summary>
-            /// <param name="SpCmd">SQL command object containing stored procedure params</param>
-            /// <param name="ConnStr">Db connection string</param>
-            /// <returns>Result code returned by SP; -1 if unable to execute SP</returns>
-            protected virtual int ExecuteSP(SqlCommand spCmd, string connStr)
+            var msg = "Warning messages were posted to local log";
+            LogWarning(msg);
+
+            foreach (var s in m_ErrorList)
             {
-                DataTable dummyTable = null;
-                return ExecuteSP(spCmd, ref dummyTable, connStr);                
+                LogWarning(s);
+            }
+        }
 
-            }    // End sub
+        /// <summary>
+        /// Method for executing a db stored procedure, assuming no data table is returned
+        /// </summary>
+        /// <param name="spCmd">SQL command object containing stored procedure params</param>
+        /// <param name="connStr">Db connection string</param>
+        /// <returns>Result code returned by SP; -1 if unable to execute SP</returns>
+        protected virtual int ExecuteSP(SqlCommand spCmd, string connStr)
+        {
+            DataTable dummyTable = null;
+            return ExecuteSP(spCmd, ref dummyTable, connStr);
 
-            /// <summary>
-            /// Method for executing a db stored procedure if a data table is to be returned
-            /// </summary>
-            /// <param name="SpCmd">SQL command object containing stored procedure params</param>
-            /// <param name="OutTable">NOTHING when called; if SP successful, contains data table on return</param>
-            /// <param name="ConnStr">Db connection string</param>
-            /// <returns>Result code returned by SP; -1 if unable to execute SP</returns>
-            protected virtual int ExecuteSP(SqlCommand spCmd, ref DataTable outTable, string connStr)
+        }
+
+        /// <summary>
+        /// Method for executing a db stored procedure if a data table is to be returned
+        /// </summary>
+        /// <param name="spCmd">SQL command object containing stored procedure params</param>
+        /// <param name="outTable">NOTHING when called; if SP successful, contains data table on return</param>
+        /// <param name="connStr">Db connection string</param>
+        /// <returns>Result code returned by SP; -1 if unable to execute SP</returns>
+        protected virtual int ExecuteSP(SqlCommand spCmd, ref DataTable outTable, string connStr)
+        {
+            // If this value is in error msg, then exception occurred before ResCode was set
+            var resCode = -9999;
+
+            var myTimer = new System.Diagnostics.Stopwatch();
+            var retryCount = 3;
+
+            m_ErrorList.Clear();
+            while (retryCount > 0)
             {
-                int resCode = -9999;
-                //If this value is in error msg, then exception occurred before ResCode was set
-                string msg = null;
-                System.Diagnostics.Stopwatch myTimer = new System.Diagnostics.Stopwatch();
-                int retryCount = 3;
-
-                m_ErrorList.Clear();
-                while (retryCount > 0)
-                {
-                    //Multiple retry loop for handling SP execution failures
-                    try
-                    {
-                        using (SqlConnection cn = new SqlConnection(connStr))
-                        {
-                            cn.InfoMessage += new SqlInfoMessageEventHandler(OnInfoMessage);
-                            using (SqlDataAdapter da = new SqlDataAdapter())
-                            {
-                                using (DataSet ds = new DataSet())
-                                {
-                                    //NOTE: The connection has to be added here because it didn't exist at the time the command object was created
-                                    spCmd.Connection = cn;
-                                    //Change command timeout from 30 second default in attempt to reduce SP execution timeout errors
-                                    spCmd.CommandTimeout = int.Parse(m_MgrParams.GetParam("cmdtimeout"));
-                                    da.SelectCommand = spCmd;
-                                    myTimer.Start();
-                                    da.Fill(ds);
-                                    myTimer.Stop();
-                                    resCode = (int)da.SelectCommand.Parameters["@Return"].Value;
-                                    if ((outTable != null) && (ds.Tables.Count>0)) outTable = ds.Tables[0];
-                                }    // ds
-                            }    //de
-                            cn.InfoMessage -= OnInfoMessage;
-                        }    // cn
-                        LogErrorEvents();
-                        break;
-                    }
-                    catch (System.Exception ex)
-                    {
-                        myTimer.Stop();
-                        retryCount -= 1;
-                        msg = "clsDBTask.ExecuteSP(), exception filling data adapter, " + ex.Message;
-                        msg += ". ResCode = " + resCode.ToString() + ". Retry count = " + retryCount.ToString();
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
-                    }
-                    finally
-                    {
-                        //Log debugging info
-                        msg = "SP execution time: " + ((double)myTimer.ElapsedMilliseconds / 1000.0).ToString("##0.000") + " seconds ";
-                        msg += "for SP " + spCmd.CommandText;
-                        clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
-
-                        //Reset the connection timer
-                        myTimer.Reset();
-                    }
-                    //Wait 10 seconds before retrying
-                    System.Threading.Thread.Sleep(10000);
-                }
-
-                if (retryCount < 1)
-                {
-                    //Too many retries, log and return error
-                    msg = "Excessive retries executing SP " + spCmd.CommandText;
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
-                    return -1;
-                }
-
-                return resCode;
-            }    // End sub
-
-            /// <summary>
-            /// Debugging routine for printing SP calling params
-            /// </summary>
-            /// <param name="InpCmd">SQL command object containing params</param>
-            protected virtual void PrintCommandParams(SqlCommand inpCmd)
-            {
-                //Verify there really are command paramters
-                if (inpCmd == null) return;
-
-                if (inpCmd.Parameters.Count < 1) return;
-
-                string myMsg = "";
-
-                foreach (SqlParameter myParam in inpCmd.Parameters)
-                {
-                    myMsg += Environment.NewLine + "Name= " + myParam.ParameterName + "\t, Value= " + DbCStr(myParam.Value);
-                }
-
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Parameter list:" + myMsg);
-            }    // End sub
-
-            protected virtual bool FillParamDict(DataTable dt)
-            {
-                string msg;
-
-                // Verify valid datatable
-                if (dt == null)
-                {
-                    msg = "clsDbTask.FillParamDict(): No parameter table";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
-                    return false;
-                }
-
-                // Verify at least one row present
-                if (dt.Rows.Count < 1)
-                {
-                    msg = "clsDbTask.FillParamDict(): No parameters returned by request SP";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
-                    return false;
-                }
-
-                // Fill string dictionary with parameter values
-                m_JobParams.Clear();
-                m_JobParams = new StringDictionary();
+                // Multiple retry loop for handling SP execution failures
                 try
                 {
-                    foreach (DataRow currRow in dt.Rows)
+                    using (var cn = new SqlConnection(connStr))
                     {
-                        string myKey = currRow[dt.Columns["Parameter"]] as string;
-                        string myVal = currRow[dt.Columns["Value"]] as string;
-                        m_JobParams.Add(myKey, myVal);
-                    }
-                    return true;
+                        cn.InfoMessage += OnInfoMessage;
+                        using (var da = new SqlDataAdapter())
+                        {
+                            using (var ds = new DataSet())
+                            {
+                                // NOTE: The connection has to be added here because it didn't exist at the time the command object was created
+                                spCmd.Connection = cn;
+                                // Change command timeout from 30 second default in attempt to reduce SP execution timeout errors
+                                spCmd.CommandTimeout = int.Parse(m_MgrParams.GetParam("cmdtimeout"));
+                                da.SelectCommand = spCmd;
+                                myTimer.Start();
+                                da.Fill(ds);
+                                myTimer.Stop();
+                                resCode = (int)da.SelectCommand.Parameters["@Return"].Value;
+                                if (outTable != null && ds.Tables.Count > 0) outTable = ds.Tables[0];
+                            }    // ds
+                        }    //de
+                        cn.InfoMessage -= OnInfoMessage;
+                    }    // cn
+                    LogErrorEvents();
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    msg = "clsDbTask.FillParamDict(): Exception reading task parameters";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
-                    return false;
+                    myTimer.Stop();
+                    retryCount -= 1;
+                    var msg = "clsDBTask.ExecuteSP(), exception filling data adapter, " + ex.Message + ". ResCode = " + resCode + ". Retry count = " + retryCount;
+                    PRISM.ConsoleMsgUtils.ShowWarning(msg);
+                    LogError(msg);
                 }
-            }    // End sub
+                finally
+                {
+                    // Log debugging info (but don't show it at the console)
+                    var debugMsg = "SP execution time: " + (myTimer.ElapsedMilliseconds / 1000.0).ToString("##0.000") + " seconds for SP " + spCmd.CommandText;
+                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, debugMsg);
 
-            protected string DbCStr(object InpObj)
-            {
-                //If input object is DbNull, returns "", otherwise returns String representation of object
-                if ((InpObj == null) || (object.ReferenceEquals(InpObj, DBNull.Value)))
-                {
-                    return "";
+                    // Reset the connection timer
+                    myTimer.Reset();
                 }
-                else
-                {
-                    return InpObj.ToString();
-                }
-            }    // End sub
 
-            protected float DbCSng(object InpObj)
-            {
-                //If input object is DbNull, returns 0.0, otherwise returns Single representation of object
-                if (object.ReferenceEquals(InpObj, DBNull.Value))
-                {
-                    return 0.0F;
-                }
-                else
-                {
-                    return (float)InpObj;
-                }
-            }    // End sub
+                // Wait 10 seconds before retrying
+                System.Threading.Thread.Sleep(10000);
+            }
 
-            protected double DbCDbl(object InpObj)
+            if (retryCount < 1)
             {
-                //If input object is DbNull, returns 0.0, otherwise returns Double representation of object
-                if (object.ReferenceEquals(InpObj, DBNull.Value))
-                {
-                    return 0.0;
-                }
-                else
-                {
-                    return (double)InpObj;
-                }
-            }    // End sub
+                // Too many retries, log and return error
+                var msg = "Excessive retries executing SP " + spCmd.CommandText;
+                LogError(msg);
+                return -1;
+            }
 
-            protected int DbCInt(object InpObj)
-            {
-                //If input object is DbNull, returns 0, otherwise returns Integer representation of object
-                if (object.ReferenceEquals(InpObj, DBNull.Value))
-                {
-                    return 0;
-                }
-                else
-                {
-                    return (int)InpObj;
-                }
-            }    // End sub
+            return resCode;
+        }
 
-            protected long DbCLng(object InpObj)
-            {
-                //If input object is DbNull, returns 0, otherwise returns Integer representation of object
-                if (object.ReferenceEquals(InpObj, DBNull.Value))
-                {
-                    return 0;
-                }
-                else
-                {
-                    return (long)InpObj;
-                }
-            }    // End sub
+        /// <summary>
+        /// Debugging routine for printing SP calling params
+        /// </summary>
+        /// <param name="inpCmd">SQL command object containing params</param>
+        protected virtual void PrintCommandParams(SqlCommand inpCmd)
+        {
+            // Verify there really are command paramters
+            if (inpCmd == null) return;
 
-            protected decimal DbCDec(object InpObj)
-            {
-                //If input object is DbNull, returns 0, otherwise returns Decimal representation of object
-                if (object.ReferenceEquals(InpObj, DBNull.Value))
-                {
-                    return 0;
-                }
-                else
-                {
-                    return (decimal)InpObj;
-                }
-            }    // End sub
+            if (inpCmd.Parameters.Count < 1) return;
 
-            protected short DbCShort(object InpObj)
+            var msg = "";
+
+            foreach (SqlParameter myParam in inpCmd.Parameters)
             {
-                //If input object is DbNull, returns 0, otherwise returns Short representation of object
-                if (object.ReferenceEquals(InpObj, DBNull.Value))
+                msg += Environment.NewLine + string.Format("  Name= {0,-20}, Value= {1}", myParam.ParameterName, DbCStr(myParam.Value));
+            }
+
+            LogDebug("Parameter list:" + msg);
+        }
+
+        protected virtual bool FillParamDict(DataTable dt)
+        {
+            // Verify valid datatable
+            if (dt == null)
+            {
+                var msg = "clsDbTask.FillParamDict(): No parameter table";
+                LogError(msg);
+                return false;
+            }
+
+            // Verify at least one row present
+            if (dt.Rows.Count < 1)
+            {
+                var msg = "clsDbTask.FillParamDict(): No parameters returned by request SP";
+                LogError(msg);
+                return false;
+            }
+
+            // Fill string dictionary with parameter values
+            m_JobParams.Clear();
+
+            try
+            {
+                foreach (DataRow currRow in dt.Rows)
                 {
-                    return 0;
+                    var myKey = currRow[dt.Columns["Parameter"]] as string;
+                    if (myKey is null)
+                        continue;
+
+                    var myVal = currRow[dt.Columns["Value"]] as string;
+                    m_JobParams.Add(myKey, myVal);
                 }
-                else
-                {
-                    return (short)InpObj;
-                }
-            }    // End sub
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var msg = "clsDbTask.FillParamDict(): Exception reading task parameters";
+                LogError(msg, ex);
+                return false;
+            }
+        }
+
+        protected string DbCStr(object InpObj)
+        {
+            // If input object is DbNull, returns "", otherwise returns String representation of object
+            if (InpObj == null || ReferenceEquals(InpObj, DBNull.Value))
+            {
+                return "";
+            }
+            return InpObj.ToString();
+        }
+
+        protected float DbCSng(object InpObj)
+        {
+            // If input object is DbNull, returns 0.0, otherwise returns Single representation of object
+            if (ReferenceEquals(InpObj, DBNull.Value))
+            {
+                return 0.0F;
+            }
+            return (float)InpObj;
+        }
+
+        protected double DbCDbl(object InpObj)
+        {
+            // If input object is DbNull, returns 0.0, otherwise returns Double representation of object
+            if (ReferenceEquals(InpObj, DBNull.Value))
+            {
+                return 0.0;
+            }
+            return (double)InpObj;
+        }
+
+        protected int DbCInt(object InpObj)
+        {
+            // If input object is DbNull, returns 0, otherwise returns Integer representation of object
+            if (ReferenceEquals(InpObj, DBNull.Value))
+            {
+                return 0;
+            }
+            return (int)InpObj;
+        }
+
+        protected long DbCLng(object InpObj)
+        {
+            // If input object is DbNull, returns 0, otherwise returns Integer representation of object
+            if (ReferenceEquals(InpObj, DBNull.Value))
+            {
+                return 0;
+            }
+            return (long)InpObj;
+        }
+
+        protected decimal DbCDec(object InpObj)
+        {
+            // If input object is DbNull, returns 0, otherwise returns Decimal representation of object
+            if (ReferenceEquals(InpObj, DBNull.Value))
+            {
+                return 0;
+            }
+            return (decimal)InpObj;
+        }
+
+        protected short DbCShort(object InpObj)
+        {
+            // If input object is DbNull, returns 0, otherwise returns Short representation of object
+            if (ReferenceEquals(InpObj, DBNull.Value))
+            {
+                return 0;
+            }
+            return (short)InpObj;
+        }
+
+        private void LogDebug(string message)
+        {
+            PRISM.ConsoleMsgUtils.ShowDebug(message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, message);
+        }
+
+        private void LogWarning(string message)
+        {
+            PRISM.ConsoleMsgUtils.ShowWarning(message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, message);
+        }
+
+        private void LogError(string message, Exception ex = null)
+        {
+            PRISM.ConsoleMsgUtils.ShowError(message);
+
+            if (ex == null)
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
+            else
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
+
+        }
+
         #endregion
 
         #region "Event handlers"
-            /// <summary>
-            /// Event handler for InfoMessage event from SQL Server
-            /// </summary>
-            /// <param name="sender"></param>
-            /// <param name="args"></param>
-            private void OnInfoMessage(object sender, SqlInfoMessageEventArgs args)
+
+        /// <summary>
+        /// Event handler for InfoMessage event from SQL Server
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        private void OnInfoMessage(object sender, SqlInfoMessageEventArgs args)
+        {
+            var errString = new StringBuilder();
+            foreach (SqlError err in args.Errors)
             {
-                StringBuilder errString=new StringBuilder();
-                foreach (SqlError err in args.Errors)
-                {
-                    errString.Length = 0;
-                    errString.Append("Message: " + err.Message);
-                    errString.Append(", Source: " + err.Source);
-                    errString.Append(", Class: " + err.Class);
-                    errString.Append(", State: " + err.State);
-                    errString.Append(", Number: " + err.Number);
-                    errString.Append(", LineNumber: " + err.LineNumber);
-                    errString.Append(", Procedure:" + err.Procedure);
-                    errString.Append(", Server: " + err.Server);
-                    m_ErrorList.Add(errString.ToString());
-                }
-            }    // End sub
+                errString.Length = 0;
+                errString.Append("Message: " + err.Message);
+                errString.Append(", Source: " + err.Source);
+                errString.Append(", Class: " + err.Class);
+                errString.Append(", State: " + err.State);
+                errString.Append(", Number: " + err.Number);
+                errString.Append(", LineNumber: " + err.LineNumber);
+                errString.Append(", Procedure:" + err.Procedure);
+                errString.Append(", Server: " + err.Server);
+                m_ErrorList.Add(errString.ToString());
+            }
+        }
+
         #endregion
-    }    // End class
-}    // End namespace
+    }
+}

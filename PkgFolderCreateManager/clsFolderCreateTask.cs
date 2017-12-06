@@ -1,332 +1,323 @@
 
 //*********************************************************************************************************
-// Written by Matthew Monroe for the US Department of Energy 
+// Written by Matthew Monroe for the US Department of Energy
 // Pacific Northwest National Laboratory, Richland, WA
 // Based on code written by Dave Clark in 2009
-//
 //*********************************************************************************************************
+
 using System;
 using System.Data.SqlClient;
 using System.Data;
-using System.Windows.Forms;
 
 namespace PkgFolderCreateManager
 {
+    /// <summary>
+    /// Provides database access and tools for one folder create task
+    /// </summary>
     class clsFolderCreateTask : clsDbTask, ITaskParams
     {
-        //*********************************************************************************************************
-        // Provides database access and tools for one folder create task
-        //**********************************************************************************************************
 
         #region "Constants"
-            protected const string SP_NAME_SET_COMPLETE = "SetFolderCreateTaskComplete";
-            protected const string SP_NAME_REQUEST_TASK = "RequestFolderCreateTask";
+
+        protected const string SP_NAME_SET_COMPLETE = "SetFolderCreateTaskComplete";
+        protected const string SP_NAME_REQUEST_TASK = "RequestFolderCreateTask";
+
         #endregion
 
         #region "Class variables"
-            int m_TaskID = 0;
-            string m_TaskParametersXML = string.Empty;
+
+        int mTaskID;
+        string mTaskParametersXML = string.Empty;
+
+        private bool mConnectionInfoLogged = false;
         #endregion
 
         #region "Properties"
-            public string TaskParametersXML {
-                get {
-                    if (string.IsNullOrEmpty(m_TaskParametersXML))
-                        return string.Empty;
-                    else
-                        return m_TaskParametersXML;
-                }
-            }
 
-        #endregion
-
-            #region "Constructors"
-            /// <summary>
-            /// Class constructor
-            /// </summary>
-            /// <param name="mgrParams">Manager params for use by class</param>
-            public clsFolderCreateTask(IMgrParams mgrParams)
-                : base(mgrParams)
+        public string TaskParametersXML
+        {
+            get
             {
-                m_JobParams.Clear();
+                if (string.IsNullOrEmpty(mTaskParametersXML))
+                    return string.Empty;
+
+                return mTaskParametersXML;
             }
+        }
+
         #endregion
 
         #region "Methods"
-            /// <summary>
-            /// Gets a stored parameter
-            /// </summary>
-            /// <param name="name">Parameter name</param>
-            /// <returns>Parameter value if found, otherwise empty string</returns>
-            public string GetParam(string name)
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="mgrParams">Manager params for use by class</param>
+        public clsFolderCreateTask(IMgrParams mgrParams)
+            : base(mgrParams)
+        {
+            mTaskID = 0;
+            m_JobParams.Clear();
+        }
+
+        /// <summary>
+        /// Gets a stored parameter
+        /// </summary>
+        /// <param name="name">Parameter name</param>
+        /// <returns>Parameter value if found, otherwise empty string</returns>
+        public string GetParam(string name)
+        {
+            if (m_JobParams.ContainsKey(name))
             {
-                if (m_JobParams.ContainsKey(name))
-                {
-                    return m_JobParams[name];
-                }
-                else
-                {
-                    return string.Empty;
-                }
+                return m_JobParams[name];
             }
 
-            /// <summary>
-            /// Adds a parameter
-            /// </summary>
-            /// <param name="paramName">Name of parameter</param>
-            /// <param name="paramValue">Value for parameter</param>
-            /// <returns>RUE for success, FALSE for error</returns>
-            public bool AddAdditionalParameter(string paramName, string paramValue)
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Adds a parameter
+        /// </summary>
+        /// <param name="paramName">Name of parameter</param>
+        /// <param name="paramValue">Value for parameter</param>
+        /// <returns>RUE for success, FALSE for error</returns>
+        public bool AddAdditionalParameter(string paramName, string paramValue)
+        {
+            try
             {
-                try
-                {
-                    m_JobParams.Add(paramName, paramValue);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    string msg = "Exception adding parameter: " + paramName + ", Value: " + paramValue;
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
-                    return false;
-                }
+                m_JobParams.Add(paramName, paramValue);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var msg = "Exception adding parameter: " + paramName + ", Value: " + paramValue;
+                LogError(msg, ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Stores a parameter
+        /// </summary>
+        /// <param name="keyName">Parameter key</param>
+        /// <param name="value">Parameter value</param>
+        public void SetParam(string keyName, string value)
+        {
+            if (value == null)
+            {
+                value = "";
+            }
+            m_JobParams[keyName] = value;
+        }
+
+        /// <summary>
+        /// Wrapper for requesting a task from the database
+        /// </summary>
+        /// <returns>num indicating if task was found</returns>
+        public override EnumRequestTaskResult RequestTask()
+        {
+            mTaskID = 0;
+
+            var retVal = RequestTaskDetailed();
+            switch (retVal)
+            {
+                case EnumRequestTaskResult.TaskFound:
+                    m_TaskWasAssigned = true;
+                    break;
+                case EnumRequestTaskResult.NoTaskFound:
+                    m_TaskWasAssigned = false;
+                    break;
+                default:
+                    m_TaskWasAssigned = false;
+                    break;
             }
 
-            /// <summary>
-            /// Stores a parameter
-            /// </summary>
-            /// <param name="keyName">Parameter key</param>
-            /// <param name="value">Parameter value</param>
-            public void SetParam(string keyName, string value)
+            return retVal;
+        }
+
+        /// <summary>
+        /// Detailed step request
+        /// </summary>
+        /// <returns>RequestTaskResult enum</returns>
+        private EnumRequestTaskResult RequestTaskDetailed()
+        {
+            EnumRequestTaskResult outcome;
+
+            try
             {
-                if (value == null)
+                // Set up the command object prior to SP execution
+                var myCmd = new SqlCommand
                 {
-                    value = "";
-                }
-                m_JobParams[keyName] = value;
-            }
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = SP_NAME_REQUEST_TASK
+                };
 
-            /// <summary>
-            /// Wrapper for requesting a task from the database
-            /// </summary>
-            /// <returns>num indicating if task was found</returns>
-            public override EnumRequestTaskResult RequestTask()
-            {
-                EnumRequestTaskResult retVal;
-                m_TaskID = 0;
+                myCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int)).Direction = ParameterDirection.ReturnValue;
+                myCmd.Parameters.Add(new SqlParameter("@processorName", SqlDbType.VarChar, 128)).Value = m_MgrParams.GetParam("MgrName");
+                myCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int)).Direction = ParameterDirection.Output;
+                myCmd.Parameters.Add(new SqlParameter("@parameters", SqlDbType.VarChar, 4000)).Direction = ParameterDirection.Output;
+                myCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512)).Direction = ParameterDirection.Output;
+                myCmd.Parameters.Add(new SqlParameter("@infoOnly", SqlDbType.TinyInt)).Value = 0;
+                myCmd.Parameters.Add(new SqlParameter("@taskCountToPreview", SqlDbType.Int)).Value = 10;
 
-                retVal = RequestTaskDetailed();
-                switch (retVal)
+                if (!mConnectionInfoLogged)
                 {
-                    case EnumRequestTaskResult.TaskFound:
-                        m_TaskWasAssigned = true;
-                        break;
-                    case EnumRequestTaskResult.NoTaskFound:
-                        m_TaskWasAssigned = false;
-                        break;
-                    default:
-                        m_TaskWasAssigned = false;
-                        break;
-                }
+                    var msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + m_BrokerConnStr;
+                    LogDebug(msg);
 
-                return retVal;
-            }
+                    var paramListHeader = "clsCaptureTask.RequestTaskDetailed(), printing param list";
+                    LogDebug(paramListHeader);
 
-            /// <summary>
-            /// Detailed step request
-            /// </summary>
-            /// <returns>RequestTaskResult enum</returns>
-            private EnumRequestTaskResult RequestTaskDetailed()
-            {
-                string msg;
-                SqlCommand myCmd = new SqlCommand();
-                EnumRequestTaskResult outcome = EnumRequestTaskResult.NoTaskFound;
-                int retVal = 0;
-                string strProductVersion = Application.ProductVersion;
-                if (strProductVersion == null) strProductVersion = "??";
-
-                try
-                {
-                    //Set up the command object prior to SP execution
-                    {
-                        myCmd.CommandType = CommandType.StoredProcedure;
-                        myCmd.CommandText = SP_NAME_REQUEST_TASK;
-                        myCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int));
-                        myCmd.Parameters["@Return"].Direction = ParameterDirection.ReturnValue;
-
-                        myCmd.Parameters.Add(new SqlParameter("@processorName", SqlDbType.VarChar, 128));
-                        myCmd.Parameters["@processorName"].Direction = ParameterDirection.Input;
-                        myCmd.Parameters["@processorName"].Value = m_MgrParams.GetParam("MgrName");
-
-                        myCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int));
-                        myCmd.Parameters["@taskID"].Direction = ParameterDirection.Output;
-
-                        myCmd.Parameters.Add(new SqlParameter("@parameters", SqlDbType.VarChar, 4000));
-                        myCmd.Parameters["@parameters"].Direction = ParameterDirection.Output;
-                        myCmd.Parameters["@parameters"].Value = "";
-
-                        myCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512));
-                        myCmd.Parameters["@message"].Direction = ParameterDirection.Output;
-                        myCmd.Parameters["@message"].Value = "";
-
-                        myCmd.Parameters.Add(new SqlParameter("@infoOnly", SqlDbType.TinyInt));
-                        myCmd.Parameters["@infoOnly"].Direction = ParameterDirection.Input;
-                        myCmd.Parameters["@infoOnly"].Value = 0;
-
-                        myCmd.Parameters.Add(new SqlParameter("@taskCountToPreview", SqlDbType.Int));
-                        myCmd.Parameters["@taskCountToPreview"].Direction = ParameterDirection.Input;
-                        myCmd.Parameters["@taskCountToPreview"].Value = 10;
-                    }
-
-                    msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + m_BrokerConnStr;
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
-                    msg = "clsCaptureTask.RequestTaskDetailed(), printing param list";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
                     PrintCommandParams(myCmd);
 
-                    //Execute the SP
-                    retVal = ExecuteSP(myCmd, m_ConnStr);
-
-                    switch (retVal)
-                    {
-                        case RET_VAL_OK:
-                            //No errors found in SP call, so see if any step tasks were found
-                            m_TaskID = (int)myCmd.Parameters["@taskID"].Value;
-
-                            m_TaskParametersXML = (string)myCmd.Parameters["@parameters"].Value;
-
-                            outcome = EnumRequestTaskResult.TaskFound;
-                            break;
-                        case RET_VAL_TASK_NOT_AVAILABLE:
-                            //No jobs found
-                            outcome = EnumRequestTaskResult.NoTaskFound;
-                            break;
-                        default:
-                            //There was an SP error
-                            msg = "clsFolderCreateTask.RequestTaskDetailed(), SP execution error " + retVal.ToString();
-                            msg += "; Msg text = " + (string)myCmd.Parameters["@message"].Value;
-                            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg);
-                            outcome = EnumRequestTaskResult.ResultError;
-                            break;
-                    }
+                    mConnectionInfoLogged = true;
                 }
-                catch (System.Exception ex)
+
+                // Execute the SP
+                var retVal = ExecuteSP(myCmd, m_ConnStr);
+
+                switch (retVal)
                 {
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, "Exception requesting folder create task: " + ex.Message);
-                    outcome = EnumRequestTaskResult.ResultError;
-                }
-                return outcome;
-            }
+                    case RET_VAL_OK:
+                        // No errors found in SP call, so see if any step tasks were found
+                        mTaskID = (int)myCmd.Parameters["@taskID"].Value;
 
-            /// <summary>
-            /// Closes a folder creation task (Overloaded)
-            /// </summary>
-            /// <param name="taskResult">Enum representing task state</param>
-            public override void CloseTask(EnumCloseOutType taskResult)
+                        mTaskParametersXML = (string)myCmd.Parameters["@parameters"].Value;
+
+                        outcome = EnumRequestTaskResult.TaskFound;
+                        break;
+                    case RET_VAL_TASK_NOT_AVAILABLE:
+                        // No jobs found
+                        outcome = EnumRequestTaskResult.NoTaskFound;
+                        break;
+                    default:
+                        // There was an SP error
+                        var errMsg = "clsFolderCreateTask.RequestTaskDetailed(), SP execution error " + retVal +
+                            "; Msg text = " + (string)myCmd.Parameters["@message"].Value;
+
+                        LogError(errMsg);
+                        outcome = EnumRequestTaskResult.ResultError;
+                        break;
+                }
+            }
+            catch (Exception ex)
             {
-                CloseTask(taskResult, "", EnumEvalCode.EVAL_CODE_SUCCESS);
+                LogError("Exception requesting folder create task: " + ex.Message);
+                outcome = EnumRequestTaskResult.ResultError;
             }
+            return outcome;
+        }
 
-            /// <summary>
-            /// Closes a capture pipeline task (Overloaded)
-            /// </summary>
-            /// <param name="taskResult">Enum representing task state</param>
-            /// <param name="closeoutMsg">Message related to task closeout</param>
-            public override void CloseTask(EnumCloseOutType taskResult, string closeoutMsg)
+        /// <summary>
+        /// Closes a folder creation task (Overloaded)
+        /// </summary>
+        /// <param name="taskResult">Enum representing task state</param>
+        public override void CloseTask(EnumCloseOutType taskResult)
+        {
+            CloseTask(taskResult, "", EnumEvalCode.EVAL_CODE_SUCCESS);
+        }
+
+        /// <summary>
+        /// Closes a capture pipeline task (Overloaded)
+        /// </summary>
+        /// <param name="taskResult">Enum representing task state</param>
+        /// <param name="closeoutMsg">Message related to task closeout</param>
+        public override void CloseTask(EnumCloseOutType taskResult, string closeoutMsg)
+        {
+            CloseTask(taskResult, closeoutMsg, EnumEvalCode.EVAL_CODE_SUCCESS);
+        }
+
+        /// <summary>
+        /// Closes a capture pipeline task (Overloaded)
+        /// </summary>
+        /// <param name="taskResult">Enum representing task state</param>
+        /// <param name="closeoutMsg">Message related to task closeout</param>
+        /// <param name="evalCode">Enum representing evaluation results</param>
+        public override void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode)
+        {
+            if (!SetFolderCreateTaskComplete(SP_NAME_SET_COMPLETE, m_ConnStr, (int)taskResult, closeoutMsg, (int)evalCode))
             {
-                CloseTask(taskResult, closeoutMsg, EnumEvalCode.EVAL_CODE_SUCCESS);
+                var msg = "Error setting task complete in database, task_id " + mTaskID;
+                LogError(msg);
             }
-
-            /// <summary>
-            /// Closes a capture pipeline task (Overloaded)
-            /// </summary>
-            /// <param name="taskResult">Enum representing task state</param>
-            /// <param name="closeoutMsg">Message related to task closeout</param>
-            /// <param name="evalCode">Enum representing evaluation results</param>
-            public override void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode)
+            else
             {
-                string msg;
-                int compCode = (int)taskResult;
-
-                if (!SetFolderCreateTaskComplete(SP_NAME_SET_COMPLETE, m_ConnStr, (int)taskResult, closeoutMsg, (int)evalCode))
-                {
-                    msg = "Error setting task complete in database, task_id " + m_TaskID.ToString();
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.ERROR,msg);
-                }
-                else
-                {
-                    msg = msg = "Successfully set task complete in database, task_id " + m_TaskID.ToString();
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile,clsLogTools.LogLevels.DEBUG,msg);
-                }
+                var msg = "Successfully set task complete in database, task_id " + mTaskID;
+                LogDebug(msg);
             }
+        }
 
-            /// <summary>
-            /// Database calls to set a folder create task complete
-            /// </summary>
-            /// <param name="SpName">Name of SetComplete stored procedure</param>
-            /// <param name="CompletionCode">Integer representation of completion code</param>
-            /// <param name="ConnStr">Db connection string</param>
-            /// <returns>TRUE for sucesss; FALSE for failure</returns>
-            public bool SetFolderCreateTaskComplete(string spName, string connStr, int compCode, string compMsg, int evalCode)
+        private void LogDebug(string message)
+        {
+            PRISM.ConsoleMsgUtils.ShowDebug(message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, message);
+        }
+
+        private void LogError(string message, Exception ex = null)
+        {
+            PRISM.ConsoleMsgUtils.ShowError(message);
+
+            if (ex == null)
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
+            else
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
+
+        }
+
+        /// <summary>
+        /// Database calls to set a folder create task complete
+        /// </summary>
+        /// <param name="spName">Name of SetComplete stored procedure</param>
+        /// <param name="connStr">Db connection string</param>
+        /// <param name="compCode">Integer representation of completion code</param>
+        /// <param name="compMsg"></param>
+        /// <param name="evalCode"></param>
+        /// <returns>TRUE for sucesss; FALSE for failure</returns>
+        public bool SetFolderCreateTaskComplete(string spName, string connStr, int compCode, string compMsg, int evalCode)
+        {
+            try
             {
-                string msg;
-                bool Outcome = false;
-                int ResCode = 0;
 
-                try
+                // Setup for execution of the stored procedure
+                var myCmd = new SqlCommand
                 {
+                    CommandType = CommandType.StoredProcedure,
+                    CommandText = spName
+                };
 
-                    //Setup for execution of the stored procedure
-                    SqlCommand MyCmd = new SqlCommand();
-                    {
-                        MyCmd.CommandType = CommandType.StoredProcedure;
-                        MyCmd.CommandText = spName;
-                        MyCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int));
-                        MyCmd.Parameters["@Return"].Direction = ParameterDirection.ReturnValue;
+                myCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int)).Direction = ParameterDirection.ReturnValue;
+                myCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int)).Value = mTaskID;
+                myCmd.Parameters.Add(new SqlParameter("@completionCode", SqlDbType.Int)).Value = compCode;
+                myCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512)).Direction = ParameterDirection.Output;
 
-                        MyCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int));
-                        MyCmd.Parameters["@taskID"].Direction = ParameterDirection.Input;
-                        MyCmd.Parameters["@taskID"].Value = m_TaskID;
+                LogDebug("Calling stored procedure " + spName);
 
-                        MyCmd.Parameters.Add(new SqlParameter("@completionCode", SqlDbType.Int));
-                        MyCmd.Parameters["@completionCode"].Direction = ParameterDirection.Input;
-                        MyCmd.Parameters["@completionCode"].Value = compCode;
+                var msg = "Parameters: TaskID=" + myCmd.Parameters["@taskID"].Value +
+                          ", completionCode=" + myCmd.Parameters["@completionCode"].Value;
 
-                        MyCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512));
-                        MyCmd.Parameters["@message"].Direction = ParameterDirection.Output;
-                    }
+                LogDebug(msg);
 
-                    msg = "Calling stored procedure " + spName;
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
+                // Execute the SP
+                var resCode = ExecuteSP(myCmd, connStr);
 
-                    msg = "Parameters: TaskID=" + MyCmd.Parameters["@taskID"].Value +
-                                    ", completionCode=" + MyCmd.Parameters["@completionCode"].Value;
-
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, msg);
-
-
-                    //Execute the SP
-                    ResCode = ExecuteSP(MyCmd, connStr);
-
-                    if (ResCode == 0)
-                    {
-                        Outcome = true;
-                    }
-                    else
-                    {
-                        msg = "Error " + ResCode.ToString() + " setting task complete";
-                        msg += "; Message = " + (string)MyCmd.Parameters["@message"].Value;
-                        Outcome = false;
-                    }
-                }
-                catch (Exception ex)
+                if (resCode == 0)
                 {
-                    msg = "Exception calling stored procedure " + spName;
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, ex);
-                    Outcome = false;
+                    return true;
                 }
 
-                return Outcome;
+                var errorMsg = "Error " + resCode + " setting task complete; Message = " + (string)myCmd.Parameters["@message"].Value;
+                LogError(errorMsg);
+                return false;
             }
+            catch (Exception ex)
+            {
+                var errorMsg = "Exception calling stored procedure " + spName;
+                LogError(errorMsg, ex);
+                return false;
+            }
+
+        }
+
         #endregion
-    }    // End class
-}    // End namespace
+    }
+}

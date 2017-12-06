@@ -38,7 +38,7 @@ namespace PkgFolderCreateManager
         #region "Event handlers"
             private void subscriber_OnMessageReceived(string processor, string message)
             {
-                //TODO: Parse the message and take appropriate action
+                // TODO: Parse the message and take appropriate action
             }
 
             void connection_OnConnectionException(Exception e)

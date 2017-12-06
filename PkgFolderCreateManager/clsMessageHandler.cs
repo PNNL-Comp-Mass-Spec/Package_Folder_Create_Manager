@@ -1,16 +1,12 @@
 ﻿
 //*********************************************************************************************************
-// Written by Gary Kiebel and Dave Clark for the US Department of Energy 
+// Written by Gary Kiebel and Dave Clark for the US Department of Energy
 // Pacific Northwest National Laboratory, Richland, WA
 // Copyright 2009, Battelle Memorial Institute
 // Created 06/26/2009
-//
-// Last modified 06/26/2009
 //*********************************************************************************************************
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Apache.NMS;
 using Apache.NMS.ActiveMQ;
 using Apache.NMS.ActiveMQ.Commands;
@@ -20,242 +16,267 @@ namespace PkgFolderCreateManager
     // received commands are sent to a delegate function with this signature
     public delegate void MessageProcessorDelegate(string cmdText);
 
+    /// <summary>
+    /// Handles sanding and receiving of control and status messages
+    /// </summary>
+    /// <remarks>Base code provided by Gary Kiebel</remarks>
     class clsMessageHandler : IDisposable
     {
-        //*********************************************************************************************************
-        // Handles sanding and receiving of control and status messages
-        // Base code provided by Gary Kiebel
-        //**********************************************************************************************************
 
         #region "Class variables"
-            private string m_BrokerUri = null;
-            private string m_CommandQueueName = null;
-            private string m_BroadcastTopicName = null;
-            private string m_StatusTopicName = null;
-            private clsMgrSettings m_MgrSettings = null;
 
-            private IConnection m_Connection;
-            private ISession m_StatusSession;
-            private IMessageProducer m_StatusSender;
-            private IMessageConsumer m_CommandConsumer;
-            private IMessageConsumer m_BroadcastConsumer;
+        private string m_BrokerUri;
+        private string m_CommandQueueName;
+        private string m_BroadcastTopicName;
+        private string m_StatusTopicName;
+        private clsMgrSettings m_MgrSettings;
 
-            private bool m_IsDisposed = false;
-            private bool m_HasConnection = false;
+        private IConnection m_Connection;
+        private ISession m_StatusSession;
+        private IMessageProducer m_StatusSender;
+        private IMessageConsumer m_CommandConsumer;
+        private IMessageConsumer m_BroadcastConsumer;
+
+        private bool m_IsDisposed;
+        private bool m_HasConnection;
+
         #endregion
 
         #region "Events"
-            public event MessageProcessorDelegate CommandReceived;
-            public event MessageProcessorDelegate BroadcastReceived;
+
+        public event MessageProcessorDelegate CommandReceived;
+        public event MessageProcessorDelegate BroadcastReceived;
+
         #endregion
 
         #region "Properties"
-            public clsMgrSettings MgrSettings
-            {
-                set
-                {
-                    m_MgrSettings = value;
-                }
-            }
 
-            public string BrokerUri
-            {
-                get { return m_BrokerUri; }
-                set { m_BrokerUri = value; }
-            }
+        public clsMgrSettings MgrSettings
+        {
+            set => m_MgrSettings = value;
+        }
 
-            public string CommandQueueName
-            {
-                get { return m_CommandQueueName; }
-                set { m_CommandQueueName = value; }
-            }
+        public string BrokerUri
+        {
+            get => m_BrokerUri;
+            set => m_BrokerUri = value;
+        }
 
-            public string BroadcastTopicName
-            {
-                get { return m_BroadcastTopicName; }
-                set { m_BroadcastTopicName = value; }
-            }
+        public string CommandQueueName
+        {
+            get => m_CommandQueueName;
+            set => m_CommandQueueName = value;
+        }
 
-            public string StatusTopicName
-            {
-                get { return m_StatusTopicName; }
-                set { m_StatusTopicName = value; }
-            }
+        public string BroadcastTopicName
+        {
+            get => m_BroadcastTopicName;
+            set => m_BroadcastTopicName = value;
+        }
+
+        public string StatusTopicName
+        {
+            get => m_StatusTopicName;
+            set => m_StatusTopicName = value;
+        }
+
         #endregion
 
         #region "Methods"
-            /// <summary>
-            /// create set of NMS connection objects necessary to talk to the ActiveMQ broker
-            /// </summary>
-            protected void CreateConnection()
+
+        /// <summary>
+        /// create set of NMS connection objects necessary to talk to the ActiveMQ broker
+        /// </summary>
+        protected void CreateConnection()
+        {
+            if (m_HasConnection) return;
+            try
             {
-                if (m_HasConnection) return;
-                try
-                {
-                    IConnectionFactory connectionFactory = new ConnectionFactory(this.m_BrokerUri);
-                    this.m_Connection = connectionFactory.CreateConnection();
-                    this.m_Connection.Start();
+                IConnectionFactory connectionFactory = new ConnectionFactory(m_BrokerUri);
+                m_Connection = connectionFactory.CreateConnection();
+                m_Connection.Start();
 
-                    this.m_HasConnection = true;
-                    // temp debug
-                    // Console.WriteLine("--- New connection made ---" + Environment.NewLine); //+ e.ToString()
-                    string msg = "Connected to broker";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
-                }
-                catch (Exception Ex)
-                {
-                    // we couldn't make a viable set of connection objects 
-                    // - this has "long day" written all over it,
-                    // but we don't have to do anything specific at this point (except eat the exception)
-
-                    // Console.WriteLine("=== Error creating connection ===" + Environment.NewLine); //+ e.ToString() // temp debug
-                    string msg = "Exception creating broker connection";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, Ex);
-                }
-            }    // End sub
-
-            /// <summary>
-            /// Create the message broker communication objects and register the listener function
-            /// </summary>
-            /// <returns>TRUE for success; FALSE otherwise</returns>
-            public bool Init()
+                m_HasConnection = true;
+                // temp debug
+                // Console.WriteLine("--- New connection made ---" + Environment.NewLine); //+ e.ToString()
+                var msg = "Connected to broker";
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
+            }
+            catch (Exception ex)
             {
-                try
-                {
-                    if (!m_HasConnection) CreateConnection();
-                    if (!m_HasConnection) return false;
+                // we couldn't make a viable set of connection objects
+                // - this has "long day" written all over it,
+                // but we don't have to do anything specific at this point (except eat the exception)
 
-                    // queue for "make folder" commands from database via its STOMP message sender
-                    ISession commandSession = m_Connection.CreateSession();
-                    m_CommandConsumer = commandSession.CreateConsumer(new ActiveMQQueue(this.m_CommandQueueName));
-//                    commandConsumer.Listener += new MessageListener(OnCommandReceived);
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Command listener established");
+                // Console.WriteLine("=== Error creating connection ===" + Environment.NewLine); //+ e.ToString() // temp debug
+                var msg = "Exception creating broker connection";
+                LogError(msg, ex);
+            }
+        }
 
-                    // topic for commands broadcast to all folder makers
-                    ISession broadcastSession = m_Connection.CreateSession();
-                    m_BroadcastConsumer = broadcastSession.CreateConsumer(new ActiveMQTopic(this.m_BroadcastTopicName));
-//                    broadcastConsumer.Listener += new MessageListener(OnBroadcastReceived);
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Broadcast listener established");
-
-                    // topic for the folder maker to send status information over
-                    this.m_StatusSession = m_Connection.CreateSession();
-                    this.m_StatusSender = m_StatusSession.CreateProducer(new ActiveMQTopic(m_StatusTopicName));
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Status sender established");
-
-                    return true;
-                }
-                catch (Exception Ex)
-                {
-                    string msg = "Exception while initializing messages sessiions";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, msg, Ex);
-                    DestroyConnection();
-                    return false;
-                }
-            }    // End sub
-
-            /// <summary>
-            /// Command listener function. Received commands will cause this to be called
-            ///    and it will trigger an event to pass on the command to all registered listeners
-            /// </summary>
-            /// <param name="message">Incoming message</param>
-            private void OnCommandReceived(IMessage message)
+        /// <summary>
+        /// Create the message broker communication objects and register the listener function
+        /// </summary>
+        /// <returns>TRUE for success; FALSE otherwise</returns>
+        public bool Init()
+        {
+            try
             {
-                ITextMessage textMessage = message as ITextMessage;
-                string Msg = "clsMessageHandler(), Command message received";
+                if (!m_HasConnection) CreateConnection();
+                if (!m_HasConnection) return false;
+
+                // queue for "make folder" commands from database via its STOMP message sender
+                var commandSession = m_Connection.CreateSession();
+                m_CommandConsumer = commandSession.CreateConsumer(new ActiveMQQueue(m_CommandQueueName));
+                //                    commandConsumer.Listener += new MessageListener(OnCommandReceived);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Command listener established");
+
+                // topic for commands broadcast to all folder makers
+                var broadcastSession = m_Connection.CreateSession();
+                m_BroadcastConsumer = broadcastSession.CreateConsumer(new ActiveMQTopic(m_BroadcastTopicName));
+                //                    broadcastConsumer.Listener += new MessageListener(OnBroadcastReceived);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Broadcast listener established");
+
+                // topic for the folder maker to send status information over
+                m_StatusSession = m_Connection.CreateSession();
+                m_StatusSender = m_StatusSession.CreateProducer(new ActiveMQTopic(m_StatusTopicName));
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Status sender established");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var msg = "Exception while initializing messages sessiions";
+                LogError(msg, ex);
+                DestroyConnection();
+                return false;
+            }
+        }
+
+
+        private void LogError(string message, Exception ex = null)
+        {
+            PRISM.ConsoleMsgUtils.ShowError(message);
+
+            if (ex == null)
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
+            else
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
+
+        }
+
+        /// <summary>
+        /// Command listener function. Received commands will cause this to be called
+        ///    and it will trigger an event to pass on the command to all registered listeners
+        /// </summary>
+        /// <param name="message">Incoming message</param>
+        private void OnCommandReceived(IMessage message)
+        {
+            var textMessage = message as ITextMessage;
+            var Msg = "clsMessageHandler(), Command message received";
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+            if (CommandReceived != null)
+            {
+                // call the delegate to process the commnd
+                Msg = "clsMessageHandler().OnCommandReceived: At lease one event handler assigned";
                 clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
-                if (this.CommandReceived != null)
+                if (textMessage != null)
                 {
-                    // call the delegate to process the commnd
-                    Msg = "clsMessageHandler().OnCommandReceived: At lease one event handler assigned";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
-                    this.CommandReceived(textMessage.Text);
+                    CommandReceived(textMessage.Text);
                 }
-                else
-                {
-                    Msg = "clsMessageHandler().OnCommandReceived: No event handlers assigned";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
-                }
-            }    // End sub
-
-            /// <summary>
-            /// Broadcast listener function. Received Broadcasts will cause this to be called
-            ///    and it will trigger an event to pass on the command to all registered listeners
-            /// </summary>
-            /// <param name="message">Incoming message</param>
-            private void OnBroadcastReceived(IMessage message)
+            }
+            else
             {
-                ITextMessage textMessage = message as ITextMessage;
-                string Msg = "clsMessageHandler(), Broadcast message received";
+                Msg = "clsMessageHandler().OnCommandReceived: No event handlers assigned";
                 clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
-                if (this.BroadcastReceived != null)
-                {
-                    // call the delegate to process the commnd
-                    Msg = "clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
-                    this.BroadcastReceived(textMessage.Text);
-                }
-                else
-                {
-                    Msg = "clsMessageHandler().OnBroadcastReceived: No event handlers assigned";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
-                }
-            }    // End sub
+            }
+        }
 
-            /// <summary>
-            /// Sends a status message
-            /// </summary>
-            /// <param name="message">Outgoing message string</param>
-            public void SendMessage(string message)
+        /// <summary>
+        /// Broadcast listener function. Received Broadcasts will cause this to be called
+        ///    and it will trigger an event to pass on the command to all registered listeners
+        /// </summary>
+        /// <param name="message">Incoming message</param>
+        private void OnBroadcastReceived(IMessage message)
+        {
+            var textMessage = message as ITextMessage;
+            var Msg = "clsMessageHandler(), Broadcast message received";
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+            if (BroadcastReceived != null)
             {
-                if (!this.m_IsDisposed)
+                // call the delegate to process the commnd
+                Msg = "clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned";
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+                if (textMessage != null)
                 {
-                    ITextMessage textMessage = this.m_StatusSession.CreateTextMessage(message);
-                    textMessage.Properties.SetString("ProcessorName", m_MgrSettings.GetParam("MgrName")); 
-                    this.m_StatusSender.Send(textMessage);
+                    BroadcastReceived(textMessage.Text);
                 }
-                else
-                {
-                    throw new ObjectDisposedException(this.GetType().FullName);
-                }
-            }    // End sub
+            }
+            else
+            {
+                Msg = "clsMessageHandler().OnBroadcastReceived: No event handlers assigned";
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+            }
+        }
+
+        /// <summary>
+        /// Sends a status message
+        /// </summary>
+        /// <param name="message">Outgoing message string</param>
+        public void SendMessage(string message)
+        {
+            if (!m_IsDisposed)
+            {
+                var textMessage = m_StatusSession.CreateTextMessage(message);
+                textMessage.Properties.SetString("ProcessorName", m_MgrSettings.GetParam("MgrName"));
+                m_StatusSender.Send(textMessage);
+            }
+            else
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+        }
+
         #endregion
 
         #region "Cleanup"
-            /// <summary>
-            /// Cleans up a connection after error or when closing
-            /// </summary>
-            protected void DestroyConnection()
-            {
-                if (m_HasConnection)
-                {
-                    this.m_Connection.Dispose();
-                    this.m_HasConnection = false;
-                    string msg = "Message connection closed";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
-                }
-            }    // End sub
 
-            /// <summary>
-            /// Implements IDisposable interface
-            /// </summary>
-            public void Dispose()
+        /// <summary>
+        /// Cleans up a connection after error or when closing
+        /// </summary>
+        protected void DestroyConnection()
+        {
+            if (m_HasConnection)
             {
-                if (!this.m_IsDisposed)
-                {
-                    this.DestroyConnection();
-                    this.m_IsDisposed = true;
-                }
-            }    // End sub
+                m_Connection.Dispose();
+                m_HasConnection = false;
+                var msg = "Message connection closed";
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
+            }
+        }
 
-            /// <summary>
-            /// Registers the command and broadcast listeners under control of main program.
-            /// This is done to prevent loss of queued messages if listeners are registered too early.
-            /// </summary>
-            public void RegisterListeners()
+        /// <summary>
+        /// Implements IDisposable interface
+        /// </summary>
+        public void Dispose()
+        {
+            if (!m_IsDisposed)
             {
-                m_CommandConsumer.Listener += new MessageListener(OnCommandReceived);
-                m_BroadcastConsumer.Listener += new MessageListener(OnBroadcastReceived);
-            }    // End sub
+                DestroyConnection();
+                m_IsDisposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Registers the command and broadcast listeners under control of main program.
+        /// This is done to prevent loss of queued messages if listeners are registered too early.
+        /// </summary>
+        public void RegisterListeners()
+        {
+            m_CommandConsumer.Listener += OnCommandReceived;
+            m_BroadcastConsumer.Listener += OnBroadcastReceived;
+        }
+
         #endregion
-    }    // End class
-}    // End namespace
+    }
+}

@@ -1,290 +1,291 @@
 ﻿
 //*********************************************************************************************************
-// Written by Dave Clark for the US Department of Energy 
+// Written by Dave Clark for the US Department of Energy
 // Pacific Northwest National Laboratory, Richland, WA
 // Copyright 2009, Battelle Memorial Institute
 // Created 06/16/2009
-//
-// Last modified 06/16/2009
 //*********************************************************************************************************
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Data.SqlClient;
 using System.Data;
-using System.IO;
-using System.Collections.Specialized;
-using System.Xml;
-using System.Configuration;
 
 namespace PkgFolderCreateManager
 {
+    /// <summary>
+    /// Class for loading, storing and accessing manager parameters.
+    /// </summary>
+    /// <remarks>
+    ///  Loads initial settings from local config file, then checks to see if remainder of settings should be
+    ///  loaded or manager set to inactive. If manager active, retrieves remainder of settings from manager
+    ///  parameters database.
+    /// </remarks>
     public class clsMgrSettings : IMgrParams
     {
-        //*********************************************************************************************************
-        //    Class for loading, storing and accessing manager parameters.
-        //    Loads initial settings from local config file, then checks to see if remainder of settings should be
-        //        loaded or manager set to inactive. If manager active, retrieves remainder of settings from manager
-        //        parameters database.
-        //**********************************************************************************************************
 
         #region "Class variables"
-            StringDictionary m_MgrParams = null;
-            string m_ErrMsg = "";
-            bool m_MCParamsLoaded = false;
-        #endregion
 
-        #region "Properties"
-            string ErrMsg
-            {
-                get
-                {
-                    return m_ErrMsg;
-                }
-            }    // End property
+        Dictionary<string, string> m_MgrParams;
+        bool m_MCParamsLoaded;
+
         #endregion
 
         #region "Methods"
-            public clsMgrSettings()
+
+        public clsMgrSettings()
+        {
+            if (!LoadSettings())
             {
-                if (!LoadSettings())
-                {
-                    throw new ApplicationException("Unable to initialize manager settings class");
-                }
-            }    // End sub
+                throw new ApplicationException("Unable to initialize manager settings class");
+            }
+        }
 
-            public bool LoadSettings()
+        public bool LoadSettings()
+        {
+
+            // If the param dictionary exists, it needs to be cleared out
+            if (m_MgrParams != null)
             {
-                m_ErrMsg = "";
+                m_MgrParams.Clear();
+                m_MgrParams = null;
+            }
 
-                // If the param dictionary exists, it needs to be cleared out
-                if (m_MgrParams != null)
-                {
-                    m_MgrParams.Clear();
-                    m_MgrParams = null;
-                }
+            // Get settings from config file
+            m_MgrParams = LoadMgrSettingsFromFile();
 
-                // Get settings from config file
-                m_MgrParams = LoadMgrSettingsFromFile();
-
-                //Test the settings retrieved from the config file
-                if ( !CheckInitialSettings(m_MgrParams) )
-                {
-                    //Error logging handled by CheckInitialSettings
-                    return false;
-                }
-
-                //Determine if manager is deactivated locally
-                if (!bool.Parse( m_MgrParams["MgrActive_Local"]))
-                {
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogSystem, clsLogTools.LogLevels.WARN, "Manager deactivated locally");
-                    m_ErrMsg = "Manager deactivated locally";
-                    return false;
-                }
-
-                //Get remaining settings from database
-                if ( !LoadMgrSettingsFromDB(ref m_MgrParams) )
-                {
-                    //Error logging handled by LoadMgrSettingsFromDB
-                    return false;
-                }
-
-                //Set flag indicating params have been loaded from MC db
-                m_MCParamsLoaded = true;
-
-                //No problems found
-                return true;
-            }    // End sub
-
-            private StringDictionary LoadMgrSettingsFromFile()
+            // Test the settings retrieved from the config file
+            if (!CheckInitialSettings(m_MgrParams))
             {
-                // Load initial settings into string dictionary for return
-                StringDictionary RetDict = new StringDictionary();
-                string TempStr;
+                // Error logging handled by CheckInitialSettings
+                return false;
+            }
 
-//                My.Settings.Reload()
-                //Manager config db connection string
-                TempStr = PkgFolderCreateManager.Properties.Settings.Default.MgrCnfgDbConnectStr;
-                RetDict.Add("MgrCnfgDbConnectStr", TempStr);
-
-                //Manager active flag
-                TempStr = PkgFolderCreateManager.Properties.Settings.Default.MgrActive_Local;
-                RetDict.Add("MgrActive_Local", TempStr);
-
-                //Manager name
-                TempStr = PkgFolderCreateManager.Properties.Settings.Default.MgrName;
-                RetDict.Add("MgrName", TempStr);
-
-                //Default settings in use flag
-                TempStr = PkgFolderCreateManager.Properties.Settings.Default.UsingDefaults;
-                RetDict.Add("UsingDefaults", TempStr);
-
-                return RetDict;
-            }    // End sub
-
-            private bool CheckInitialSettings(StringDictionary InpDict)
+            // Determine if manager is deactivated locally
+            if (!bool.Parse(m_MgrParams["MgrActive_Local"]))
             {
-                string MyMsg = null;
+                var msg = "Manager deactivated locally";
+                PRISM.ConsoleMsgUtils.ShowWarning(msg);
+                LogWarning(msg);
+                return false;
+            }
 
-                //Verify manager settings dictionary exists
-                if (InpDict == null)
-                {
-                    MyMsg = "clsMgrSettings.CheckInitialSettings(); Manager parameter string dictionary not found";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogSystem, clsLogTools.LogLevels.ERROR, MyMsg);
-                    return false;
-                }
-
-                //Verify intact config file was found
-                if (bool.Parse(InpDict["UsingDefaults"]))
-                {
-                    MyMsg = "clsMgrSettings.CheckInitialSettings(); Config file problem, default settings being used";
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogSystem, clsLogTools.LogLevels.ERROR, MyMsg);
-                    return false;
-                }
-
-                //No problems found
-                return true;
-            }    // End sub
-
-            private bool LoadMgrSettingsFromDB()
+            // Get remaining settings from database
+            if (!LoadMgrSettingsFromDB(m_MgrParams))
             {
-                return LoadMgrSettingsFromDB(ref m_MgrParams);
-            }    // End sub
+                // Error logging handled by LoadMgrSettingsFromDB
+                return false;
+            }
 
-            public bool LoadMgrSettingsFromDB(ref StringDictionary MgrSettingsDict)
+            // Set flag indicating params have been loaded from MC db
+            m_MCParamsLoaded = true;
+
+            // No problems found
+            return true;
+        }
+
+        private Dictionary<string, string> LoadMgrSettingsFromFile()
+        {
+            // Load initial settings into string dictionary for return
+            var msgParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // Manager config db connection string
+            var conStr = PkgFolderCreateManager.Properties.Settings.Default.MgrCnfgDbConnectStr;
+            msgParams.Add("MgrCnfgDbConnectStr", conStr);
+
+            // Manager active flag
+            var mgrActiveLocal = PkgFolderCreateManager.Properties.Settings.Default.MgrActive_Local;
+            msgParams.Add("MgrActive_Local", mgrActiveLocal);
+
+            // Manager name
+            var mgrName = PkgFolderCreateManager.Properties.Settings.Default.MgrName;
+            msgParams.Add("MgrName", mgrName);
+
+            // Default settings in use flag
+            var usingDefaults = PkgFolderCreateManager.Properties.Settings.Default.UsingDefaults;
+            msgParams.Add("UsingDefaults", usingDefaults);
+
+            return msgParams;
+        }
+
+        private bool CheckInitialSettings(IDictionary<string, string> mgrParams)
+        {
+            // Verify manager settings dictionary exists
+            if (mgrParams == null)
             {
-                //Requests manager parameters from database. Input string specifies view to use. Performs retries if necessary.
-                short RetryCount = 3;
-                string MyMsg = null;
-                string ParamKey = null;
-                string ParamVal = null;
+                WriteErrorToSystemLog("clsMgrSettings.CheckInitialSettings(); Manager parameter dictionary is null");
+                return false;
+            }
 
-                string SqlStr = "SELECT ParameterName, ParameterValue FROM V_MgrParams WHERE ManagerName = '" 
-                                            + m_MgrParams["MgrName"] + "'";
+            if (!mgrParams.TryGetValue("UsingDefaults", out var usingDefaults) || string.IsNullOrEmpty(usingDefaults))
+            {
+                WriteErrorToSystemLog("clsMgrSettings.CheckInitialSettings(); usingDefaults manager parameter not defined");
+                return false;
+            }
 
-                //Get a table containing data for job
-                 DataTable Dt = null;
+            // Verify intact config file was found
+            if (bool.Parse(usingDefaults))
+            {
+                WriteErrorToSystemLog("clsMgrSettings.CheckInitialSettings(); Config file problem, default settings being used");
+                return false;
+            }
 
-                //Get a datatable holding the parameters for one manager
-                while (RetryCount > 0)
-                {
-                    try
-                    {
-                        using (SqlConnection Cn = new SqlConnection(MgrSettingsDict["MgrCnfgDbConnectStr"]))
-                        {
-                            using (SqlDataAdapter Da = new SqlDataAdapter(SqlStr, Cn))
-                            {
-                                using (DataSet Ds = new DataSet())
-                                {
-                                    Da.Fill(Ds);
-                                    Dt = Ds.Tables[0];
-                                    //Ds
-                                }
-                                //Da
-                            }
-                        }
-                        //Cn
-                        break;
-                    }
-                    catch (System.Exception ex)
-                    {
-                        RetryCount -= 1;
-                        MyMsg = "clsMgrSettings.LoadMgrSettingsFromDB; Exception getting manager settings from database: " + ex.Message;
-                        MyMsg = MyMsg + ", RetryCount = " + RetryCount.ToString();
-                        WriteErrorMsg(MyMsg);
-                        //Delay for 5 seconds before trying again
-                        System.Threading.Thread.Sleep(5000);
-                    }
-                }
+            // No problems found
+            return true;
+        }
 
-                //If loop exited due to errors, return false
-                if (RetryCount < 1)
-                {
-                    MyMsg = "clsMgrSettings.LoadMgrSettingsFromDB; Excessive failures attempting to retrieve manager settings from database";
-                    WriteErrorMsg(MyMsg);
-                    Dt.Dispose();
-                    return false;
-                }
+        public bool LoadMgrSettingsFromDB(Dictionary<string, string> mgrSettings)
+        {
+            // Requests manager parameters from database. Input string specifies view to use. Performs retries if necessary.
+            short retryCount = 3;
 
-                //Verify at least one row returned
-                if (Dt.Rows.Count < 1)
-                {
-                    //Wrong number of rows returned
-                    MyMsg = "clsMgrSettings.LoadMgrSettingsFromDB; Invalid row count retrieving manager settings: RowCount = ";
-                    MyMsg += Dt.Rows.Count.ToString();
-                    WriteErrorMsg(MyMsg);
-                    Dt.Dispose();
-                    return false;
-                }
+            if (!m_MgrParams.TryGetValue("MgrName", out var managerName))
+            {
+                WriteErrorMsg("Manager parameter MgrName is not defined");
+                return false;
+            }
 
-                //Fill a string dictionary with the manager parameters that have been found
+            var sqlStr = "SELECT ParameterName, ParameterValue FROM V_MgrParams WHERE ManagerName = '" + managerName + "'";
+
+            // Get a table containing data for job
+            DataTable dt = null;
+
+            if (!mgrSettings.TryGetValue("MgrCnfgDbConnectStr", out var connectionString))
+            {
+                WriteErrorMsg("Manager setting MgrCnfgDbConnectStr is not defined");
+                return false;
+            }
+
+            // Get a datatable holding the parameters for one manager
+            while (retryCount > 0)
+            {
                 try
                 {
-                    foreach (DataRow TestRow in Dt.Rows)
+                    using (var cn = new SqlConnection(connectionString))
                     {
-                        //Add the column heading and value to the dictionary
-                        ParamKey = DbCStr(TestRow[Dt.Columns["ParameterName"]]);
-                        ParamVal = DbCStr(TestRow[Dt.Columns["ParameterValue"]]);
-                        if (m_MgrParams.ContainsKey(ParamKey))
+                        using (var da = new SqlDataAdapter(sqlStr, cn))
                         {
-                            m_MgrParams[ParamKey] = ParamVal;
-                        }
-                        else
-                        {
-                            m_MgrParams.Add(ParamKey, ParamVal);
+                            using (var ds = new DataSet())
+                            {
+                                da.Fill(ds);
+                                dt = ds.Tables[0];
+                            }
                         }
                     }
-                    return true;
+                    break;
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
-                    MyMsg = "clsMgrSettings.LoadMgrSettingsFromDB; Exception filling string dictionary from table: " + ex.Message;
-                    WriteErrorMsg(MyMsg);
-                    return false;
-                }
-                finally
-                {
-                    Dt.Dispose();
-                }
-            }    // End sub
+                    retryCount -= 1;
+                    var msg = "Exception getting manager settings from database: " + ex.Message + ", RetryCount = " + retryCount;
 
-            public string GetParam(string ItemKey)
-            {
-                if (m_MgrParams.ContainsKey(ItemKey))
-                    return m_MgrParams[ItemKey];
-                else
-                    return String.Empty;
-            }
-
-            public void SetParam(string ItemKey, string ItemValue)
-            {
-                m_MgrParams[ItemKey] = ItemValue;
-            }
-
-            private string DbCStr(object InpObj)
-            {
-                if (InpObj == null)
-                {
-                    return "";
-                }
-                else
-                {
-                    return InpObj.ToString();
+                    WriteErrorMsg(msg);
+                    // Delay for 5 seconds before trying again
+                    System.Threading.Thread.Sleep(5000);
                 }
             }
 
-            private void WriteErrorMsg(string ErrMsg)
+            // If loop exited due to errors, return false
+            if (retryCount < 1)
             {
-                if (m_MCParamsLoaded)
-                {
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, ErrMsg);
-                }
-                else
-                {
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogSystem, clsLogTools.LogLevels.ERROR, ErrMsg);
-                }
+                var msg = "Excessive failures attempting to retrieve manager settings from database";
+                WriteErrorMsg(msg);
+                dt?.Dispose();
+                return false;
             }
+
+            if (dt == null)
+                return false;
+
+            // Verify at least one row returned
+            if (dt.Rows.Count < 1)
+            {
+                // Wrong number of rows returned
+                var msg = "Settings not found for manager " + managerName + "; connection string " + connectionString;
+                WriteErrorMsg(msg);
+                dt.Dispose();
+                return false;
+            }
+
+            // Fill a string dictionary with the manager parameters that have been found
+            try
+            {
+                foreach (DataRow currentRow in dt.Rows)
+                {
+                    // Add the column heading and value to the dictionary
+                    var paramKey = DbCStr(currentRow[dt.Columns["ParameterName"]]);
+                    var paramVal = DbCStr(currentRow[dt.Columns["ParameterValue"]]);
+                    if (m_MgrParams.ContainsKey(paramKey))
+                    {
+                        m_MgrParams[paramKey] = paramVal;
+                    }
+                    else
+                    {
+                        m_MgrParams.Add(paramKey, paramVal);
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var msg = "Exception parsing manager settings retrieved from the database: " + ex.Message;
+                WriteErrorMsg(msg);
+                return false;
+            }
+            finally
+            {
+                dt.Dispose();
+            }
+        }
+
+        public string GetParam(string itemKey)
+        {
+            if (m_MgrParams.ContainsKey(itemKey))
+                return m_MgrParams[itemKey];
+
+            return String.Empty;
+        }
+
+        public void SetParam(string itemKey, string itemValue)
+        {
+            m_MgrParams[itemKey] = itemValue;
+        }
+
+        private string DbCStr(object inpObj)
+        {
+            if (inpObj == null)
+            {
+                return "";
+            }
+            return inpObj.ToString();
+        }
+
+        private void LogWarning(string message)
+        {
+            PRISM.ConsoleMsgUtils.ShowWarning(message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, message);
+        }
+
+        private void WriteErrorMsg(string message)
+        {
+
+            if (m_MCParamsLoaded)
+            {
+                PRISM.ConsoleMsgUtils.ShowError(message);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
+            }
+            else
+            {
+                WriteErrorToSystemLog(message);
+            }
+        }
+
+        private void WriteErrorToSystemLog(string message)
+        {
+            PRISM.ConsoleMsgUtils.ShowError(message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogSystem, clsLogTools.LogLevels.ERROR, message);
+        }
+
         #endregion
-    }    // End class
-}    // End namespace
+    }
+}
