@@ -17,14 +17,9 @@ namespace PkgFolderCreateManager
     class clsStatusData
     {
 
-        #region "Class variables"
-
         private static string m_MostRecentLogMessage;
         private static readonly Queue<string> m_ErrorQueue = new Queue<string>();
 
-        #endregion
-
-        #region "Properties"
 
         public static string MostRecentLogMessage
         {
@@ -45,25 +40,18 @@ namespace PkgFolderCreateManager
 
         public static Queue<string> ErrorQueue => m_ErrorQueue;
 
-        #endregion
-
-        #region "Methods"
 
         public static void AddErrorMessage(string ErrMsg)
         {
             // Add the most recent error message
             m_ErrorQueue.Enqueue(ErrMsg);
 
-            // If there are > 4 entries in the queue, then delete the oldest ones
-            if (m_ErrorQueue.Count > 4)
+            // If there are > 4 entries in the queue, delete the oldest ones
+            while (m_ErrorQueue.Count > 4)
             {
-                while (m_ErrorQueue.Count > 4)
-                {
-                    m_ErrorQueue.Dequeue();
-                }
+                m_ErrorQueue.Dequeue();
             }
         }
 
-        #endregion
     }
 }

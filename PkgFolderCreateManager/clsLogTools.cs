@@ -13,7 +13,7 @@ using PRISM.Logging;
 namespace PkgFolderCreateManager
 {
     /// <summary>
-    /// Class for handling logging via Log4Net
+    /// Class for handling logging via the FileLogger and DatabaseLogger in PRISM.dll
     /// </summary>
     /// <remarks>
     /// Call method CreateFileLogger to define the log file name

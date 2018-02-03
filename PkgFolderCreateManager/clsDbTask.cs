@@ -8,10 +8,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Data.SqlClient;
-using System.Collections.Specialized;
-using System.Data;
 
 namespace PkgFolderCreateManager
 {
@@ -56,16 +53,36 @@ namespace PkgFolderCreateManager
 
         #region "Class variables"
 
-        protected IMgrParams m_MgrParams;
-        protected string m_ConnStr;
-        protected string m_BrokerConnStr;
-        protected StringCollection m_ErrorList = new StringCollection();
+        protected readonly IMgrParams m_MgrParams;
+
+        protected readonly string m_ConnStr;
+
         protected bool m_TaskWasAssigned = false;
-        protected Dictionary<string, string> m_JobParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Debug level
+        /// </summary>
+        /// <remarks>4 means Info level (normal) logging; 5 for Debug level (verbose) logging</remarks>
+        protected readonly int m_DebugLevel;
+
+        /// <summary>
+        /// Job parameters
+        /// </summary>
+        protected readonly Dictionary<string, string> m_JobParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Stored procedure executor
+        /// </summary>
+        protected readonly PRISM.clsExecuteDatabaseSP m_PipelineDBProcedureExecutor;
 
         #endregion
 
         #region "Properties"
+
+        /// <summary>
+        /// Manager name
+        /// </summary>
+        public string ManagerName { get; }
 
         public bool TaskWasAssigned => m_TaskWasAssigned;
 
@@ -73,18 +90,32 @@ namespace PkgFolderCreateManager
 
         #endregion
 
-        #region "Methods"
+        #region "Constructor"
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="MgrParams"></param>
-        protected clsDbTask(IMgrParams MgrParams)
+        /// <param name="mgrParams"></param>
+        protected clsDbTask(IMgrParams mgrParams)
         {
-            m_MgrParams = MgrParams;
+            m_MgrParams = mgrParams;
+            ManagerName = m_MgrParams.GetParam("MgrName", Environment.MachineName + "_Undefined-Manager");
+
+            // Gigasax.DMS_Pipeline
             m_ConnStr = m_MgrParams.GetParam("ConnectionString");
-            m_BrokerConnStr = m_MgrParams.GetParam("brokerconnectionstring");
+
+            m_PipelineDBProcedureExecutor = new PRISM.clsExecuteDatabaseSP(m_ConnStr);
+
+            m_PipelineDBProcedureExecutor.ErrorEvent += PipelineDBProcedureExecutor_DBErrorEvent;
+
+            // Cache the log level
+            // 4 means Info level (normal) logging; 5 for Debug level (verbose) logging
+            m_DebugLevel = mgrParams.GetParam("debuglevel", 4);
         }
+
+        #endregion
+
+        #region "Methods"
 
         /// <summary>
         /// Requests a capture pipeline task
@@ -113,83 +144,6 @@ namespace PkgFolderCreateManager
         /// <param name="evalCode">Enum representing evaluation results</param>
         public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode);
 
-        /// <summary>
-        /// Method for executing a db stored procedure if a data table is to be returned
-        /// </summary>
-        /// <param name="spCmd">SQL command object containing stored procedure params</param>
-        /// <param name="outTable">NOTHING when called; if SP successful, contains data table on return</param>
-        /// <param name="connStr">Db connection string</param>
-        /// <returns>Result code returned by SP; -1 if unable to execute SP</returns>
-        protected virtual int ExecuteSP(SqlCommand spCmd, ref DataTable outTable, string connStr)
-        {
-            // If this value is in error msg, then exception occurred before ResCode was set
-            var resCode = -9999;
-
-            var myTimer = new System.Diagnostics.Stopwatch();
-            var retryCount = 3;
-
-            m_ErrorList.Clear();
-            while (retryCount > 0)
-            {
-                // Multiple retry loop for handling SP execution failures
-                try
-                {
-                    using (var cn = new SqlConnection(connStr))
-                    {
-                        cn.InfoMessage += OnInfoMessage;
-                        using (var da = new SqlDataAdapter())
-                        {
-                            using (var ds = new DataSet())
-                            {
-                                // NOTE: The connection has to be added here because it didn't exist at the time the command object was created
-                                spCmd.Connection = cn;
-                                // Change command timeout from 30 second default in attempt to reduce SP execution timeout errors
-                                spCmd.CommandTimeout = int.Parse(m_MgrParams.GetParam("cmdtimeout"));
-                                da.SelectCommand = spCmd;
-                                myTimer.Start();
-                                da.Fill(ds);
-                                myTimer.Stop();
-                                resCode = (int)da.SelectCommand.Parameters["@Return"].Value;
-                                if (outTable != null && ds.Tables.Count > 0) outTable = ds.Tables[0];
-                            }    // ds
-                        }    //de
-                        cn.InfoMessage -= OnInfoMessage;
-                    }    // cn
-                    LogErrorEvents();
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    myTimer.Stop();
-                    retryCount -= 1;
-                    var msg = "clsDBTask.ExecuteSP(), exception filling data adapter, " + ex.Message + ". ResCode = " + resCode + ". Retry count = " + retryCount;
-                    PRISM.ConsoleMsgUtils.ShowWarning(msg);
-                    LogError(msg);
-                }
-                finally
-                {
-                    // Log debugging info (but don't show it at the console)
-                    var debugMsg = "SP execution time: " + (myTimer.ElapsedMilliseconds / 1000.0).ToString("##0.000") + " seconds for SP " + spCmd.CommandText;
-                    clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, debugMsg);
-
-                    // Reset the connection timer
-                    myTimer.Reset();
-                }
-
-                // Wait 10 seconds before retrying
-                System.Threading.Thread.Sleep(10000);
-            }
-
-            if (retryCount < 1)
-            {
-                // Too many retries, log and return error
-                var msg = "Excessive retries executing SP " + spCmd.CommandText;
-                LogError(msg);
-                return -1;
-            }
-
-            return resCode;
-        }
 
         /// <summary>
         /// Debugging routine for printing SP calling params
@@ -197,10 +151,12 @@ namespace PkgFolderCreateManager
         /// <param name="inpCmd">SQL command object containing params</param>
         protected virtual void PrintCommandParams(SqlCommand inpCmd)
         {
-            // Verify there really are command paramters
-            if (inpCmd == null) return;
+            //Verify there really are command paramters
+            if (inpCmd == null)
+                return;
 
-            if (inpCmd.Parameters.Count < 1) return;
+            if (inpCmd.Parameters.Count < 1)
+                return;
 
             var msg = "";
 
@@ -213,49 +169,7 @@ namespace PkgFolderCreateManager
             LogDebug("Parameter list:" + msg, writeToLog);
         }
 
-        protected virtual bool FillParamDict(DataTable dt)
-        {
-            // Verify valid datatable
-            if (dt == null)
-            {
-                var msg = "clsDbTask.FillParamDict(): No parameter table";
-                LogError(msg);
-                return false;
-            }
-
-            // Verify at least one row present
-            if (dt.Rows.Count < 1)
-            {
-                var msg = "clsDbTask.FillParamDict(): No parameters returned by request SP";
-                LogError(msg);
-                return false;
-            }
-
-            // Fill string dictionary with parameter values
-            m_JobParams.Clear();
-
-            try
-            {
-                foreach (DataRow currRow in dt.Rows)
-                {
-                    var myKey = currRow[dt.Columns["Parameter"]] as string;
-                    if (myKey is null)
-                        continue;
-
-                    var myVal = currRow[dt.Columns["Value"]] as string;
-                    m_JobParams.Add(myKey, myVal);
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                var msg = "clsDbTask.FillParamDict(): Exception reading task parameters";
-                LogError(msg, ex);
-                return false;
-            }
-        }
-
-        protected string DbCStr(object InpObj)
+        private string DbCStr(object InpObj)
         {
             // If input object is DbNull, returns "", otherwise returns String representation of object
             if (InpObj == null || ReferenceEquals(InpObj, DBNull.Value))
@@ -329,7 +243,14 @@ namespace PkgFolderCreateManager
 
         #region "Event handlers"
 
+        void PipelineDBProcedureExecutor_DBErrorEvent(string message, Exception ex)
         {
+            var logToDb = message.Contains("permission was denied");
+
+            if (logToDb)
+                LogError(message, logToDb: true);
+            else
+                LogError(message, ex);
         }
 
         #endregion

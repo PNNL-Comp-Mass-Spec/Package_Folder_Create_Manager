@@ -7,20 +7,23 @@
 //*********************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using Apache.NMS;
 using Apache.NMS.ActiveMQ;
 using Apache.NMS.ActiveMQ.Commands;
 
 namespace PkgFolderCreateManager
 {
-    // received commands are sent to a delegate function with this signature
+    /// <summary>
+    /// Received commands are sent to a delegate function with this signature
+    /// </summary>
+    /// <param name="cmdText"></param>
     public delegate void MessageProcessorDelegate(string cmdText);
 
     /// <summary>
-    /// Handles sanding and receiving of control and status messages
+    /// Handles sending and receiving of control and status messages
     /// </summary>
-    /// <remarks>Base code provided by Gary Kiebel</remarks>
-    class clsMessageHandler : IDisposable
+    class clsMessageHandler : clsLoggerBase, IDisposable
     {
 
         #region "Class variables"
@@ -85,33 +88,64 @@ namespace PkgFolderCreateManager
         #region "Methods"
 
         /// <summary>
-        /// create set of NMS connection objects necessary to talk to the ActiveMQ broker
+        /// Create set of NMS connection objects necessary to talk to the ActiveMQ broker
         /// </summary>
-        protected void CreateConnection()
+        /// <param name="retryCount">Number of times to try the connection</param>
+        /// <param name="timeoutSeconds">Number of seconds to wait for the broker to respond</param>
+        protected void CreateConnection(int retryCount = 2, int timeoutSeconds = 15)
         {
-            if (m_HasConnection) return;
-            try
-            {
-                IConnectionFactory connectionFactory = new ConnectionFactory(m_BrokerUri);
-                m_Connection = connectionFactory.CreateConnection();
-                m_Connection.Start();
+            if (m_HasConnection)
+                return;
 
-                m_HasConnection = true;
-                // temp debug
-                // Console.WriteLine("--- New connection made ---" + Environment.NewLine); //+ e.ToString()
-                var msg = "Connected to broker";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
-            }
-            catch (Exception ex)
-            {
-                // we couldn't make a viable set of connection objects
-                // - this has "long day" written all over it,
-                // but we don't have to do anything specific at this point (except eat the exception)
+            if (retryCount < 0)
+                retryCount = 0;
 
-                // Console.WriteLine("=== Error creating connection ===" + Environment.NewLine); //+ e.ToString() // temp debug
-                var msg = "Exception creating broker connection";
-                LogError(msg, ex);
+            var retriesRemaining = retryCount;
+
+            if (timeoutSeconds < 5)
+                timeoutSeconds = 5;
+
+            var errorList = new List<string>();
+
+            while (retriesRemaining >= 0)
+            {
+                try
+                {
+                    IConnectionFactory connectionFactory = new ConnectionFactory(m_BrokerUri);
+                    m_Connection = connectionFactory.CreateConnection();
+                    m_Connection.RequestTimeout = new TimeSpan(0, 0, timeoutSeconds);
+                    m_Connection.Start();
+
+                    m_HasConnection = true;
+
+                    var username = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+
+                    LogDebug(string.Format("Connected to broker as user {0}", username));
+
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    // Connection failed
+                    if (!errorList.Contains(ex.Message))
+                        errorList.Add(ex.Message);
+
+                    // Sleep for 3 seconds
+                    System.Threading.Thread.Sleep(3000);
+                }
+
+                retriesRemaining -= 1;
             }
+
+            // If we get here, we never could connect to the message broker
+
+            var msg = "Exception creating broker connection";
+            if (retryCount > 0)
+                msg += " after " + (retryCount + 1) + " attempts";
+
+            msg += ": " + string.Join("; ", errorList);
+
+            LogError(msg);
         }
 
         /// <summary>
@@ -122,8 +156,11 @@ namespace PkgFolderCreateManager
         {
             try
             {
-                if (!m_HasConnection) CreateConnection();
-                if (!m_HasConnection) return false;
+                if (!m_HasConnection)
+                    CreateConnection();
+
+                if (!m_HasConnection)
+                    return false;
 
                 // queue for "make folder" commands from database via its STOMP message sender
                 var commandSession = m_Connection.CreateSession();
@@ -215,8 +252,15 @@ namespace PkgFolderCreateManager
             if (!m_IsDisposed)
             {
                 var textMessage = m_StatusSession.CreateTextMessage(message);
-                textMessage.Properties.SetString("ProcessorName", m_MgrSettings.GetParam("MgrName"));
-                m_StatusSender.Send(textMessage);
+                textMessage.Properties.SetString("ProcessorName", m_MgrSettings.ManagerName);
+                try
+                {
+                    m_StatusSender.Send(textMessage);
+                }
+                catch
+                {
+                    // Do nothing
+                }
             }
             else
             {
@@ -237,8 +281,7 @@ namespace PkgFolderCreateManager
             {
                 m_Connection.Dispose();
                 m_HasConnection = false;
-                var msg = "Message connection closed";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, msg);
+                LogDebug("Message connection closed");
             }
         }
 
@@ -247,11 +290,11 @@ namespace PkgFolderCreateManager
         /// </summary>
         public void Dispose()
         {
-            if (!m_IsDisposed)
-            {
-                DestroyConnection();
-                m_IsDisposed = true;
-            }
+            if (m_IsDisposed)
+                return;
+
+            DestroyConnection();
+            m_IsDisposed = true;
         }
 
         /// <summary>

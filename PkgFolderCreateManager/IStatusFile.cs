@@ -58,27 +58,93 @@ namespace PkgFolderCreateManager
 
         #region "Properties"
 
+        /// <summary>
+        /// Status file path
+        /// </summary>
         string FileNamePath { get; set; }
+
+        /// <summary>
+        /// Manager name
+        /// </summary>
         string MgrName { get; set; }
+
+        /// <summary>
+        /// Manager status
+        /// </summary>
         EnumMgrStatus MgrStatus { get; set; }
+
+        /// <summary>
+        /// Overall CPU utilization of all threads
+        /// </summary>
+        /// <remarks></remarks>
         int CpuUtilization { get; set; }
+
+        /// <summary>
+        /// Step tool name
+        /// </summary>
         string Tool { get; set; }
+
+        /// <summary>
+        /// Task status
+        /// </summary>
         EnumTaskStatus TaskStatus { get; set; }
+        /// <summary>
+        /// Progress (value between 0 and 100)
+        /// </summary>
         float Progress { get; set; }
+
+        /// <summary>
+        /// Current task
+        /// </summary>
         string CurrentOperation { get; set; }
+
+        /// <summary>
+        /// Task status detail
+        /// </summary>
         EnumTaskStatusDetail TaskStatusDetail { get; set; }
+
+        /// <summary>
+        /// Job number
+        /// </summary>
         int JobNumber { get; set; }
+
+        /// <summary>
+        /// Step number
+        /// </summary>
         int JobStep { get; set; }
+
+        /// <summary>
+        /// Dataset name
+        /// </summary>
         string Dataset { get; set; }
+
+        /// <summary>
+        /// Most recent job info
+        /// </summary>
         string MostRecentJobInfo { get; set; }
-        bool LogToMsgQueue { get; set; }
+        /// <summary>
+        /// When true, the status XML is being sent to the manager status message queue
+        /// </summary>
+        bool LogToMsgQueue { get; set;  }
 
         #endregion
 
         #region "Methods"
 
         void WriteStatusFile();
+        /// <summary>
+        /// Updates status file
+        /// </summary>
+        /// <param name="percentComplete">Job completion percentage (value between 0 and 100)</param>
+        /// <remarks></remarks>
         void UpdateAndWrite(float percentComplete);
+
+        /// <summary>
+        /// Updates status file
+        /// </summary>
+        /// <param name="status">Job status enum</param>
+        /// <param name="percentComplete">Job completion percentage (value between 0 and 100)</param>
+        /// <remarks></remarks>
         void UpdateAndWrite(EnumTaskStatusDetail status, float percentComplete);
         void UpdateStopped(bool mgrError);
         void UpdateDisabled(bool disabledLocally);

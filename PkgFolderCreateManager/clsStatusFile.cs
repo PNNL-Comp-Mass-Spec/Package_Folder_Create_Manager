@@ -252,7 +252,7 @@ namespace PkgFolderCreateManager
 
                 // Create the XML document in memory
                 xWriter.WriteStartDocument(true);
-                xWriter.WriteComment("Space manager status");
+                xWriter.WriteComment("Package Folder Create manager status");
 
                 // Root level element
                 xWriter.WriteStartElement("Root");
