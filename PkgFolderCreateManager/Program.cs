@@ -7,7 +7,7 @@
 //*********************************************************************************************************
 
 using System;
-using System.Windows.Forms;
+using PRISM;
 
 namespace PkgFolderCreateManager
 {
@@ -20,7 +20,6 @@ namespace PkgFolderCreateManager
         #region "Class variables"
 
         static clsMainProg m_MainProcess;
-        static string ErrMsg;
 
         #endregion
 
@@ -29,11 +28,8 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
 
             // Start the main program running
             try
@@ -50,12 +46,9 @@ namespace PkgFolderCreateManager
             }
             catch (Exception ex)
             {
-                // Report any exceptions not handled at a lover leve to the system application log
-                ErrMsg = "Critical exception starting application: " + ex.Message;
-                var ev = new System.Diagnostics.EventLog("Application", ".", "DMS_PkgFolderCreate");
-                System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.EventLogTraceListener("DMS_PkgFolderCreate"));
-                System.Diagnostics.Trace.WriteLine(ErrMsg);
-                ev.Close();
+                    var errMsg = "Critical exception starting application: " + ex.Message;
+                    ConsoleMsgUtils.ShowWarning(errMsg + "; " + clsStackTraceFormatter.GetExceptionStackTrace(ex, true));
+                    ConsoleMsgUtils.ShowWarning("Exiting clsMainProcess.Main with error code = 1");
             }
 
         }
