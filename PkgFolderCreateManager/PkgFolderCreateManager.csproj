@@ -79,7 +79,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -94,6 +93,7 @@
     <Compile Include="clsMgrSettings.cs" />
     <Compile Include="clsStatusData.cs" />
     <Compile Include="clsStatusFile.cs" />
+    <Compile Include="clsUtilityMethods.cs" />
     <Compile Include="clsXMLTools.cs" />
     <Compile Include="IMgrParams.cs" />
     <Compile Include="IStatusFile.cs" />
