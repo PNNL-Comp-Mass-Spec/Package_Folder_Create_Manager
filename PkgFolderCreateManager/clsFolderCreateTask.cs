@@ -247,23 +247,6 @@ namespace PkgFolderCreateManager
             }
         }
 
-        private void LogDebug(string message)
-        {
-            PRISM.ConsoleMsgUtils.ShowDebug(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, message);
-        }
-
-        private void LogError(string message, Exception ex = null)
-        {
-            PRISM.ConsoleMsgUtils.ShowError(message);
-
-            if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
-            else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
-
-        }
-
         /// <summary>
         /// Database calls to set a folder create task complete
         /// </summary>

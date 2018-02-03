@@ -18,7 +18,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     ///  Base class for handling task-related data
     /// </summary>
-    abstract class clsDbTask
+    abstract class clsDbTask : clsLoggerBase
     {
 
         #region "Enums"
@@ -112,38 +112,6 @@ namespace PkgFolderCreateManager
         /// <param name="closeoutMsg">Message related to task closeout</param>
         /// <param name="evalCode">Enum representing evaluation results</param>
         public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode);
-
-        /// <summary>
-        /// Reports database errors to local log
-        /// </summary>
-        protected virtual void LogErrorEvents()
-        {
-            if (m_ErrorList.Count == 0)
-            {
-                return;
-            }
-
-            var msg = "Warning messages were posted to local log";
-            LogWarning(msg);
-
-            foreach (var s in m_ErrorList)
-            {
-                LogWarning(s);
-            }
-        }
-
-        /// <summary>
-        /// Method for executing a db stored procedure, assuming no data table is returned
-        /// </summary>
-        /// <param name="spCmd">SQL command object containing stored procedure params</param>
-        /// <param name="connStr">Db connection string</param>
-        /// <returns>Result code returned by SP; -1 if unable to execute SP</returns>
-        protected virtual int ExecuteSP(SqlCommand spCmd, string connStr)
-        {
-            DataTable dummyTable = null;
-            return ExecuteSP(spCmd, ref dummyTable, connStr);
-
-        }
 
         /// <summary>
         /// Method for executing a db stored procedure if a data table is to be returned
@@ -241,7 +209,8 @@ namespace PkgFolderCreateManager
                 msg += Environment.NewLine + string.Format("  Name= {0,-20}, Value= {1}", myParam.ParameterName, DbCStr(myParam.Value));
             }
 
-            LogDebug("Parameter list:" + msg);
+            var writeToLog = m_DebugLevel >= 5;
+            LogDebug("Parameter list:" + msg, writeToLog);
         }
 
         protected virtual bool FillParamDict(DataTable dt)
@@ -356,54 +325,11 @@ namespace PkgFolderCreateManager
             return (short)InpObj;
         }
 
-        private void LogDebug(string message)
-        {
-            PRISM.ConsoleMsgUtils.ShowDebug(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, message);
-        }
-
-        private void LogWarning(string message)
-        {
-            PRISM.ConsoleMsgUtils.ShowWarning(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, message);
-        }
-
-        private void LogError(string message, Exception ex = null)
-        {
-            PRISM.ConsoleMsgUtils.ShowError(message);
-
-            if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
-            else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
-
-        }
-
         #endregion
 
         #region "Event handlers"
 
-        /// <summary>
-        /// Event handler for InfoMessage event from SQL Server
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
-        private void OnInfoMessage(object sender, SqlInfoMessageEventArgs args)
         {
-            var errString = new StringBuilder();
-            foreach (SqlError err in args.Errors)
-            {
-                errString.Length = 0;
-                errString.Append("Message: " + err.Message);
-                errString.Append(", Source: " + err.Source);
-                errString.Append(", Class: " + err.Class);
-                errString.Append(", State: " + err.State);
-                errString.Append(", Number: " + err.Number);
-                errString.Append(", LineNumber: " + err.LineNumber);
-                errString.Append(", Procedure:" + err.Procedure);
-                errString.Append(", Server: " + err.Server);
-                m_ErrorList.Add(errString.ToString());
-            }
         }
 
         #endregion

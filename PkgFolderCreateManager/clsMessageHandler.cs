@@ -129,40 +129,27 @@ namespace PkgFolderCreateManager
                 var commandSession = m_Connection.CreateSession();
                 m_CommandConsumer = commandSession.CreateConsumer(new ActiveMQQueue(m_CommandQueueName));
                 //                    commandConsumer.Listener += new MessageListener(OnCommandReceived);
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Command listener established");
+                LogDebug("Command listener established");
 
                 // topic for commands broadcast to all folder makers
                 var broadcastSession = m_Connection.CreateSession();
                 m_BroadcastConsumer = broadcastSession.CreateConsumer(new ActiveMQTopic(m_BroadcastTopicName));
                 //                    broadcastConsumer.Listener += new MessageListener(OnBroadcastReceived);
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Broadcast listener established");
+                LogDebug("Broadcast listener established");
 
                 // topic for the folder maker to send status information over
                 m_StatusSession = m_Connection.CreateSession();
                 m_StatusSender = m_StatusSession.CreateProducer(new ActiveMQTopic(m_StatusTopicName));
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, "Status sender established");
+                LogDebug("Status sender established");
 
                 return true;
             }
             catch (Exception ex)
             {
-                var msg = "Exception while initializing messages sessiions";
-                LogError(msg, ex);
+                LogError("Exception while initializing message sessions", ex);
                 DestroyConnection();
                 return false;
             }
-        }
-
-
-        private void LogError(string message, Exception ex = null)
-        {
-            PRISM.ConsoleMsgUtils.ShowError(message);
-
-            if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
-            else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
-
         }
 
         /// <summary>
@@ -174,12 +161,12 @@ namespace PkgFolderCreateManager
         {
             var textMessage = message as ITextMessage;
             var Msg = "clsMessageHandler(), Command message received";
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
             if (CommandReceived != null)
             {
                 // call the delegate to process the commnd
                 Msg = "clsMessageHandler().OnCommandReceived: At lease one event handler assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
                 if (textMessage != null)
                 {
                     CommandReceived(textMessage.Text);
@@ -188,7 +175,7 @@ namespace PkgFolderCreateManager
             else
             {
                 Msg = "clsMessageHandler().OnCommandReceived: No event handlers assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
             }
         }
 
@@ -201,12 +188,12 @@ namespace PkgFolderCreateManager
         {
             var textMessage = message as ITextMessage;
             var Msg = "clsMessageHandler(), Broadcast message received";
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
             if (BroadcastReceived != null)
             {
                 // call the delegate to process the commnd
                 Msg = "clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
                 if (textMessage != null)
                 {
                     BroadcastReceived(textMessage.Text);
@@ -215,7 +202,7 @@ namespace PkgFolderCreateManager
             else
             {
                 Msg = "clsMessageHandler().OnBroadcastReceived: No event handlers assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, Msg);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
             }
         }
 

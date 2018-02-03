@@ -569,15 +569,14 @@ namespace PkgFolderCreateManager
             }
         }
 
-
         private void LogError(string message, Exception ex = null)
         {
             ConsoleMsgUtils.ShowError(message);
 
             if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message);
             else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message, ex);
 
         }
         #endregion

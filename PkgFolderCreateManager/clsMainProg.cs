@@ -200,7 +200,8 @@ namespace PkgFolderCreateManager
                 logFileNameBase = "FolderCreate";
 
             var debugLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
-            clsLogTools.CreateFileLogger(logFileNameBase, debugLevel);
+            clsLogTools.SetFileLogLevel(debugLevel);
+            clsLogTools.CreateFileLogger(logFileNameBase);
 
             var logCnStr = m_MgrSettings.GetParam("connectionstring");
             var moduleName = m_MgrSettings.GetParam("modulename");
@@ -439,19 +440,19 @@ namespace PkgFolderCreateManager
         private void LogDebug(string message)
         {
             PRISM.ConsoleMsgUtils.ShowDebug(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.DEBUG, message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, message);
         }
 
         private void LogInfo(string message)
         {
             Console.WriteLine(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.INFO, message);
         }
 
         private void LogWarning(string message)
         {
             PRISM.ConsoleMsgUtils.ShowWarning(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, message);
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.WARN, message);
         }
 
         private void LogError(string message, Exception ex = null)
@@ -459,20 +460,20 @@ namespace PkgFolderCreateManager
             PRISM.ConsoleMsgUtils.ShowError(message);
 
             if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message);
             else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
+                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message, ex);
 
         }
 
-        private void MessageLoggedHandler(string message, clsLogTools.LogLevels logLevel)
+        private void MessageLoggedHandler(string message, PRISM.Logging.BaseLogger.LogLevels logLevel)
         {
             var timeStamp = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
 
             // Update the status file data
             clsStatusData.MostRecentLogMessage = timeStamp + "; " + message + "; " + logLevel;
 
-            if (logLevel <= clsLogTools.LogLevels.ERROR)
+            if (logLevel <= PRISM.Logging.BaseLogger.LogLevels.ERROR)
             {
                 clsStatusData.AddErrorMessage(timeStamp + "; " + message + "; " + logLevel);
             }

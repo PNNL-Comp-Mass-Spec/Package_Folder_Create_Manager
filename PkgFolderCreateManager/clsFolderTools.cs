@@ -15,7 +15,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Performs folder creation
     /// </summary>
-    public class clsFolderTools
+    public class clsFolderTools : clsLoggerBase
     {
 
         #region "Constants"
@@ -36,7 +36,7 @@ namespace PkgFolderCreateManager
         public static void CreateFolder(string perspective, StringDictionary folderParams, string source)
         {
             var msg = "Processing command for package " + folderParams["package"] + " (Source = " + source + ")";
-            LogInfo(msg);
+            ReportStatus(msg);
 
             // // Test for add or update
             // if (folderParams["cmd"].ToLower() != "add")
@@ -153,7 +153,7 @@ namespace PkgFolderCreateManager
                 else
                 {
                     if (logIfExists)
-                        LogInfo(msg);
+                        ReportStatus(msg);
                 }
                 return true;
             }
@@ -163,7 +163,7 @@ namespace PkgFolderCreateManager
             {
                 Directory.CreateDirectory(folderPath);
                 var msg = "Folder " + folderPath + " created";
-                LogInfo(msg);
+                ReportStatus(msg);
                 return true;
             }
             catch (Exception ex)
@@ -172,29 +172,6 @@ namespace PkgFolderCreateManager
                 LogError(msg, ex);
                 return false;
             }
-        }
-
-        private static void LogInfo(string message)
-        {
-            Console.WriteLine(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, message);
-        }
-
-        private static void LogWarning(string message)
-        {
-            PRISM.ConsoleMsgUtils.ShowWarning(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.WARN, message);
-        }
-
-        private static void LogError(string message, Exception ex = null)
-        {
-            PRISM.ConsoleMsgUtils.ShowError(message);
-
-            if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message);
-            else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.ERROR, message, ex);
-
         }
 
         #endregion
