@@ -210,8 +210,9 @@ namespace PkgFolderCreateManager
             clsLogTools.MessageLogged += MessageLoggedHandler;
 
             // Make the initial log entry
-            var myMsg = "=== Started Package Folder Creation Manager V" + Application.ProductVersion + " ===== ";
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, clsLogTools.LogLevels.INFO, myMsg);
+            var appVersion = Assembly.GetExecutingAssembly().GetName().Version;
+            var myMsg = "=== Started Package Folder Creation Manager V" + appVersion + " ===== ";
+            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.INFO, myMsg);
 
             // Setup the message queue
             m_MsgHandler = new clsMessageHandler();
@@ -235,7 +236,8 @@ namespace PkgFolderCreateManager
             m_MsgHandler.BroadcastReceived += OnMsgHandler_BroadcastReceived;
 
             // Setup the status file class
-            var fInfo = new FileInfo(Application.ExecutablePath);
+            var appPath = PRISM.FileProcessor.ProcessFilesOrFoldersBase.GetAppPath();
+            var fInfo = new FileInfo(appPath);
 
             string statusFileNameLoc;
             if (fInfo.DirectoryName == null)
