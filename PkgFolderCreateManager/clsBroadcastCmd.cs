@@ -13,7 +13,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Class to hold data receieved from Broadcast command queue for control of manager
     /// </summary>
-    public class clsBroadcastCmd
+    class clsBroadcastCmd
     {
 
         #region "Properties"

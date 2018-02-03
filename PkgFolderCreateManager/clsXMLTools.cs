@@ -15,7 +15,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Tools for parsing input XML
     /// </summary>
-    public class clsXMLTools
+    class clsXMLTools
     {
 
         #region "Methods"

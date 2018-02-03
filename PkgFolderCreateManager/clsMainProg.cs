@@ -7,9 +7,9 @@
 //*********************************************************************************************************
 
 using System;
-using System.Windows.Forms;
 using System.IO;
 using System.Collections.Specialized;
+using System.Reflection;
 
 namespace PkgFolderCreateManager
 {
@@ -90,9 +90,8 @@ namespace PkgFolderCreateManager
                             continueLooping = false;
                             break;
 
-                    }    // End switch (taskReturn)
-
-                } // While Loop
+                    }
+                }
 
             }
             catch (Exception ex)
@@ -239,7 +238,8 @@ namespace PkgFolderCreateManager
 
             m_StatusFile = new clsStatusFile(statusFileNameLoc, m_MsgHandler);
             {
-                m_StatusFile.MgrName = m_MgrSettings.GetParam("MgrName");
+                m_StatusFile.LogToMsgQueue = m_MgrSettings.GetParam("LogStatusToMessageQueue", false);
+                m_StatusFile.MgrName = m_MgrSettings.ManagerName;
                 m_StatusFile.InitStatusFromFile();
                 SetStartupStatus();
                 m_StatusFile.WriteStatusFile();
@@ -277,7 +277,7 @@ namespace PkgFolderCreateManager
             }
 
             // Determine if the message applies to this machine
-            if (!recvCmd.MachineList.Contains(m_MgrSettings.GetParam("MgrName")))
+            if (!recvCmd.MachineList.Contains(m_MgrSettings.ManagerName))
             {
                 // Received command doesn't apply to this manager
                 msg = "Received command not applicable to this manager instance";
