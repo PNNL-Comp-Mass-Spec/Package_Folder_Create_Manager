@@ -44,14 +44,6 @@ namespace PkgFolderCreateManager
 
         #region "Methods"
 
-        private bool CBoolSafe(string Value, bool bDefaultValue)
-        {
-            if (bool.TryParse(Value, out var bValue))
-                return bValue;
-
-            return bDefaultValue;
-        }
-
         public bool CheckDBQueue()
         {
             var success = true;
@@ -247,7 +239,6 @@ namespace PkgFolderCreateManager
 
             m_StatusFile = new clsStatusFile(statusFileNameLoc, m_MsgHandler);
             {
-                m_StatusFile.LogToMsgQueue = CBoolSafe(m_MgrSettings.GetParam("LogStatusToMessageQueue"), false);
                 m_StatusFile.MgrName = m_MgrSettings.GetParam("MgrName");
                 m_StatusFile.InitStatusFromFile();
                 SetStartupStatus();
@@ -361,9 +352,9 @@ namespace PkgFolderCreateManager
             m_Task = new clsFolderCreateTask(m_MgrSettings);
 
             LogDebug("Starting DoFolderCreation()");
-            m_MgrActive = CBoolSafe(m_MgrSettings.GetParam("mgractive"), false);
+            m_MgrActive = m_MgrSettings.GetParam("mgractive", false);
 
-            var checkDBQueue = CBoolSafe(m_MgrSettings.GetParam("CheckDataFolderCreateQueue"), false);
+            var checkDBQueue = m_MgrSettings.GetParam("CheckDataFolderCreateQueue", false);
 
             if (!checkDBQueue)
             {
