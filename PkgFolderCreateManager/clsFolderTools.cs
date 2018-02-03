@@ -36,7 +36,7 @@ namespace PkgFolderCreateManager
         public static void CreateFolder(string perspective, StringDictionary folderParams, string source)
         {
             var msg = "Processing command for package " + folderParams["package"] + " (Source = " + source + ")";
-            ReportStatus(msg);
+            LogMessage(msg);
 
             // // Test for add or update
             // if (folderParams["cmd"].ToLower() != "add")
@@ -153,7 +153,7 @@ namespace PkgFolderCreateManager
                 else
                 {
                     if (logIfExists)
-                        ReportStatus(msg);
+                        LogMessage(msg);
                 }
                 return true;
             }
@@ -163,7 +163,7 @@ namespace PkgFolderCreateManager
             {
                 Directory.CreateDirectory(folderPath);
                 var msg = "Folder " + folderPath + " created";
-                ReportStatus(msg);
+                LogMessage(msg);
                 return true;
             }
             catch (Exception ex)

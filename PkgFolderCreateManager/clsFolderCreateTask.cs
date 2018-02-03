@@ -29,7 +29,7 @@ namespace PkgFolderCreateManager
         int mTaskID;
         string mTaskParametersXML = string.Empty;
 
-        private bool mConnectionInfoLogged = false;
+        private bool mConnectionInfoLogged;
         #endregion
 
         #region "Properties"
@@ -146,43 +146,43 @@ namespace PkgFolderCreateManager
             try
             {
                 // Set up the command object prior to SP execution
-                var myCmd = new SqlCommand
+                var spCmd = new SqlCommand
                 {
                     CommandType = CommandType.StoredProcedure,
                     CommandText = SP_NAME_REQUEST_TASK
                 };
 
-                myCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int)).Direction = ParameterDirection.ReturnValue;
-                myCmd.Parameters.Add(new SqlParameter("@processorName", SqlDbType.VarChar, 128)).Value = m_MgrParams.GetParam("MgrName");
-                myCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int)).Direction = ParameterDirection.Output;
-                myCmd.Parameters.Add(new SqlParameter("@parameters", SqlDbType.VarChar, 4000)).Direction = ParameterDirection.Output;
-                myCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512)).Direction = ParameterDirection.Output;
-                myCmd.Parameters.Add(new SqlParameter("@infoOnly", SqlDbType.TinyInt)).Value = 0;
-                myCmd.Parameters.Add(new SqlParameter("@taskCountToPreview", SqlDbType.Int)).Value = 10;
+                spCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int)).Direction = ParameterDirection.ReturnValue;
+                spCmd.Parameters.Add(new SqlParameter("@processorName", SqlDbType.VarChar, 128)).Value = ManagerName;
+                spCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int)).Direction = ParameterDirection.Output;
+                spCmd.Parameters.Add(new SqlParameter("@parameters", SqlDbType.VarChar, 4000)).Direction = ParameterDirection.Output;
+                spCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512)).Direction = ParameterDirection.Output;
+                spCmd.Parameters.Add(new SqlParameter("@infoOnly", SqlDbType.TinyInt)).Value = 0;
+                spCmd.Parameters.Add(new SqlParameter("@taskCountToPreview", SqlDbType.Int)).Value = 10;
 
                 if (!mConnectionInfoLogged)
                 {
-                    var msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + m_BrokerConnStr;
+                    var msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + m_ConnStr;
                     LogDebug(msg);
 
                     var paramListHeader = "clsCaptureTask.RequestTaskDetailed(), printing param list";
                     LogDebug(paramListHeader);
 
-                    PrintCommandParams(myCmd);
+                    PrintCommandParams(spCmd);
 
                     mConnectionInfoLogged = true;
                 }
 
                 // Execute the SP
-                var retVal = ExecuteSP(myCmd, m_ConnStr);
+                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(spCmd, out _);
 
-                switch (retVal)
+                switch (resCode)
                 {
                     case RET_VAL_OK:
                         // No errors found in SP call, so see if any step tasks were found
-                        mTaskID = (int)myCmd.Parameters["@taskID"].Value;
+                        mTaskID = (int)spCmd.Parameters["@taskID"].Value;
 
-                        mTaskParametersXML = (string)myCmd.Parameters["@parameters"].Value;
+                        mTaskParametersXML = (string)spCmd.Parameters["@parameters"].Value;
 
                         outcome = EnumRequestTaskResult.TaskFound;
                         break;
@@ -192,8 +192,8 @@ namespace PkgFolderCreateManager
                         break;
                     default:
                         // There was an SP error
-                        var errMsg = "clsFolderCreateTask.RequestTaskDetailed(), SP execution error " + retVal +
-                            "; Msg text = " + (string)myCmd.Parameters["@message"].Value;
+                        var errMsg = "clsFolderCreateTask.RequestTaskDetailed(), SP execution error " + resCode +
+                            "; Msg text = " + (string)spCmd.Parameters["@message"].Value;
 
                         LogError(errMsg);
                         outcome = EnumRequestTaskResult.ResultError;
@@ -281,7 +281,7 @@ namespace PkgFolderCreateManager
                 LogDebug(msg);
 
                 // Execute the SP
-                var resCode = ExecuteSP(myCmd, connStr);
+                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(myCmd);
 
                 if (resCode == 0)
                 {
