@@ -125,7 +125,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// When true, the status XML is being sent to the manager status message queue
         /// </summary>
-        bool LogToMsgQueue { get; set;  }
+        bool LogToMsgQueue { get; set; }
 
         #endregion
 

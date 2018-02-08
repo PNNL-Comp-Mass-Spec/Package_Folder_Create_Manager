@@ -245,7 +245,7 @@ namespace PkgFolderCreateManager
         /// </summary>
         /// <returns>True if success, otherwise false</returns>
         /// <remarks>Performs retries if necessary.</remarks>
-        private bool LoadMgrSettingsFromDB(bool logConnectionErrors= true)
+        private bool LoadMgrSettingsFromDB(bool logConnectionErrors = true)
         {
 
             var managerName = GetParam(MGR_PARAM_MGR_NAME, string.Empty);
