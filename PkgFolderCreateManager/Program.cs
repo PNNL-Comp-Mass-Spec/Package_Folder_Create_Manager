@@ -39,6 +39,7 @@ namespace PkgFolderCreateManager
                     m_MainProcess = new clsMainProg();
                     if (!m_MainProcess.InitMgr())
                     {
+                        PRISM.Logging.FileLogger.FlushPendingMessages();
                         return;
                     }
                     m_MainProcess.DoFolderCreation();
@@ -50,6 +51,8 @@ namespace PkgFolderCreateManager
                     ConsoleMsgUtils.ShowWarning(errMsg + "; " + clsStackTraceFormatter.GetExceptionStackTrace(ex, true));
                     ConsoleMsgUtils.ShowWarning("Exiting clsMainProcess.Main with error code = 1");
             }
+
+            PRISM.Logging.FileLogger.FlushPendingMessages();
 
         }
 

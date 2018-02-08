@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Collections.Specialized;
 using System.Reflection;
+using PRISM.Logging;
 
 namespace PkgFolderCreateManager
 {
@@ -190,20 +191,31 @@ namespace PkgFolderCreateManager
             if (string.IsNullOrWhiteSpace(logFileNameBase))
                 logFileNameBase = "FolderCreate";
 
-            var debugLevel = int.Parse(m_MgrSettings.GetParam("debuglevel"));
-            clsLogTools.SetFileLogLevel(debugLevel);
-            clsLogTools.CreateFileLogger(logFileNameBase);
+            BaseLogger.LogLevels logLevel;
+            if (int.TryParse(m_MgrSettings.GetParam("debuglevel"), out var debugLevel))
+            {
+                logLevel = (BaseLogger.LogLevels)debugLevel;
+            }
+            else
+            {
+                logLevel = BaseLogger.LogLevels.INFO;
+            }
 
+            LogTools.CreateFileLogger(logFileNameBase, logLevel);
+
+            // Typically:
+            // Data Source=gigasax;Initial Catalog=DMS_Pipeline;Integrated Security=SSPI;
             var logCnStr = m_MgrSettings.GetParam("connectionstring");
             var moduleName = m_MgrSettings.GetParam("modulename");
-            clsLogTools.CreateDbLogger(logCnStr, moduleName);
+            LogTools.CreateDbLogger(logCnStr, moduleName);
 
-            clsLogTools.MessageLogged += MessageLoggedHandler;
+            LogTools.MessageLogged += MessageLoggedHandler;
 
             // Make the initial log entry
             var appVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            var myMsg = "=== Started Package Folder Creation Manager V" + appVersion + " ===== ";
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.INFO, myMsg);
+            var msg = "=== Started Package Folder Creation Manager V" + appVersion + " ===== ";
+
+            LogTools.LogMessage(msg);
 
             // Setup the message queue
             m_MsgHandler = new clsMessageHandler();
@@ -432,41 +444,32 @@ namespace PkgFolderCreateManager
 
         private void LogDebug(string message)
         {
-            PRISM.ConsoleMsgUtils.ShowDebug(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, message);
+            LogTools.LogDebug(message);
         }
 
         private void LogInfo(string message)
         {
-            Console.WriteLine(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.INFO, message);
+            LogTools.LogMessage(message);
         }
 
         private void LogWarning(string message)
         {
-            PRISM.ConsoleMsgUtils.ShowWarning(message);
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.WARN, message);
+            LogTools.LogWarning(message);
         }
 
         private void LogError(string message, Exception ex = null)
         {
-            PRISM.ConsoleMsgUtils.ShowError(message);
-
-            if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message);
-            else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message, ex);
-
+            LogTools.LogError(message, ex);
         }
 
-        private void MessageLoggedHandler(string message, PRISM.Logging.BaseLogger.LogLevels logLevel)
+        private void MessageLoggedHandler(string message, BaseLogger.LogLevels logLevel)
         {
             var timeStamp = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
 
             // Update the status file data
             clsStatusData.MostRecentLogMessage = timeStamp + "; " + message + "; " + logLevel;
 
-            if (logLevel <= PRISM.Logging.BaseLogger.LogLevels.ERROR)
+            if (logLevel <= BaseLogger.LogLevels.ERROR)
             {
                 clsStatusData.AddErrorMessage(timeStamp + "; " + message + "; " + logLevel);
             }

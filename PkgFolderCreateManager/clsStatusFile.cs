@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Xml;
 using System.IO;
 using PRISM;
+using PRISM.Logging;
 
 namespace PkgFolderCreateManager
 {
@@ -571,14 +572,9 @@ namespace PkgFolderCreateManager
 
         private void LogError(string message, Exception ex = null)
         {
-            ConsoleMsgUtils.ShowError(message);
-
-            if (ex == null)
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message);
-            else
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.ERROR, message, ex);
-
+            LogTools.LogError(message, ex);
         }
+
         #endregion
     }
 }

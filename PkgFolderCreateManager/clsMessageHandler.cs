@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using Apache.NMS;
 using Apache.NMS.ActiveMQ;
 using Apache.NMS.ActiveMQ.Commands;
+using PRISM.Logging;
 
 namespace PkgFolderCreateManager
 {
@@ -197,13 +198,13 @@ namespace PkgFolderCreateManager
         private void OnCommandReceived(IMessage message)
         {
             var textMessage = message as ITextMessage;
-            var Msg = "clsMessageHandler(), Command message received";
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
+            var msgReceived = "clsMessageHandler(), Command message received";
+            LogTools.LogDebug(msgReceived);
             if (CommandReceived != null)
             {
                 // call the delegate to process the commnd
-                Msg = "clsMessageHandler().OnCommandReceived: At lease one event handler assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
+                var msg = "clsMessageHandler().OnCommandReceived: At lease one event handler assigned";
+                LogTools.LogDebug(msg);
                 if (textMessage != null)
                 {
                     CommandReceived(textMessage.Text);
@@ -211,8 +212,8 @@ namespace PkgFolderCreateManager
             }
             else
             {
-                Msg = "clsMessageHandler().OnCommandReceived: No event handlers assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
+                var msg = "clsMessageHandler().OnCommandReceived: No event handlers assigned";
+                LogTools.LogDebug(msg);
             }
         }
 
@@ -224,13 +225,13 @@ namespace PkgFolderCreateManager
         private void OnBroadcastReceived(IMessage message)
         {
             var textMessage = message as ITextMessage;
-            var Msg = "clsMessageHandler(), Broadcast message received";
-            clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
+            var msgReceived = "clsMessageHandler(), Broadcast message received";
+            LogTools.LogDebug(msgReceived);
             if (BroadcastReceived != null)
             {
                 // call the delegate to process the commnd
-                Msg = "clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
+                var msg = "clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned";
+                LogTools.LogDebug(msg);
                 if (textMessage != null)
                 {
                     BroadcastReceived(textMessage.Text);
@@ -238,8 +239,8 @@ namespace PkgFolderCreateManager
             }
             else
             {
-                Msg = "clsMessageHandler().OnBroadcastReceived: No event handlers assigned";
-                clsLogTools.WriteLog(clsLogTools.LoggerTypes.LogFile, PRISM.Logging.BaseLogger.LogLevels.DEBUG, Msg);
+                var msg = "clsMessageHandler().OnBroadcastReceived: No event handlers assigned";
+                LogTools.LogDebug(msg);
             }
         }
 
