@@ -20,7 +20,6 @@ namespace PkgFolderCreateManager
     class clsMainProg
     {
 
-        #region "Enums"
         #region "Constants and Enums"
 
         private const string DEFAULT_BASE_LOGFILE_NAME = @"Logs\FolderCreate";
@@ -28,8 +27,7 @@ namespace PkgFolderCreateManager
         private enum BroadcastCmdType
         {
             Shutdown,
-            ReadConfig,
-            Invalid
+            ReadConfig
         }
 
         #endregion
