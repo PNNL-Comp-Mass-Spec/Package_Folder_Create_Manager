@@ -21,6 +21,9 @@ namespace PkgFolderCreateManager
     {
 
         #region "Enums"
+        #region "Constants and Enums"
+
+        private const string DEFAULT_BASE_LOGFILE_NAME = @"Logs\FolderCreate";
 
         private enum BroadcastCmdType
         {
@@ -175,6 +178,17 @@ namespace PkgFolderCreateManager
         /// <returns>TRUE for success, FALSE for failure</returns>
         public bool InitMgr()
         {
+            // Define the default logging info
+            // This will get updated below
+            LogTools.CreateFileLogger(DEFAULT_BASE_LOGFILE_NAME, BaseLogger.LogLevels.DEBUG);
+
+            // Create a database logger connected to the Manager Control DB
+            // Once the initial parameters have been successfully read,
+            // we remove this logger than make a new one using the connection string read from the Manager Control DB
+            var defaultDmsConnectionString = Properties.Settings.Default.MgrCnfgDbConnectStr;
+
+            LogTools.CreateDbLogger(defaultDmsConnectionString, "FolderCreate: " + System.Net.Dns.GetHostName());
+
             // Get the manager settings
             try
             {
