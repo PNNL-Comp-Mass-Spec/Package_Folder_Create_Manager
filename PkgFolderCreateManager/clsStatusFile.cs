@@ -18,8 +18,49 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Provides tools for creating and updating a task status file
     /// </summary>
-    class clsStatusFile : clsEventNotifier, IStatusFile
+    class clsStatusFile : EventNotifier
     {
+
+        #region "Enums"
+
+        /// <summary>
+        /// Manager status constants
+        /// </summary>
+        public enum EnumMgrStatus : short
+        {
+            Stopped,
+            Stopped_Error,
+            Running,
+            Disabled_Local,
+            Disabled_MC
+        }
+
+        /// <summary>
+        /// Task status constants
+        /// </summary>
+        public enum EnumTaskStatus : short
+        {
+            Stopped,
+            Requesting,
+            Running,
+            Closing,
+            Failed,
+            No_Task
+        }
+
+        /// <summary>
+        /// Task status detail constants
+        /// </summary>
+        public enum EnumTaskStatusDetail : short
+        {
+            Retrieving_Resources,
+            Running_Tool,
+            Packaging_Results,
+            Delivering_Results,
+            No_Task
+        }
+
+        #endregion
 
         #region "Class variables"
 
@@ -76,7 +117,7 @@ namespace PkgFolderCreateManager
         public float Progress { get; set; }
 
         /// <summary>
-        // Current task
+        /// Current task
         /// </summary>
         public string CurrentOperation { get; set; }
 
@@ -117,12 +158,12 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Constructor
         /// </summary>
-        public clsStatusFile(string statusFilePath, clsMessageHandler MsgHandler)
+        public clsStatusFile(string statusFilePath, clsMessageHandler msgHandler)
         {
             FileNamePath = statusFilePath;
             TaskStartTime = DateTime.UtcNow;
 
-            m_MsgHandler = MsgHandler;
+            m_MsgHandler = msgHandler;
 
             ClearCachedInfo();
         }
@@ -181,7 +222,7 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
-        /// Get the folder path for the status file tracked by FileNamePath
+        /// Get the directory path for the status file tracked by FileNamePath
         /// </summary>
         /// <returns></returns>
         private string GetStatusFileDirectory()
@@ -487,9 +528,11 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Writes the status to the message queue
         /// </summary>
-        /// <param name="strStatusXML">A string contiaining the XML to write</param>
+        /// <param name="strStatusXML">A string containing the XML to write</param>
         protected void LogStatusToMessageQueue(string strStatusXML)
         {
+            if (m_MsgHandler == null)
+                return;
 
             try
             {
@@ -558,11 +601,17 @@ namespace PkgFolderCreateManager
                 // Get the most recent job info
                 MostRecentJobInfo = Doc.SelectSingleNode("//Task/TaskDetails/MostRecentJobInfo")?.InnerText;
 
-                // Get the error messsages
-                foreach (XmlNode Xn in Doc.SelectNodes("//Manager/RecentErrorMessages/ErrMsg"))
+                var recentErrorMessages = Doc.SelectNodes("//Manager/RecentErrorMessages/ErrMsg");
+
+                if (recentErrorMessages != null)
                 {
-                    clsStatusData.AddErrorMessage(Xn.InnerText);
+                    // Get the error messages
+                    foreach (XmlNode Xn in recentErrorMessages)
+                    {
+                        clsStatusData.AddErrorMessage(Xn.InnerText);
+                    }
                 }
+
             }
             catch (Exception ex)
             {

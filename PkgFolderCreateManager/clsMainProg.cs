@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Collections.Specialized;
 using System.Reflection;
+using PRISM;
 using PRISM.Logging;
 
 namespace PkgFolderCreateManager
@@ -17,7 +18,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Main program class for application
     /// </summary>
-    class clsMainProg
+    class clsMainProg : clsLoggerBase
     {
 
         #region "Constants and Enums"
@@ -35,7 +36,7 @@ namespace PkgFolderCreateManager
         #region "Class variables"
 
         private clsMgrSettings m_MgrSettings;
-        private IStatusFile m_StatusFile;
+        private clsStatusFile m_StatusFile;
         private clsMessageHandler m_MsgHandler;
         private bool m_Running;
         private bool m_MgrActive;
@@ -123,7 +124,7 @@ namespace PkgFolderCreateManager
                 errorMessage = "Exception parsing XML command string";
                 var msg = errorMessage + ": " + cmdText + Environment.NewLine;
                 LogError(msg, ex);
-                m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
+                m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.Failed;
                 m_StatusFile.WriteStatusFile();
                 return false;
             }
@@ -134,7 +135,7 @@ namespace PkgFolderCreateManager
                 errorMessage = "cmdParams is null; Cannot create folder";
                 var msg = errorMessage + " for string " + cmdText;
                 LogError(msg);
-                m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
+                m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.Failed;
                 m_StatusFile.WriteStatusFile();
                 return false;
             }
@@ -142,7 +143,7 @@ namespace PkgFolderCreateManager
             try
             {
 
-                m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.Running_Tool;
+                m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.Running_Tool;
 
                 var dumStr = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
                 m_StatusFile.MostRecentJobInfo = dumStr;
@@ -151,8 +152,8 @@ namespace PkgFolderCreateManager
                 clsFolderTools.CreateFolder(m_MgrSettings.GetParam("perspective"), cmdParams, source);
 
                 m_StatusFile.JobNumber = 0;
-                m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
-                m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
+                m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.No_Task;
+                m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.No_Task;
                 m_StatusFile.WriteStatusFile();
 
             }
@@ -161,7 +162,7 @@ namespace PkgFolderCreateManager
                 errorMessage = "Exception calling clsFolderTools.CreateFolder";
                 var msg = errorMessage + " with XML command string: " + cmdText;
                 LogError(msg, ex);
-                m_StatusFile.TaskStatus = EnumTaskStatus.Failed;
+                m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.Failed;
                 m_StatusFile.WriteStatusFile();
                 return false;
             }
@@ -199,9 +200,7 @@ namespace PkgFolderCreateManager
             }
 
             // Setup the loggers
-            var logFileNameBase = m_MgrSettings.GetParam("logfilename");
-            if (string.IsNullOrWhiteSpace(logFileNameBase))
-                logFileNameBase = "FolderCreate";
+            var logFileNameBase = m_MgrSettings.GetParam("logfilename", "FolderCreate");
 
             BaseLogger.LogLevels logLevel;
             if (int.TryParse(m_MgrSettings.GetParam("debuglevel"), out var debugLevel))
@@ -230,12 +229,14 @@ namespace PkgFolderCreateManager
             LogTools.LogMessage(msg);
 
             // Setup the message queue
-            m_MsgHandler = new clsMessageHandler();
-            m_MsgHandler.BrokerUri = m_MsgHandler.BrokerUri = m_MgrSettings.GetParam("MessageQueueURI");
-            m_MsgHandler.CommandQueueName = m_MgrSettings.GetParam("ControlQueueName");
-            m_MsgHandler.BroadcastTopicName = m_MgrSettings.GetParam("BroadcastQueueTopic");
-            m_MsgHandler.StatusTopicName = m_MgrSettings.GetParam("MessageQueueTopicMgrStatus");
-            m_MsgHandler.MgrSettings = m_MgrSettings;
+            m_MsgHandler = new clsMessageHandler
+            {
+                BrokerUri = m_MgrSettings.GetParam("MessageQueueURI"),
+                CommandQueueName = m_MgrSettings.GetParam("ControlQueueName"),
+                BroadcastTopicName = m_MgrSettings.GetParam("BroadcastQueueTopic"),
+                StatusTopicName = m_MgrSettings.GetParam("MessageQueueTopicMgrStatus"),
+                MgrSettings = m_MgrSettings
+            };
 
             if (!m_MsgHandler.Init())
             {
@@ -260,14 +261,19 @@ namespace PkgFolderCreateManager
             else
                 statusFileNameLoc = Path.Combine(fInfo.DirectoryName, "Status.xml");
 
-            m_StatusFile = new clsStatusFile(statusFileNameLoc, m_MsgHandler);
+            m_StatusFile = new clsStatusFile(statusFileNameLoc, m_MsgHandler)
             {
-                m_StatusFile.LogToMsgQueue = m_MgrSettings.GetParam("LogStatusToMessageQueue", false);
-                m_StatusFile.MgrName = m_MgrSettings.ManagerName;
-                m_StatusFile.InitStatusFromFile();
-                SetStartupStatus();
-                m_StatusFile.WriteStatusFile();
-            }
+                LogToMsgQueue = m_MgrSettings.GetParam("LogStatusToMessageQueue", false),
+                MgrName = m_MgrSettings.ManagerName
+            };
+
+            AttachEvents(m_StatusFile);
+
+            m_StatusFile.InitStatusFromFile();
+
+            SetStartupStatus();
+            m_StatusFile.WriteStatusFile();
+
             LogDebug("Status file init complete");
 
             // Register the listeners for the message handler
@@ -314,13 +320,13 @@ namespace PkgFolderCreateManager
             {
                 case "shutdown":
                     msg = "Shutdown message received";
-                    LogInfo(msg);
+                    LogMessage(msg);
                     m_BroadcastCmdType = BroadcastCmdType.Shutdown;
                     m_Running = false;
                     break;
                 case "readconfig":
                     msg = "Reload config message received";
-                    LogInfo(msg);
+                    LogMessage(msg);
                     m_BroadcastCmdType = BroadcastCmdType.ReadConfig;
                     m_Running = false;
                     break;
@@ -344,7 +350,7 @@ namespace PkgFolderCreateManager
                 var msg = "clsMainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
                 LogDebug(msg);
 
-                m_StatusFile.TaskStatus = EnumTaskStatus.Running;
+                m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.Running;
                 m_StatusFile.WriteStatusFile();
 
                 var bSuccess = CreateFolder(cmdText, out var sErrorMessage, "ActiveMQ Broker");
@@ -402,7 +408,7 @@ namespace PkgFolderCreateManager
                     {
                         lastLoopRun = DateTime.UtcNow;
                         logMsg = "Manager running";
-                        LogInfo(logMsg);
+                        LogMessage(logMsg);
                     }
                 }
 
@@ -445,33 +451,13 @@ namespace PkgFolderCreateManager
                     }
 
                     logMsg = "=== Exiting Package Folder Creation Manager ===";
-                    LogInfo(logMsg);
+                    LogMessage(logMsg);
                     break;
                 default:
                     logMsg = "clsMainProg.DoFolderCreation(); Invalid command type received: " + m_BroadcastCmdType.ToString();
                     LogError(logMsg);
                     break;
             }
-        }
-
-        private void LogDebug(string message)
-        {
-            LogTools.LogDebug(message);
-        }
-
-        private void LogInfo(string message)
-        {
-            LogTools.LogMessage(message);
-        }
-
-        private void LogWarning(string message)
-        {
-            LogTools.LogWarning(message);
-        }
-
-        private void LogError(string message, Exception ex = null)
-        {
-            LogTools.LogError(message, ex);
         }
 
         private void MessageLoggedHandler(string message, BaseLogger.LogLevels logLevel)
@@ -493,12 +479,12 @@ namespace PkgFolderCreateManager
         /// </summary>
         private void SetStartupStatus()
         {
-            m_StatusFile.MgrStatus = EnumMgrStatus.Running;
+            m_StatusFile.MgrStatus = clsStatusFile.EnumMgrStatus.Running;
             m_StatusFile.Tool = "NA";
-            m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
+            m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.No_Task;
             m_StatusFile.Dataset = "NA";
             m_StatusFile.CurrentOperation = "";
-            m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
+            m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.No_Task;
         }
 
         /// <summary>
@@ -506,12 +492,12 @@ namespace PkgFolderCreateManager
         /// </summary>
         private void SetNormalShutdownStatus()
         {
-            m_StatusFile.MgrStatus = EnumMgrStatus.Stopped;
+            m_StatusFile.MgrStatus = clsStatusFile.EnumMgrStatus.Stopped;
             m_StatusFile.Tool = "NA";
-            m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
+            m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.No_Task;
             m_StatusFile.Dataset = "NA";
             m_StatusFile.CurrentOperation = "";
-            m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
+            m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.No_Task;
         }
 
         /// <summary>
@@ -519,12 +505,38 @@ namespace PkgFolderCreateManager
         /// </summary>
         private void SetMCDisabledStatus()
         {
-            m_StatusFile.MgrStatus = EnumMgrStatus.Disabled_MC;
+            m_StatusFile.MgrStatus = clsStatusFile.EnumMgrStatus.Disabled_MC;
             m_StatusFile.Tool = "NA";
-            m_StatusFile.TaskStatus = EnumTaskStatus.No_Task;
+            m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.No_Task;
             m_StatusFile.Dataset = "NA";
             m_StatusFile.CurrentOperation = "";
-            m_StatusFile.TaskStatusDetail = EnumTaskStatusDetail.No_Task;
+            m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.No_Task;
+        }
+
+        #endregion
+
+        #region "Event Handlers"
+
+        private void AttachEvents(EventNotifier objClass)
+        {
+            objClass.ErrorEvent += ErrorEventHandler;
+            objClass.StatusEvent += MessageEventHandler;
+            objClass.WarningEvent += WarningEventHandler;
+        }
+
+        private void ErrorEventHandler(string message, Exception ex)
+        {
+            LogError(message);
+        }
+
+        private void MessageEventHandler(string message)
+        {
+            LogMessage(message);
+        }
+
+        private void WarningEventHandler(string message)
+        {
+            LogWarning(message);
         }
 
         #endregion

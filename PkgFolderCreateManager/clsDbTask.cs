@@ -73,7 +73,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Stored procedure executor
         /// </summary>
-        protected readonly PRISM.clsExecuteDatabaseSP m_PipelineDBProcedureExecutor;
+        protected readonly PRISM.ExecuteDatabaseSP m_PipelineDBProcedureExecutor;
 
         #endregion
 
@@ -104,7 +104,7 @@ namespace PkgFolderCreateManager
             // Gigasax.DMS_Pipeline
             m_ConnStr = m_MgrParams.GetParam("ConnectionString");
 
-            m_PipelineDBProcedureExecutor = new PRISM.clsExecuteDatabaseSP(m_ConnStr);
+            m_PipelineDBProcedureExecutor = new PRISM.ExecuteDatabaseSP(m_ConnStr);
 
             m_PipelineDBProcedureExecutor.ErrorEvent += PipelineDBProcedureExecutor_DBErrorEvent;
 
