@@ -7,8 +7,8 @@
 //*********************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Collections.Specialized;
 
 namespace PkgFolderCreateManager
 {
@@ -20,57 +20,57 @@ namespace PkgFolderCreateManager
 
         #region "Constants"
 
-        private const bool WARN_IF_FOLDER_EXISTS = true;
-        private const bool NO_WARN_IF_FOLDER_EXISTS = false;
+        private const bool WARN_IF_DIRECTORY_EXISTS = true;
+        private const bool NO_WARN_IF_DIRECTORY_EXISTS = false;
 
         #endregion
 
         #region "Methods"
 
         /// <summary>
-        /// Creates specified folder
+        /// Creates specified directory
         /// </summary>
         /// <param name="perspective"></param>
-        /// <param name="folderParams">String dictionary containing parameters for folder creation</param>
+        /// <param name="cmdParams">Dictionary containing parameters for directory creation</param>
         /// <param name="source"></param>
-        public static void CreateFolder(string perspective, StringDictionary folderParams, string source)
+        public static void CreateDirectory(string perspective, IReadOnlyDictionary<string, string> cmdParams, string source)
         {
-            var msg = "Processing command for package " + folderParams["package"] + " (Source = " + source + ")";
+            var msg = "Processing command for package " + cmdParams["package"] + " (Source = " + source + ")";
             LogMessage(msg);
 
             // // Test for add or update
-            // if (folderParams["cmd"].ToLower() != "add")
+            // if (cmdParams["cmd"].ToLower() != "add")
             // {
             //   // Ignore the command if it isn't an "add"
-            //   msg = "Package " + folderParams["package"] + ", command '" + folderParams["cmd"] + "' not supported. Message ignored";
+            //   msg = "Package " + cmdParams["package"] + ", command '" + cmdParams["cmd"] + "' not supported. Message ignored";
             //   LogWarning(msg);
             //   return;
             // }
             // else
             // {
-            //   msg = "Creating folder for package " + folderParams["package"];
+            //   msg = "Creating directory for package " + cmdParams["package"];
             //   LogInfo(msg);
             // }
 
             // Determine if client or server perspective and initialize path
-            string folderPath;
+            string directoryPath;
             string[] pathParts;
             int XMLParamVersion;
 
-            if (folderParams.ContainsKey("Path_Shared_Root"))
+            if (cmdParams.ContainsKey("Path_Shared_Root"))
             {
                 // New-style XML
-                // folderParams will have entries named: package, Path_Local_Root, Path_Shared_Root, and Path_Folder
+                // cmdParams will have entries named: package, Path_Local_Root, Path_Shared_Root, and Path_Directory
 
                 XMLParamVersion = 1;
 
                 if (perspective.ToLower() == "client")
                 {
-                    folderPath = folderParams["Path_Shared_Root"];
+                    directoryPath = cmdParams["Path_Shared_Root"];
                 }
                 else
                 {
-                    folderPath = folderParams["Path_Local_Root"];
+                    directoryPath = cmdParams["Path_Local_Root"];
                 }
 
 
@@ -78,55 +78,55 @@ namespace PkgFolderCreateManager
             else
             {
                 // Old-style XML
-                // folderParams will have entries named: package, local, share, year, team, folder, and ID
+                // cmdParams will have entries named: package, local, share, year, team, directory, and ID
 
                 XMLParamVersion = 0;
 
                 if (perspective.ToLower() == "client")
                 {
-                    folderPath = folderParams["share"];
+                    directoryPath = cmdParams["share"];
                 }
                 else
                 {
-                    folderPath = folderParams["local"];
+                    directoryPath = cmdParams["local"];
                 }
 
             }
 
-            // Determine if root-level folder exists; error out if not present
-            if (!Directory.Exists(folderPath))
+            // Determine if root-level directory exists; error out if not present
+            if (!Directory.Exists(directoryPath))
             {
-                msg = "Root folder " + folderPath + " not found";
+                msg = "Root directory " + directoryPath + " not found";
                 LogError(msg);
                 return;
             }
 
             if (XMLParamVersion == 1)
             {
-                // Parse folder string
-                pathParts = folderParams["Path_Folder"].Split(new[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
+                // Parse directory string
+                pathParts = cmdParams["Path_Directory"].Split(new[] { @"\" }, StringSplitOptions.RemoveEmptyEntries);
             }
             else
             {
                 pathParts = new string[3];
-                pathParts[0] = folderParams["team"];
-                pathParts[1] = folderParams["year"];
-                pathParts[2] = folderParams["folder"];
+                pathParts[0] = cmdParams["team"];
+                pathParts[1] = cmdParams["year"];
+                pathParts[2] = cmdParams["directory"];
             }
 
-            // Create desired path, one subfolder at a time
-            for (var indx = 0; indx < pathParts.Length; indx++)
+            // Create desired path, one subdirectory at a time
+            for (var i = 0; i < pathParts.Length; i++)
             {
-                folderPath = Path.Combine(folderPath, pathParts[indx]);
-                bool bLogIfAlreadyExists;
-                if (indx == pathParts.Length - 1)
-                    bLogIfAlreadyExists = true;
+                directoryPath = Path.Combine(directoryPath, pathParts[i]);
+                bool logIfAreadyExists;
+                if (i == pathParts.Length - 1)
+                    logIfAreadyExists = true;
                 else
-                    bLogIfAlreadyExists = false;
+                    logIfAreadyExists = false;
 
-                if (!CreateFolderIfNotFound(folderPath, NO_WARN_IF_FOLDER_EXISTS, bLogIfAlreadyExists))
+                if (!CreateDirectoryIfNotFound(directoryPath, NO_WARN_IF_DIRECTORY_EXISTS, logIfAreadyExists))
                 {
-                    // Couldn't create folder, so exit
+                    // Couldn't create directory, so exit
                     // Error reporting handled within called function
                     return;
                 }
@@ -134,18 +134,18 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
-        /// Creates specified folder
+        /// Creates specified directory
         /// </summary>
-        /// <param name="folderPath">Path to the folder to create</param>
-        /// <param name="warnIfExists">When true, log a warning if the directory exiss</param>
+        /// <param name="directoryPath">Path to the directory to create</param>
+        /// <param name="warnIfExists">When true, log a warning if the directory exists</param>
         /// <param name="logIfExists">When true, log a status message if the directory exists</param>
         /// <returns>TRUE for success; FALSE otherwise</returns>
-        private static bool CreateFolderIfNotFound(string folderPath, bool warnIfExists, bool logIfExists)
+        private static bool CreateDirectoryIfNotFound(string directoryPath, bool warnIfExists, bool logIfExists)
         {
-            if (Directory.Exists(folderPath))
+            if (Directory.Exists(directoryPath))
             {
-                // Folder exists
-                var msg = "Folder " + folderPath + " already exists";
+                // Directory exists
+                var msg = "Directory " + directoryPath + " already exists";
                 if (warnIfExists)
                 {
                     LogWarning(msg);
@@ -158,17 +158,17 @@ namespace PkgFolderCreateManager
                 return true;
             }
 
-            // Folder not found, so try to create it
+            // Directory not found, so try to create it
             try
             {
-                Directory.CreateDirectory(folderPath);
-                var msg = "Folder " + folderPath + " created";
+                Directory.CreateDirectory(directoryPath);
+                var msg = "Directory " + directoryPath + " created";
                 LogMessage(msg);
                 return true;
             }
             catch (Exception ex)
             {
-                var msg = "Exception creating folder " + folderPath;
+                var msg = "Exception creating directory " + directoryPath;
                 LogError(msg, ex);
                 return false;
             }

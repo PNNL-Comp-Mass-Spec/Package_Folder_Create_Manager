@@ -74,7 +74,7 @@ namespace PkgFolderCreateManager
 
                         case clsDbTask.EnumRequestTaskResult.TaskFound:
 
-                            success = CreateFolder(m_Task.TaskParametersXML, out var sErrorMessage, "T_Data_Folder_Create_Queue");
+                            success = CreateDirectory(m_Task.TaskParametersXML, out var sErrorMessage, "T_Data_Folder_Create_Queue");
 
                             if (success)
                             {
@@ -109,10 +109,10 @@ namespace PkgFolderCreateManager
             return success;
         }
 
-        protected bool CreateFolder(string cmdText, out string errorMessage, string source)
+        protected bool CreateDirectory(string cmdText, out string errorMessage, string source)
         {
 
-            StringDictionary cmdParams;
+            Dictionary<string, string> cmdParams;
             errorMessage = string.Empty;
 
             // Parse the received string
@@ -130,10 +130,10 @@ namespace PkgFolderCreateManager
                 return false;
             }
 
-            // Make the folder
+            // Make the Directory
             if (cmdParams == null)
             {
-                errorMessage = "cmdParams is null; Cannot create folder";
+                errorMessage = "cmdParams is null; Cannot create Directory";
                 var msg = errorMessage + " for string " + cmdText;
                 LogError(msg);
                 m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.Failed;
@@ -150,7 +150,7 @@ namespace PkgFolderCreateManager
                 m_StatusFile.MostRecentJobInfo = dumStr;
                 m_StatusFile.WriteStatusFile();
 
-                clsFolderTools.CreateFolder(m_MgrSettings.GetParam("perspective"), cmdParams, source);
+                clsFolderTools.CreateDirectory(m_MgrSettings.GetParam("perspective"), cmdParams, source);
 
                 m_StatusFile.JobNumber = 0;
                 m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.No_Task;
@@ -160,7 +160,7 @@ namespace PkgFolderCreateManager
             }
             catch (Exception ex)
             {
-                errorMessage = "Exception calling clsFolderTools.CreateFolder";
+                errorMessage = "Exception calling clsFolderTools.CreateDirectory";
                 var msg = errorMessage + " with XML command string: " + cmdText;
                 LogError(msg, ex);
                 m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.Failed;
@@ -285,7 +285,7 @@ namespace PkgFolderCreateManager
             m_MsgHandler.BroadcastReceived += OnMsgHandler_BroadcastReceived;
 
             // Setup the status file class
-            var appPath = PRISM.FileProcessor.ProcessFilesOrFoldersBase.GetAppPath();
+            var appPath = PRISM.FileProcessor.ProcessFilesOrDirectoriesBase.GetAppPath();
             var fInfo = new FileInfo(appPath);
 
             string statusFileNameLoc;
@@ -386,11 +386,11 @@ namespace PkgFolderCreateManager
                 m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.Running;
                 m_StatusFile.WriteStatusFile();
 
-                var bSuccess = CreateFolder(cmdText, out var sErrorMessage, "ActiveMQ Broker");
+                var bSuccess = CreateDirectory(cmdText, out var sErrorMessage, "ActiveMQ Broker");
 
                 if (!bSuccess)
                 {
-                    LogError("Error calling CreateFolder: " + sErrorMessage);
+                    LogError("Error calling CreateDirectory: " + sErrorMessage);
                 }
 
             }
@@ -402,9 +402,9 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
-        /// Start looping while awaiting control or folder creation command
+        /// Start looping while awaiting control or directory creation command
         /// </summary>
-        public void DoFolderCreation()
+        public void DoDirectoryCreation()
         {
             const int DB_Query_Interval_Seconds = 30;
 
@@ -414,8 +414,8 @@ namespace PkgFolderCreateManager
 
             m_Task = new clsFolderCreateTask(m_MgrSettings);
 
-            LogDebug("Starting DoFolderCreation()");
-            m_MgrActive = m_MgrSettings.GetParam("mgractive", false);
+            LogDebug("Starting DoDirectoryCreation()");
+            m_MgrActive = m_MgrSettings.GetParam("MgrActive", false);
 
             var checkDBQueue = m_MgrSettings.GetParam("CheckDataFolderCreateQueue", false);
 
@@ -455,9 +455,9 @@ namespace PkgFolderCreateManager
                 System.Threading.Thread.Sleep(1000);
             }
 
-            LogDebug("Exiting DoFolderCreation()");
+            LogDebug("Exiting DoDirectoryCreation()");
 
-            // Determine what caused exit from folder creation loop and take appropriate action
+            // Determine what caused exit from directory creation loop and take appropriate action
             switch (m_BroadcastCmdType)
             {
                 case BroadcastCmdType.ReadConfig:
@@ -487,7 +487,7 @@ namespace PkgFolderCreateManager
                     LogMessage(logMsg);
                     break;
                 default:
-                    logMsg = "clsMainProg.DoFolderCreation(); Invalid command type received: " + m_BroadcastCmdType.ToString();
+                    logMsg = "DoDirectoryCreation(); Invalid command type received: " + m_BroadcastCmdType.ToString();
                     LogError(logMsg);
                     break;
             }

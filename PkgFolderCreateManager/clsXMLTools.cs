@@ -58,7 +58,7 @@ namespace PkgFolderCreateManager
                     returnDict.Add("share", doc.SelectSingleNode("//share")?.InnerText);
                     returnDict.Add("year", doc.SelectSingleNode("//year")?.InnerText);
                     returnDict.Add("team", doc.SelectSingleNode("//team")?.InnerText);
-                    returnDict.Add("folder", doc.SelectSingleNode("//folder")?.InnerText);
+                    returnDict.Add("directory", doc.SelectSingleNode("//folder")?.InnerText);
                     // returnDict.Add("ID", doc.SelectSingleNode("//ID").InnerText);
                     // returnDict.Add("cmd", doc.SelectSingleNode("//cmd").InnerText);
                 }
@@ -67,7 +67,7 @@ namespace PkgFolderCreateManager
                 {
                     returnDict.Add("Path_Local_Root", doc.SelectSingleNode("//Path_Local_Root")?.InnerText);
                     returnDict.Add("Path_Shared_Root", doc.SelectSingleNode("//Path_Shared_Root")?.InnerText);
-                    returnDict.Add("Path_Folder", doc.SelectSingleNode("//Path_Folder")?.InnerText);
+                    returnDict.Add("Path_Directory", doc.SelectSingleNode("//Path_Folder")?.InnerText);
                     // returnDict.Add("cmd", doc.SelectSingleNode("//cmd").InnerText);
                 }
 

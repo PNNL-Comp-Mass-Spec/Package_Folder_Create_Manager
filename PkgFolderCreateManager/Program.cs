@@ -42,7 +42,7 @@ namespace PkgFolderCreateManager
                         PRISM.Logging.FileLogger.FlushPendingMessages();
                         return;
                     }
-                    m_MainProcess.DoFolderCreation();
+                    m_MainProcess.DoDirectoryCreation();
                 }
             }
             catch (Exception ex)
