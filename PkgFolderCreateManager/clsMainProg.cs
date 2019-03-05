@@ -317,7 +317,7 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
-        /// Handles broacast messages for control of the manager
+        /// Handles broadcast messages for control of the manager
         /// </summary>
         /// <param name="cmdText">Text of received message</param>
         void OnMsgHandler_BroadcastReceived(string cmdText)
@@ -325,12 +325,12 @@ namespace PkgFolderCreateManager
             var msg = "clsMainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
             LogDebug(msg);
 
-            clsBroadcastCmd recvCmd;
+            clsBroadcastCmd receivedCmd;
 
             // Parse the received message
             try
             {
-                recvCmd = clsXMLTools.ParseBroadcastXML(cmdText);
+                receivedCmd = clsXMLTools.ParseBroadcastXML(cmdText);
             }
             catch (Exception ex)
             {
@@ -340,7 +340,7 @@ namespace PkgFolderCreateManager
             }
 
             // Determine if the message applies to this machine
-            if (!recvCmd.MachineList.Contains(m_MgrSettings.ManagerName))
+            if (!receivedCmd.MachineList.Contains(m_MgrSettings.ManagerName))
             {
                 // Received command doesn't apply to this manager
                 msg = "Received command not applicable to this manager instance";
@@ -349,7 +349,7 @@ namespace PkgFolderCreateManager
             }
 
             // Get the command and take appropriate action
-            switch (recvCmd.MachCmd.ToLower())
+            switch (receivedCmd.MachCmd.ToLower())
             {
                 case "shutdown":
                     msg = "Shutdown message received";
@@ -357,7 +357,7 @@ namespace PkgFolderCreateManager
                     m_BroadcastCmdType = BroadcastCmdType.Shutdown;
                     m_Running = false;
                     break;
-                case "readconfig":
+                case "ReadConfig":
                     msg = "Reload config message received";
                     LogMessage(msg);
                     m_BroadcastCmdType = BroadcastCmdType.ReadConfig;

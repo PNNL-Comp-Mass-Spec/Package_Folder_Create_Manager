@@ -118,13 +118,13 @@ namespace PkgFolderCreateManager
             for (var i = 0; i < pathParts.Length; i++)
             {
                 directoryPath = Path.Combine(directoryPath, pathParts[i]);
-                bool logIfAreadyExists;
+                bool logIfAlreadyExists;
                 if (i == pathParts.Length - 1)
-                    logIfAreadyExists = true;
+                    logIfAlreadyExists = true;
                 else
-                    logIfAreadyExists = false;
+                    logIfAlreadyExists = false;
 
-                if (!CreateDirectoryIfNotFound(directoryPath, NO_WARN_IF_DIRECTORY_EXISTS, logIfAreadyExists))
+                if (!CreateDirectoryIfNotFound(directoryPath, NO_WARN_IF_DIRECTORY_EXISTS, logIfAlreadyExists))
                 {
                     // Couldn't create directory, so exit
                     // Error reporting handled within called function

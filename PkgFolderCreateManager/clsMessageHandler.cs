@@ -203,7 +203,7 @@ namespace PkgFolderCreateManager
             LogTools.LogDebug(msgReceived);
             if (CommandReceived != null)
             {
-                // call the delegate to process the commnd
+                // call the delegate to process the command
                 var msg = "clsMessageHandler().OnCommandReceived: At lease one event handler assigned";
                 LogTools.LogDebug(msg);
                 if (textMessage != null)
@@ -230,7 +230,7 @@ namespace PkgFolderCreateManager
             LogTools.LogDebug(msgReceived);
             if (BroadcastReceived != null)
             {
-                // call the delegate to process the commnd
+                // call the delegate to process the command
                 var msg = "clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned";
                 LogTools.LogDebug(msg);
                 if (textMessage != null)

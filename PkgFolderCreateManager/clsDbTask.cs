@@ -152,7 +152,7 @@ namespace PkgFolderCreateManager
         /// <param name="inpCmd">SQL command object containing params</param>
         protected virtual void PrintCommandParams(SqlCommand inpCmd)
         {
-            // Verify there really are command paramters
+            // Verify there really are command parameters
             if (inpCmd == null)
                 return;
 

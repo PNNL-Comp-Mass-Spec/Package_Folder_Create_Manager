@@ -256,7 +256,7 @@ namespace PkgFolderCreateManager
         /// <param name="compCode">Integer representation of completion code</param>
         /// <param name="compMsg"></param>
         /// <param name="evalCode"></param>
-        /// <returns>TRUE for sucesss; FALSE for failure</returns>
+        /// <returns>TRUE for success; FALSE for failure</returns>
         public bool SetFolderCreateTaskComplete(string spName, string connStr, int compCode, string compMsg, int evalCode)
         {
             try

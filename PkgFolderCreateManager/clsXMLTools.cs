@@ -8,7 +8,7 @@
 
 using System;
 using System.Xml;
-using System.Collections.Specialized;
+using System.Collections.Generic;
 
 namespace PkgFolderCreateManager
 {
@@ -23,15 +23,15 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Converts command XML string into a dictionary of strings
         /// </summary>
-        /// <param name="InputXML">XML string to parse</param>
+        /// <param name="inputXML">XML string to parse</param>
         /// <returns>String dictionary of command sections</returns>
-        public static StringDictionary ParseCommandXML(string InputXML)
+        public static Dictionary<string, string> ParseCommandXML(string inputXML)
         {
-            var returnDict = new StringDictionary();
+            var returnDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var XMLParamVersion = -1;
 
             var doc = new XmlDocument();
-            doc.LoadXml(InputXML);
+            doc.LoadXml(inputXML);
 
             try
             {
