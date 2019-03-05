@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using PRISM.AppSettings;
 
 namespace PkgFolderCreateManager
 {
@@ -53,7 +54,7 @@ namespace PkgFolderCreateManager
 
         #region "Class variables"
 
-        protected readonly IMgrParams m_MgrParams;
+        protected readonly MgrSettings m_MgrParams;
 
         protected readonly string m_ConnStr;
 
@@ -96,7 +97,7 @@ namespace PkgFolderCreateManager
         /// Constructor
         /// </summary>
         /// <param name="mgrParams"></param>
-        protected clsDbTask(IMgrParams mgrParams)
+        protected clsDbTask(MgrSettings mgrParams)
         {
             m_MgrParams = mgrParams;
             ManagerName = m_MgrParams.GetParam("MgrName", Environment.MachineName + "_Undefined-Manager");
@@ -110,7 +111,7 @@ namespace PkgFolderCreateManager
 
             // Cache the log level
             // 4 means Info level (normal) logging; 5 for Debug level (verbose) logging
-            m_DebugLevel = mgrParams.GetParam("debuglevel", 4);
+            m_DebugLevel = mgrParams.GetParam("DebugLevel", 4);
         }
 
         #endregion

@@ -7,10 +7,11 @@
 //*********************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Collections.Specialized;
 using System.Reflection;
 using PRISM;
+using PRISM.AppSettings;
 using PRISM.Logging;
 
 namespace PkgFolderCreateManager
@@ -35,7 +36,7 @@ namespace PkgFolderCreateManager
 
         #region "Class variables"
 
-        private clsMgrSettings m_MgrSettings;
+        private MgrSettings m_MgrSettings;
         private clsStatusFile m_StatusFile;
         private clsMessageHandler m_MsgHandler;
         private bool m_Running;
@@ -171,6 +172,21 @@ namespace PkgFolderCreateManager
 
         }
 
+        private Dictionary<string, string> GetLocalManagerSettings()
+        {
+
+            var localSettings = new Dictionary<string, string>
+            {
+                {MgrSettings.MGR_PARAM_MGR_CFG_DB_CONN_STRING, Properties.Settings.Default.MgrCnfgDbConnectStr},
+                {MgrSettings.MGR_PARAM_MGR_ACTIVE_LOCAL, Properties.Settings.Default.MgrActive_Local},
+                {MgrSettings.MGR_PARAM_MGR_NAME, Properties.Settings.Default.MgrName},
+                {MgrSettings.MGR_PARAM_USING_DEFAULTS, Properties.Settings.Default.UsingDefaults}
+            };
+
+            return localSettings;
+
+        }
+
         /// <summary>
         /// Initializes the manager
         /// </summary>
@@ -191,7 +207,24 @@ namespace PkgFolderCreateManager
             // Get the manager settings
             try
             {
-                m_MgrSettings = new clsMgrSettings();
+                var localSettings = GetLocalManagerSettings();
+
+                m_MgrSettings = new MgrSettings {
+                    TraceMode = false
+                };
+                RegisterEvents(m_MgrSettings);
+                m_MgrSettings.CriticalErrorEvent += ErrorEventHandler;
+
+                var success = m_MgrSettings.LoadSettings(localSettings, true);
+                if (!success)
+                {
+                    if (string.Equals(m_MgrSettings.ErrMsg, MgrSettings.DEACTIVATED_LOCALLY))
+                        throw new ApplicationException(MgrSettings.DEACTIVATED_LOCALLY);
+
+                    throw new ApplicationException("Unable to initialize manager settings class: " + m_MgrSettings.ErrMsg);
+                }
+
+
             }
             catch
             {
@@ -200,10 +233,10 @@ namespace PkgFolderCreateManager
             }
 
             // Setup the loggers
-            var logFileNameBase = m_MgrSettings.GetParam("logfilename", "FolderCreate");
+            var logFileNameBase = m_MgrSettings.GetParam("LogFilename", "FolderCreate");
 
             BaseLogger.LogLevels logLevel;
-            if (int.TryParse(m_MgrSettings.GetParam("debuglevel"), out var debugLevel))
+            if (int.TryParse(m_MgrSettings.GetParam("DebugLevel"), out var debugLevel))
             {
                 logLevel = (BaseLogger.LogLevels)debugLevel;
             }
@@ -216,8 +249,8 @@ namespace PkgFolderCreateManager
 
             // Typically:
             // Data Source=gigasax;Initial Catalog=DMS_Pipeline;Integrated Security=SSPI;
-            var logCnStr = m_MgrSettings.GetParam("connectionstring");
-            var moduleName = m_MgrSettings.GetParam("modulename");
+            var logCnStr = m_MgrSettings.GetParam("ConnectionString");
+            var moduleName = m_MgrSettings.GetParam("ModuleName");
             LogTools.CreateDbLogger(logCnStr, moduleName);
 
             LogTools.MessageLogged += MessageLoggedHandler;
@@ -267,7 +300,7 @@ namespace PkgFolderCreateManager
                 MgrName = m_MgrSettings.ManagerName
             };
 
-            AttachEvents(m_StatusFile);
+            RegisterEvents(m_StatusFile);
 
             m_StatusFile.InitStatusFromFile();
 
@@ -517,19 +550,38 @@ namespace PkgFolderCreateManager
 
         #region "Event Handlers"
 
-        private void AttachEvents(EventNotifier objClass)
+        private void RegisterEvents(EventNotifier sourceClass, bool writeDebugEventsToLog = true)
         {
-            objClass.ErrorEvent += ErrorEventHandler;
-            objClass.StatusEvent += MessageEventHandler;
-            objClass.WarningEvent += WarningEventHandler;
+            if (writeDebugEventsToLog)
+            {
+                sourceClass.DebugEvent += DebugEventHandler;
+            }
+            else
+            {
+                sourceClass.DebugEvent += DebugEventHandlerConsoleOnly;
+            }
+
+            sourceClass.StatusEvent += StatusEventHandler;
+            sourceClass.ErrorEvent += ErrorEventHandler;
+            sourceClass.WarningEvent += WarningEventHandler;
+            // sourceClass.ProgressUpdate += ProgressUpdateHandler;
         }
 
+        private void DebugEventHandlerConsoleOnly(string statusMessage)
+        {
+            LogDebug(statusMessage, writeToLog: false);
+        }
+
+        private void DebugEventHandler(string statusMessage)
+        {
+            LogDebug(statusMessage);
+        }
         private void ErrorEventHandler(string message, Exception ex)
         {
             LogError(message);
         }
 
-        private void MessageEventHandler(string message)
+        private void StatusEventHandler(string message)
         {
             LogMessage(message);
         }

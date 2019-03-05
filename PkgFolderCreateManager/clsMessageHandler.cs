@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using Apache.NMS;
 using Apache.NMS.ActiveMQ;
 using Apache.NMS.ActiveMQ.Commands;
+using PRISM.AppSettings;
 using PRISM.Logging;
 
 namespace PkgFolderCreateManager
@@ -33,7 +34,7 @@ namespace PkgFolderCreateManager
         private string m_CommandQueueName;
         private string m_BroadcastTopicName;
         private string m_StatusTopicName;
-        private clsMgrSettings m_MgrSettings;
+        private MgrSettings m_MgrSettings;
 
         private IConnection m_Connection;
         private ISession m_StatusSession;
@@ -55,7 +56,7 @@ namespace PkgFolderCreateManager
 
         #region "Properties"
 
-        public clsMgrSettings MgrSettings
+        public MgrSettings MgrSettings
         {
             set => m_MgrSettings = value;
         }

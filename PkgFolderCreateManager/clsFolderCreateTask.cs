@@ -8,6 +8,7 @@
 using System;
 using System.Data.SqlClient;
 using System.Data;
+using PRISM.AppSettings;
 
 namespace PkgFolderCreateManager
 {
@@ -53,7 +54,7 @@ namespace PkgFolderCreateManager
         /// Constructor
         /// </summary>
         /// <param name="mgrParams">Manager params for use by class</param>
-        public clsFolderCreateTask(IMgrParams mgrParams)
+        public clsFolderCreateTask(MgrSettings mgrParams)
             : base(mgrParams)
         {
             mTaskID = 0;
