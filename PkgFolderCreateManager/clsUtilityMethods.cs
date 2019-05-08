@@ -112,7 +112,7 @@ namespace PkgFolderCreateManager
             else
             {
                 if (isError)
-                    ConsoleMsgUtils.ShowError(statusMessage, false);
+                    ConsoleMsgUtils.ShowErrorCustom(statusMessage, false);
                 else
                     Console.WriteLine(statusMessage);
             }
