@@ -8,8 +8,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Data.Common;
 using PRISM.AppSettings;
+using PRISMDatabaseUtils;
 
 namespace PkgFolderCreateManager
 {
@@ -74,7 +75,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Stored procedure executor
         /// </summary>
-        protected readonly PRISM.ExecuteDatabaseSP m_PipelineDBProcedureExecutor;
+        protected readonly IDBTools m_PipelineDBProcedureExecutor;
 
         #endregion
 
@@ -105,7 +106,7 @@ namespace PkgFolderCreateManager
             // Gigasax.DMS_Pipeline
             m_ConnStr = m_MgrParams.GetParam("ConnectionString");
 
-            m_PipelineDBProcedureExecutor = new PRISM.ExecuteDatabaseSP(m_ConnStr);
+            m_PipelineDBProcedureExecutor = DbToolsFactory.GetDBTools(m_ConnStr);
 
             m_PipelineDBProcedureExecutor.ErrorEvent += PipelineDBProcedureExecutor_DBErrorEvent;
 
@@ -150,7 +151,7 @@ namespace PkgFolderCreateManager
         /// Debugging routine for printing SP calling params
         /// </summary>
         /// <param name="inpCmd">SQL command object containing params</param>
-        protected virtual void PrintCommandParams(SqlCommand inpCmd)
+        protected virtual void PrintCommandParams(DbCommand inpCmd)
         {
             // Verify there really are command parameters
             if (inpCmd == null)
@@ -161,7 +162,7 @@ namespace PkgFolderCreateManager
 
             var msg = "";
 
-            foreach (SqlParameter myParam in inpCmd.Parameters)
+            foreach (DbParameter myParam in inpCmd.Parameters)
             {
                 msg += Environment.NewLine + string.Format("  Name= {0,-20}, Value= {1}", myParam.ParameterName, DbCStr(myParam.Value));
             }

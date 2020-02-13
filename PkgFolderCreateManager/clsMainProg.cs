@@ -13,6 +13,7 @@ using System.Reflection;
 using PRISM;
 using PRISM.AppSettings;
 using PRISM.Logging;
+using PRISMDatabaseUtils.AppSettings;
 
 namespace PkgFolderCreateManager
 {
@@ -209,7 +210,7 @@ namespace PkgFolderCreateManager
             {
                 var localSettings = GetLocalManagerSettings();
 
-                m_MgrSettings = new MgrSettings {
+                m_MgrSettings = new MgrSettingsDB {
                     TraceMode = false
                 };
                 RegisterEvents(m_MgrSettings);

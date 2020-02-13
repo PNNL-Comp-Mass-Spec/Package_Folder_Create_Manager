@@ -6,9 +6,9 @@
 //*********************************************************************************************************
 
 using System;
-using System.Data.SqlClient;
 using System.Data;
 using PRISM.AppSettings;
+using PRISMDatabaseUtils;
 
 namespace PkgFolderCreateManager
 {
@@ -147,19 +147,16 @@ namespace PkgFolderCreateManager
             try
             {
                 // Set up the command object prior to SP execution
-                var spCmd = new SqlCommand
-                {
-                    CommandType = CommandType.StoredProcedure,
-                    CommandText = SP_NAME_REQUEST_TASK
-                };
+                var dbTools = m_PipelineDBProcedureExecutor;
+                var cmd = dbTools.CreateCommand(SP_NAME_REQUEST_TASK, CommandType.StoredProcedure);
 
-                spCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int)).Direction = ParameterDirection.ReturnValue;
-                spCmd.Parameters.Add(new SqlParameter("@processorName", SqlDbType.VarChar, 128)).Value = ManagerName;
-                spCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int)).Direction = ParameterDirection.Output;
-                spCmd.Parameters.Add(new SqlParameter("@parameters", SqlDbType.VarChar, 4000)).Direction = ParameterDirection.Output;
-                spCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512)).Direction = ParameterDirection.Output;
-                spCmd.Parameters.Add(new SqlParameter("@infoOnly", SqlDbType.TinyInt)).Value = 0;
-                spCmd.Parameters.Add(new SqlParameter("@taskCountToPreview", SqlDbType.Int)).Value = 10;
+                dbTools.AddParameter(cmd, "@Return", SqlType.Int, direction: ParameterDirection.ReturnValue);
+                dbTools.AddParameter(cmd, "@processorName", SqlType.VarChar, 128, value: ManagerName);
+                var taskParam = dbTools.AddParameter(cmd, "@taskID", SqlType.Int, direction: ParameterDirection.Output);
+                var taskParamsParam = dbTools.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, direction: ParameterDirection.Output);
+                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, direction: ParameterDirection.Output);
+                dbTools.AddParameter(cmd, "@infoOnly", SqlType.TinyInt, value: 0);
+                dbTools.AddParameter(cmd, "@taskCountToPreview", SqlType.Int, value: 10);
 
                 if (!mConnectionInfoLogged)
                 {
@@ -169,21 +166,21 @@ namespace PkgFolderCreateManager
                     var paramListHeader = "clsCaptureTask.RequestTaskDetailed(), printing param list";
                     LogDebug(paramListHeader);
 
-                    PrintCommandParams(spCmd);
+                    PrintCommandParams(cmd);
 
                     mConnectionInfoLogged = true;
                 }
 
                 // Execute the SP
-                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(spCmd, out _);
+                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(cmd, out _);
 
                 switch (resCode)
                 {
                     case RET_VAL_OK:
                         // No errors found in SP call, so see if any step tasks were found
-                        mTaskID = (int)spCmd.Parameters["@taskID"].Value;
+                        mTaskID = (int)taskParam.Value;
 
-                        mTaskParametersXML = (string)spCmd.Parameters["@parameters"].Value;
+                        mTaskParametersXML = (string)taskParamsParam.Value;
 
                         outcome = EnumRequestTaskResult.TaskFound;
                         break;
@@ -194,7 +191,7 @@ namespace PkgFolderCreateManager
                     default:
                         // There was an SP error
                         var errMsg = "clsFolderCreateTask.RequestTaskDetailed(), SP execution error " + resCode +
-                            "; Msg text = " + (string)spCmd.Parameters["@message"].Value;
+                            "; Msg text = " + (string)messageParam.Value;
 
                         LogError(errMsg);
                         outcome = EnumRequestTaskResult.ResultError;
@@ -263,33 +260,30 @@ namespace PkgFolderCreateManager
             {
 
                 // Setup for execution of the stored procedure
-                var myCmd = new SqlCommand
-                {
-                    CommandType = CommandType.StoredProcedure,
-                    CommandText = spName
-                };
+                var dbTools = m_PipelineDBProcedureExecutor;
+                var cmd = dbTools.CreateCommand(spName, CommandType.StoredProcedure);
 
-                myCmd.Parameters.Add(new SqlParameter("@Return", SqlDbType.Int)).Direction = ParameterDirection.ReturnValue;
-                myCmd.Parameters.Add(new SqlParameter("@taskID", SqlDbType.Int)).Value = mTaskID;
-                myCmd.Parameters.Add(new SqlParameter("@completionCode", SqlDbType.Int)).Value = compCode;
-                myCmd.Parameters.Add(new SqlParameter("@message", SqlDbType.VarChar, 512)).Direction = ParameterDirection.Output;
+                dbTools.AddParameter(cmd, "@Return", SqlType.Int, direction: ParameterDirection.ReturnValue);
+                dbTools.AddParameter(cmd, "@taskID", SqlType.Int, value: mTaskID);
+                dbTools.AddParameter(cmd, "@completionCode", SqlType.Int, value: compCode);
+                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, direction: ParameterDirection.Output);
 
                 LogDebug("Calling stored procedure " + spName);
 
-                var msg = "Parameters: TaskID=" + myCmd.Parameters["@taskID"].Value +
-                          ", completionCode=" + myCmd.Parameters["@completionCode"].Value;
+                var msg = "Parameters: TaskID=" + mTaskID +
+                          ", completionCode=" + compCode;
 
                 LogDebug(msg);
 
                 // Execute the SP
-                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(myCmd);
+                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(cmd);
 
                 if (resCode == 0)
                 {
                     return true;
                 }
 
-                var errorMsg = "Error " + resCode + " setting task complete; Message = " + (string)myCmd.Parameters["@message"].Value;
+                var errorMsg = "Error " + resCode + " setting task complete; Message = " + messageParam.Value;
                 LogError(errorMsg);
                 return false;
             }
