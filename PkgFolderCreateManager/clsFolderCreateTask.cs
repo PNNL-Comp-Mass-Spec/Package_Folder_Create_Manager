@@ -150,13 +150,13 @@ namespace PkgFolderCreateManager
                 var dbTools = m_PipelineDBProcedureExecutor;
                 var cmd = dbTools.CreateCommand(SP_NAME_REQUEST_TASK, CommandType.StoredProcedure);
 
-                dbTools.AddParameter(cmd, "@Return", SqlType.Int, direction: ParameterDirection.ReturnValue);
-                dbTools.AddParameter(cmd, "@processorName", SqlType.VarChar, 128, value: ManagerName);
-                var taskParam = dbTools.AddParameter(cmd, "@taskID", SqlType.Int, direction: ParameterDirection.Output);
-                var taskParamsParam = dbTools.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, direction: ParameterDirection.Output);
-                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, direction: ParameterDirection.Output);
-                dbTools.AddParameter(cmd, "@infoOnly", SqlType.TinyInt, value: 0);
-                dbTools.AddParameter(cmd, "@taskCountToPreview", SqlType.Int, value: 10);
+                dbTools.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
+                dbTools.AddParameter(cmd, "@processorName", SqlType.VarChar, 128, ManagerName);
+                var taskParam = dbTools.AddParameter(cmd, "@taskID", SqlType.Int, ParameterDirection.Output);
+                var taskParamsParam = dbTools.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, ParameterDirection.Output);
+                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
+                dbTools.AddParameter(cmd, "@infoOnly", SqlType.TinyInt).Value = 0;
+                dbTools.AddParameter(cmd, "@taskCountToPreview", SqlType.Int).Value = 10;
 
                 if (!mConnectionInfoLogged)
                 {
@@ -263,10 +263,10 @@ namespace PkgFolderCreateManager
                 var dbTools = m_PipelineDBProcedureExecutor;
                 var cmd = dbTools.CreateCommand(spName, CommandType.StoredProcedure);
 
-                dbTools.AddParameter(cmd, "@Return", SqlType.Int, direction: ParameterDirection.ReturnValue);
-                dbTools.AddParameter(cmd, "@taskID", SqlType.Int, value: mTaskID);
-                dbTools.AddParameter(cmd, "@completionCode", SqlType.Int, value: compCode);
-                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, direction: ParameterDirection.Output);
+                dbTools.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
+                dbTools.AddParameter(cmd, "@taskID", SqlType.Int).Value = mTaskID;
+                dbTools.AddParameter(cmd, "@completionCode", SqlType.Int).Value = compCode;
+                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
 
                 LogDebug("Calling stored procedure " + spName);
 
