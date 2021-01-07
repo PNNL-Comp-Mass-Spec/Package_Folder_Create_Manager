@@ -17,6 +17,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     class clsXMLTools
     {
+        // Ignore Spelling: cmd
 
         #region "Methods"
 

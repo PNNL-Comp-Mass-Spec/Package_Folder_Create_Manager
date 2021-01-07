@@ -22,6 +22,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     class clsMainProg : clsLoggerBase
     {
+        // Ignore Spelling: cmd, dd, yyyy, HH:mm:ss
 
         #region "Constants and Enums"
 

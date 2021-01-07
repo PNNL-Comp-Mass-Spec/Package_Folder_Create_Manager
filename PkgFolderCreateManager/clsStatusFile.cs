@@ -20,6 +20,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     class clsStatusFile : EventNotifier
     {
+        // Ignore Spelling: yyyy-MM-dd, hh:mm:ss tt, T_Mgrs
 
         #region "Enums"
 
