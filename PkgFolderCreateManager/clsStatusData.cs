@@ -14,11 +14,10 @@ namespace PkgFolderCreateManager
     /// Class to hold long-term data for status reporting.
     /// This is a hack to avoid adding an instance of the status file class to the log tools class
     /// </summary>
-    class clsStatusData
+    internal static class clsStatusData
     {
 
         private static string m_MostRecentLogMessage;
-        private static readonly Queue<string> m_ErrorQueue = new Queue<string>();
 
 
         public static string MostRecentLogMessage
@@ -38,18 +37,18 @@ namespace PkgFolderCreateManager
             }
         }
 
-        public static Queue<string> ErrorQueue => m_ErrorQueue;
+        public static Queue<string> ErrorQueue { get; } = new Queue<string>();
 
 
         public static void AddErrorMessage(string ErrMsg)
         {
             // Add the most recent error message
-            m_ErrorQueue.Enqueue(ErrMsg);
+            ErrorQueue.Enqueue(ErrMsg);
 
             // If there are > 4 entries in the queue, delete the oldest ones
-            while (m_ErrorQueue.Count > 4)
+            while (ErrorQueue.Count > 4)
             {
-                m_ErrorQueue.Dequeue();
+                ErrorQueue.Dequeue();
             }
         }
 

@@ -17,7 +17,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     ///  Base class for handling task-related data
     /// </summary>
-    abstract class clsDbTask : clsLoggerBase
+    internal abstract class clsDbTask : clsLoggerBase
     {
 
         #region "Enums"
@@ -245,7 +245,7 @@ namespace PkgFolderCreateManager
 
         #region "Event handlers"
 
-        void PipelineDBProcedureExecutor_DBErrorEvent(string message, Exception ex)
+        private void PipelineDBProcedureExecutor_DBErrorEvent(string message, Exception ex)
         {
             var logToDb = message.Contains("permission was denied");
 

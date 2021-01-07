@@ -18,7 +18,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Provides tools for creating and updating a task status file
     /// </summary>
-    class clsStatusFile : EventNotifier
+    internal class clsStatusFile : EventNotifier
     {
         // Ignore Spelling: yyyy-MM-dd, hh:mm:ss tt, T_Mgrs
 
@@ -69,9 +69,9 @@ namespace PkgFolderCreateManager
 
         private int m_WritingErrorCountSaved;
 
-        readonly clsMessageHandler m_MsgHandler;
+        private readonly clsMessageHandler m_MsgHandler;
 
-        int m_MessageQueueExceptionCount;
+        private int m_MessageQueueExceptionCount;
 
         #endregion
 
@@ -230,10 +230,7 @@ namespace PkgFolderCreateManager
         {
             var statusFileDirectory = Path.GetDirectoryName(FileNamePath);
 
-            if (statusFileDirectory == null)
-                return ".";
-
-            return statusFileDirectory;
+            return statusFileDirectory ?? ".";
         }
 
         /// <summary>
@@ -435,7 +432,7 @@ namespace PkgFolderCreateManager
             catch (Exception ex)
             {
                 // Increment the error counter
-                m_WritingErrorCountSaved += 1;
+                m_WritingErrorCountSaved++;
 
                 if (m_WritingErrorCountSaved >= WRITE_FAILURE_LOG_THRESHOLD)
                 {
@@ -554,7 +551,7 @@ namespace PkgFolderCreateManager
                 //      T_ParamType PT ON PV.TypeID = PT.ParamID
                 // WHERE (PT.ParamName = 'LogStatusToMessageQueue') AND (MT.MT_TypeName = 'FolderCreate')
 
-                m_MessageQueueExceptionCount += 1;
+                m_MessageQueueExceptionCount++;
                 var msg = "Exception sending status message to broker; count = " + m_MessageQueueExceptionCount;
 
                 if (DateTime.Now.TimeOfDay.Hours == 0 && DateTime.Now.TimeOfDay.Minutes >= 0 && DateTime.Now.TimeOfDay.Minutes <= 5)

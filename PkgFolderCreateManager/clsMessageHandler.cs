@@ -25,15 +25,10 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Handles sending and receiving of control and status messages
     /// </summary>
-    class clsMessageHandler : clsLoggerBase, IDisposable
+    internal class clsMessageHandler : clsLoggerBase, IDisposable
     {
 
-        #region "Class variables"
-
-        private string m_BrokerUri;
-        private string m_CommandQueueName;
-        private string m_BroadcastTopicName;
-        private string m_StatusTopicName;
+#region "Class variables"
         private MgrSettings m_MgrSettings;
 
         private IConnection m_Connection;
@@ -61,29 +56,13 @@ namespace PkgFolderCreateManager
             set => m_MgrSettings = value;
         }
 
-        public string BrokerUri
-        {
-            get => m_BrokerUri;
-            set => m_BrokerUri = value;
-        }
+        public string BrokerUri { get; set; }
 
-        public string CommandQueueName
-        {
-            get => m_CommandQueueName;
-            set => m_CommandQueueName = value;
-        }
+        public string CommandQueueName { get; set; }
 
-        public string BroadcastTopicName
-        {
-            get => m_BroadcastTopicName;
-            set => m_BroadcastTopicName = value;
-        }
+        public string BroadcastTopicName { get; set; }
 
-        public string StatusTopicName
-        {
-            get => m_StatusTopicName;
-            set => m_StatusTopicName = value;
-        }
+        public string StatusTopicName { get; set; }
 
         #endregion
 
@@ -113,7 +92,7 @@ namespace PkgFolderCreateManager
             {
                 try
                 {
-                    IConnectionFactory connectionFactory = new ConnectionFactory(m_BrokerUri);
+                    IConnectionFactory connectionFactory = new ConnectionFactory(BrokerUri);
                     m_Connection = connectionFactory.CreateConnection();
                     m_Connection.RequestTimeout = new TimeSpan(0, 0, timeoutSeconds);
                     m_Connection.Start();
@@ -136,7 +115,7 @@ namespace PkgFolderCreateManager
                     System.Threading.Thread.Sleep(3000);
                 }
 
-                retriesRemaining -= 1;
+                retriesRemaining--;
             }
 
             // If we get here, we never could connect to the message broker
@@ -166,19 +145,19 @@ namespace PkgFolderCreateManager
 
                 // queue for "make folder" commands from database via its STOMP message sender
                 var commandSession = m_Connection.CreateSession();
-                m_CommandConsumer = commandSession.CreateConsumer(new ActiveMQQueue(m_CommandQueueName));
+                m_CommandConsumer = commandSession.CreateConsumer(new ActiveMQQueue(CommandQueueName));
                 //                    commandConsumer.Listener += new MessageListener(OnCommandReceived);
                 LogDebug("Command listener established");
 
                 // topic for commands broadcast to all folder makers
                 var broadcastSession = m_Connection.CreateSession();
-                m_BroadcastConsumer = broadcastSession.CreateConsumer(new ActiveMQTopic(m_BroadcastTopicName));
+                m_BroadcastConsumer = broadcastSession.CreateConsumer(new ActiveMQTopic(BroadcastTopicName));
                 //                    broadcastConsumer.Listener += new MessageListener(OnBroadcastReceived);
                 LogDebug("Broadcast listener established");
 
                 // topic for the folder maker to send status information over
                 m_StatusSession = m_Connection.CreateSession();
-                m_StatusSender = m_StatusSession.CreateProducer(new ActiveMQTopic(m_StatusTopicName));
+                m_StatusSender = m_StatusSession.CreateProducer(new ActiveMQTopic(StatusTopicName));
                 LogDebug("Status sender established");
 
                 return true;
@@ -198,23 +177,19 @@ namespace PkgFolderCreateManager
         /// <param name="message">Incoming message</param>
         private void OnCommandReceived(IMessage message)
         {
-            var textMessage = message as ITextMessage;
-            var msgReceived = "clsMessageHandler(), Command message received";
-            LogTools.LogDebug(msgReceived);
+            LogTools.LogDebug("clsMessageHandler(), Command message received");
             if (CommandReceived != null)
             {
-                // call the delegate to process the command
-                var msg = "clsMessageHandler().OnCommandReceived: At lease one event handler assigned";
-                LogTools.LogDebug(msg);
-                if (textMessage != null)
+                // Call the delegate to process the command
+                LogTools.LogDebug("clsMessageHandler().OnCommandReceived: At lease one event handler assigned");
+                if (message is ITextMessage textMessage)
                 {
                     CommandReceived(textMessage.Text);
                 }
             }
             else
             {
-                var msg = "clsMessageHandler().OnCommandReceived: No event handlers assigned";
-                LogTools.LogDebug(msg);
+                LogTools.LogDebug("clsMessageHandler().OnCommandReceived: No event handlers assigned");
             }
         }
 
@@ -225,23 +200,19 @@ namespace PkgFolderCreateManager
         /// <param name="message">Incoming message</param>
         private void OnBroadcastReceived(IMessage message)
         {
-            var textMessage = message as ITextMessage;
-            var msgReceived = "clsMessageHandler(), Broadcast message received";
-            LogTools.LogDebug(msgReceived);
+            LogTools.LogDebug("clsMessageHandler(), Broadcast message received");
             if (BroadcastReceived != null)
             {
-                // call the delegate to process the command
-                var msg = "clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned";
-                LogTools.LogDebug(msg);
-                if (textMessage != null)
+                // Call the delegate to process the command
+                LogTools.LogDebug("clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned");
+                if (message is ITextMessage textMessage)
                 {
                     BroadcastReceived(textMessage.Text);
                 }
             }
             else
             {
-                var msg = "clsMessageHandler().OnBroadcastReceived: No event handlers assigned";
-                LogTools.LogDebug(msg);
+                LogTools.LogDebug("clsMessageHandler().OnBroadcastReceived: No event handlers assigned");
             }
         }
 

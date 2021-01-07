@@ -15,7 +15,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Provides database access and tools for one folder create task
     /// </summary>
-    class clsFolderCreateTask : clsDbTask, ITaskParams
+    internal class clsFolderCreateTask : clsDbTask, ITaskParams
     {
 
         #region "Constants"
@@ -27,8 +27,8 @@ namespace PkgFolderCreateManager
 
         #region "Class variables"
 
-        int mTaskID;
-        string mTaskParametersXML = string.Empty;
+        private int mTaskID;
+        private string mTaskParametersXML = string.Empty;
 
         private bool mConnectionInfoLogged;
         #endregion
@@ -163,8 +163,7 @@ namespace PkgFolderCreateManager
                     var msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + m_ConnStr;
                     LogDebug(msg);
 
-                    var paramListHeader = "clsCaptureTask.RequestTaskDetailed(), printing param list";
-                    LogDebug(paramListHeader);
+                    LogDebug("clsCaptureTask.RequestTaskDetailed(), printing param list");
 
                     PrintCommandParams(cmd);
 

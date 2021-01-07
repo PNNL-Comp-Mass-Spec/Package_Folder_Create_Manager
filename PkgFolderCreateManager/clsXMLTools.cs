@@ -15,7 +15,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Tools for parsing input XML
     /// </summary>
-    class clsXMLTools
+    internal static class clsXMLTools
     {
         // Ignore Spelling: cmd
 

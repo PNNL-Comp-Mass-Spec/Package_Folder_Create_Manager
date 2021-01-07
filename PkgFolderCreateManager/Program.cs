@@ -14,12 +14,12 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Class that starts application execution
     /// </summary>
-    static class Program
+    internal static class Program
     {
 
         #region "Class variables"
 
-        static clsMainProg m_MainProcess;
+        private static clsMainProg m_MainProcess;
 
         #endregion
 
@@ -28,7 +28,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        static void Main()
+        private static void Main()
         {
 
             // Start the main program running

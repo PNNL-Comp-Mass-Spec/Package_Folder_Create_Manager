@@ -65,7 +65,7 @@ namespace PkgFolderCreateManager
 
                 XMLParamVersion = 1;
 
-                if (perspective.ToLower() == "client")
+                if (string.Equals(perspective, "client", StringComparison.OrdinalIgnoreCase))
                 {
                     directoryPath = cmdParams["Path_Shared_Root"];
                 }
@@ -83,7 +83,7 @@ namespace PkgFolderCreateManager
 
                 XMLParamVersion = 0;
 
-                if (perspective.ToLower() == "client")
+                if (string.Equals(perspective, "client", StringComparison.OrdinalIgnoreCase))
                 {
                     directoryPath = cmdParams["share"];
                 }
@@ -120,6 +120,7 @@ namespace PkgFolderCreateManager
             {
                 directoryPath = Path.Combine(directoryPath, pathParts[i]);
                 bool logIfAlreadyExists;
+
                 if (i == pathParts.Length - 1)
                     logIfAlreadyExists = true;
                 else

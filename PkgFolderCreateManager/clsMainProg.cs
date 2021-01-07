@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using PRISM;
 using PRISM.AppSettings;
 using PRISM.Logging;
 using PRISMDatabaseUtils.AppSettings;
@@ -20,7 +19,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Main program class for application
     /// </summary>
-    class clsMainProg : clsLoggerBase
+    internal class clsMainProg : clsLoggerBase
     {
         // Ignore Spelling: cmd, dd, yyyy, HH:mm:ss
 
@@ -44,7 +43,7 @@ namespace PkgFolderCreateManager
         private bool m_Running;
         private bool m_MgrActive;
         private BroadcastCmdType m_BroadcastCmdType;
-        clsFolderCreateTask m_Task;
+        private clsFolderCreateTask m_Task;
 
         #endregion
 
@@ -102,9 +101,7 @@ namespace PkgFolderCreateManager
             }
             catch (Exception ex)
             {
-                var msg = "Exception requesting and processing task";
-                LogError(msg, ex);
-
+                LogError("Exception requesting and processing task", ex);
                 return false;
             }
 
@@ -322,7 +319,7 @@ namespace PkgFolderCreateManager
         /// Handles broadcast messages for control of the manager
         /// </summary>
         /// <param name="cmdText">Text of received message</param>
-        void OnMsgHandler_BroadcastReceived(string cmdText)
+        private void OnMsgHandler_BroadcastReceived(string cmdText)
         {
             var msg = "clsMainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
             LogDebug(msg);
@@ -377,7 +374,7 @@ namespace PkgFolderCreateManager
         /// Handles receipt of command to make a directory
         /// </summary>
         /// <param name="cmdText">XML string containing command</param>
-        void OnMsgHandler_CommandReceived(string cmdText)
+        private void OnMsgHandler_CommandReceived(string cmdText)
         {
             try
             {
@@ -552,7 +549,7 @@ namespace PkgFolderCreateManager
 
         #region "Event Handlers"
 
-        private void RegisterEvents(EventNotifier sourceClass, bool writeDebugEventsToLog = true)
+        private void RegisterEvents(IEventNotifier sourceClass, bool writeDebugEventsToLog = true)
         {
             if (writeDebugEventsToLog)
             {
