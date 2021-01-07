@@ -16,9 +16,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal static class clsStatusData
     {
-
         private static string m_MostRecentLogMessage;
-
 
         public static string MostRecentLogMessage
         {
@@ -39,7 +37,6 @@ namespace PkgFolderCreateManager
 
         public static Queue<string> ErrorQueue { get; } = new Queue<string>();
 
-
         public static void AddErrorMessage(string ErrMsg)
         {
             // Add the most recent error message
@@ -51,6 +48,5 @@ namespace PkgFolderCreateManager
                 ErrorQueue.Dequeue();
             }
         }
-
     }
 }

@@ -73,8 +73,6 @@ namespace PkgFolderCreateManager
                 {
                     directoryPath = cmdParams["Path_Local_Root"];
                 }
-
-
             }
             else
             {
@@ -91,7 +89,6 @@ namespace PkgFolderCreateManager
                 {
                     directoryPath = cmdParams["local"];
                 }
-
             }
 
             // Determine if root-level directory exists; error out if not present

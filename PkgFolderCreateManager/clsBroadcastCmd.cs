@@ -15,7 +15,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class clsBroadcastCmd
     {
-
         #region "Properties"
 
         /// <summary>

@@ -56,10 +56,8 @@ namespace PkgFolderCreateManager
 
             try
             {
-
                 while (continueLooping)
                 {
-
                     var taskReturn = m_Task.RequestTask();
                     switch (taskReturn)
                     {
@@ -94,10 +92,8 @@ namespace PkgFolderCreateManager
                             success = false;
                             continueLooping = false;
                             break;
-
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -110,7 +106,6 @@ namespace PkgFolderCreateManager
 
         protected bool CreateDirectory(string cmdText, out string errorMessage, string source)
         {
-
             Dictionary<string, string> cmdParams;
             errorMessage = string.Empty;
 
@@ -142,7 +137,6 @@ namespace PkgFolderCreateManager
 
             try
             {
-
                 m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.Running_Tool;
 
                 var dumStr = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
@@ -155,7 +149,6 @@ namespace PkgFolderCreateManager
                 m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.No_Task;
                 m_StatusFile.TaskStatus = clsStatusFile.EnumTaskStatus.No_Task;
                 m_StatusFile.WriteStatusFile();
-
             }
             catch (Exception ex)
             {
@@ -168,12 +161,10 @@ namespace PkgFolderCreateManager
             }
 
             return true;
-
         }
 
         private Dictionary<string, string> GetLocalManagerSettings()
         {
-
             var localSettings = new Dictionary<string, string>
             {
                 {MgrSettings.MGR_PARAM_MGR_CFG_DB_CONN_STRING, Properties.Settings.Default.MgrCnfgDbConnectStr},
@@ -183,7 +174,6 @@ namespace PkgFolderCreateManager
             };
 
             return localSettings;
-
         }
 
         /// <summary>
@@ -222,8 +212,6 @@ namespace PkgFolderCreateManager
 
                     throw new ApplicationException("Unable to initialize manager settings class: " + m_MgrSettings.ErrMsg);
                 }
-
-
             }
             catch
             {
@@ -378,7 +366,6 @@ namespace PkgFolderCreateManager
         {
             try
             {
-
                 var msg = "clsMainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
                 LogDebug(msg);
 
@@ -391,13 +378,11 @@ namespace PkgFolderCreateManager
                 {
                     LogError("Error calling CreateDirectory: " + sErrorMessage);
                 }
-
             }
             catch (Exception ex)
             {
                 LogError("Error in OnMsgHandler_CommandReceived", ex);
             }
-
         }
 
         /// <summary>
@@ -503,7 +488,6 @@ namespace PkgFolderCreateManager
             {
                 clsStatusData.AddErrorMessage(timeStamp + "; " + message + "; " + logLevel);
             }
-
         }
 
         /// <summary>

@@ -27,7 +27,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class clsMessageHandler : clsLoggerBase, IDisposable
     {
-
 #region "Class variables"
         private MgrSettings m_MgrSettings;
 

@@ -15,12 +15,10 @@ namespace PkgFolderCreateManager
     /// </summary>
     public interface ITaskParams
     {
-
         Dictionary<string, string> TaskDictionary { get; }
 
         string GetParam(string name);
         bool AddAdditionalParameter(string paramName, string paramValue);
         void SetParam(string keyName, string value);
-
     }
 }

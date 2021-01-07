@@ -265,7 +265,6 @@ namespace PkgFolderCreateManager
                 // Send the XML text to a message queue
                 LogStatusToMessageQueue(xmlText);
             }
-
         }
 
         private string GenerateStatusXML(
@@ -354,7 +353,6 @@ namespace PkgFolderCreateManager
 
                 return xmlText;
             }
-
         }
 
         private void WriteStatusFileToDisk(string xmlText)
@@ -386,7 +384,6 @@ namespace PkgFolderCreateManager
                     // Log a warning that the file copy failed
                     OnWarningEvent("Unable to copy temporary status file to the final status file (" + Path.GetFileName(tempStatusFilePath) +
                                    " to " + Path.GetFileName(FileNamePath) + "):" + ex.Message);
-
                 }
 
                 try
@@ -399,7 +396,6 @@ namespace PkgFolderCreateManager
                     // Log a warning that the file delete failed
                     OnWarningEvent("Unable to delete temporary status file (" + Path.GetFileName(tempStatusFilePath) + "): " + ex.Message);
                 }
-
             }
             else
             {
@@ -427,7 +423,6 @@ namespace PkgFolderCreateManager
                 m_WritingErrorCountSaved = 0;
 
                 success = true;
-
             }
             catch (Exception ex)
             {
@@ -448,7 +443,6 @@ namespace PkgFolderCreateManager
             }
 
             return success;
-
         }
 
         /// <summary>
@@ -460,7 +454,6 @@ namespace PkgFolderCreateManager
         {
             Progress = percentComplete;
             WriteStatusFile();
-
         }
 
         /// <summary>
@@ -609,7 +602,6 @@ namespace PkgFolderCreateManager
                         clsStatusData.AddErrorMessage(Xn.InnerText);
                     }
                 }
-
             }
             catch (Exception ex)
             {

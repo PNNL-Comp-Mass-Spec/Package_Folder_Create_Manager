@@ -17,7 +17,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class clsFolderCreateTask : clsDbTask, ITaskParams
     {
-
         #region "Constants"
 
         protected const string SP_NAME_SET_COMPLETE = "SetFolderCreateTaskComplete";
@@ -257,7 +256,6 @@ namespace PkgFolderCreateManager
         {
             try
             {
-
                 // Setup for execution of the stored procedure
                 var dbTools = m_PipelineDBProcedureExecutor;
                 var cmd = dbTools.CreateCommand(spName, CommandType.StoredProcedure);
@@ -292,7 +290,6 @@ namespace PkgFolderCreateManager
                 LogError(errorMsg, ex);
                 return false;
             }
-
         }
 
         #endregion

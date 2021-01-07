@@ -17,7 +17,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     public static class clsUtilityMethods
     {
-
         #region "Methods"
 
         /// <summary>
@@ -116,7 +115,6 @@ namespace PkgFolderCreateManager
                 else
                     Console.WriteLine(statusMessage);
             }
-
         }
 
         /// <summary>

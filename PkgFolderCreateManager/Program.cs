@@ -16,7 +16,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal static class Program
     {
-
         #region "Class variables"
 
         private static clsMainProg m_MainProcess;
@@ -30,7 +29,6 @@ namespace PkgFolderCreateManager
         /// </summary>
         private static void Main()
         {
-
             // Start the main program running
             try
             {
@@ -53,7 +51,6 @@ namespace PkgFolderCreateManager
             }
 
             PRISM.Logging.FileLogger.FlushPendingMessages();
-
         }
 
         #endregion

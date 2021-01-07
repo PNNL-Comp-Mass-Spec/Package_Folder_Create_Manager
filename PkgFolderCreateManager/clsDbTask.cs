@@ -19,7 +19,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal abstract class clsDbTask : clsLoggerBase
     {
-
         #region "Enums"
 
         public enum EnumCloseOutType : short
@@ -145,7 +144,6 @@ namespace PkgFolderCreateManager
         /// <param name="closeoutMsg">Message related to task closeout</param>
         /// <param name="evalCode">Enum representing evaluation results</param>
         public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode);
-
 
         /// <summary>
         /// Debugging routine for printing SP calling params
