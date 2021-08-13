@@ -59,7 +59,7 @@ namespace PkgFolderCreateManager
 
         protected readonly string m_ConnStr;
 
-        protected bool m_TaskWasAssigned = false;
+        protected bool m_TaskWasAssigned;
 
         /// <summary>
         /// Debug level
@@ -178,7 +178,7 @@ namespace PkgFolderCreateManager
             // If input object is DbNull, returns "", otherwise returns String representation of object
             if (InpObj == null || ReferenceEquals(InpObj, DBNull.Value))
             {
-                return "";
+                return string.Empty;
             }
             return InpObj.ToString();
         }

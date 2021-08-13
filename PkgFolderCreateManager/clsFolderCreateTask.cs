@@ -103,10 +103,7 @@ namespace PkgFolderCreateManager
         /// <param name="value">Parameter value</param>
         public void SetParam(string keyName, string value)
         {
-            if (value == null)
-            {
-                value = "";
-            }
+            value ??= string.Empty;
             m_JobParams[keyName] = value;
         }
 
@@ -188,8 +185,9 @@ namespace PkgFolderCreateManager
                         break;
                     default:
                         // There was an SP error
-                        var errMsg = "clsFolderCreateTask.RequestTaskDetailed(), SP execution error " + resCode +
-                            "; Msg text = " + (string)messageParam.Value;
+                        var errMsg = string.Format(
+                            "clsFolderCreateTask.RequestTaskDetailed(), SP execution error {0}; Message text = {1}",
+                            resCode, (string)messageParam.Value);
 
                         LogError(errMsg);
                         outcome = EnumRequestTaskResult.ResultError;
