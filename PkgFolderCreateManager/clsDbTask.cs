@@ -179,66 +179,6 @@ namespace PkgFolderCreateManager
             return InpObj.ToString();
         }
 
-        protected float DbCSng(object InpObj)
-        {
-            // If input object is DbNull, returns 0.0, otherwise returns Single representation of object
-            if (ReferenceEquals(InpObj, DBNull.Value))
-            {
-                return 0.0F;
-            }
-            return (float)InpObj;
-        }
-
-        protected double DbCDbl(object InpObj)
-        {
-            // If input object is DbNull, returns 0.0, otherwise returns Double representation of object
-            if (ReferenceEquals(InpObj, DBNull.Value))
-            {
-                return 0.0;
-            }
-            return (double)InpObj;
-        }
-
-        protected int DbCInt(object InpObj)
-        {
-            // If input object is DbNull, returns 0, otherwise returns Integer representation of object
-            if (ReferenceEquals(InpObj, DBNull.Value))
-            {
-                return 0;
-            }
-            return (int)InpObj;
-        }
-
-        protected long DbCLng(object InpObj)
-        {
-            // If input object is DbNull, returns 0, otherwise returns Integer representation of object
-            if (ReferenceEquals(InpObj, DBNull.Value))
-            {
-                return 0;
-            }
-            return (long)InpObj;
-        }
-
-        protected decimal DbCDec(object InpObj)
-        {
-            // If input object is DbNull, returns 0, otherwise returns Decimal representation of object
-            if (ReferenceEquals(InpObj, DBNull.Value))
-            {
-                return 0;
-            }
-            return (decimal)InpObj;
-        }
-
-        protected short DbCShort(object InpObj)
-        {
-            // If input object is DbNull, returns 0, otherwise returns Short representation of object
-            if (ReferenceEquals(InpObj, DBNull.Value))
-            {
-                return 0;
-            }
-            return (short)InpObj;
-        }
-
         #endregion
 
         #region "Event handlers"
