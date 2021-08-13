@@ -110,7 +110,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Wrapper for requesting a task from the database
         /// </summary>
-        /// <returns>num indicating if task was found</returns>
+        /// <returns>Enum indicating if task was found</returns>
         public override EnumRequestTaskResult RequestTask()
         {
             mTaskID = 0;

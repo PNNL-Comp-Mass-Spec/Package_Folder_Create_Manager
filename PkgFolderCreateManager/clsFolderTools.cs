@@ -17,7 +17,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     public class clsFolderTools : clsLoggerBase
     {
-        // Ignore Spelling: cmd
+        // Ignore Spelling: cmd, msg
 
         #region "Constants"
 
