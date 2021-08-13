@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Text;
 using PRISM.AppSettings;
 using PRISMDatabaseUtils;
 
@@ -159,15 +160,17 @@ namespace PkgFolderCreateManager
             if (inpCmd.Parameters.Count < 1)
                 return;
 
-            var msg = "";
+            var msg = new StringBuilder();
+            msg.AppendLine("Parameter list:");
 
             foreach (DbParameter myParam in inpCmd.Parameters)
             {
-                msg += Environment.NewLine + string.Format("  Name= {0,-20}, Value= {1}", myParam.ParameterName, DbCStr(myParam.Value));
+                msg.AppendFormat("  Name= {0,-20}, Value= {1}", myParam.ParameterName, DbCStr(myParam.Value));
+                msg.AppendLine();
             }
 
             var writeToLog = m_DebugLevel >= 5;
-            LogDebug("Parameter list:" + msg, writeToLog);
+            LogDebug(msg.ToString(), writeToLog);
         }
 
         private string DbCStr(object InpObj)
