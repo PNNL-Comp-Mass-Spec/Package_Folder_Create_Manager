@@ -70,7 +70,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Job parameters
         /// </summary>
-        protected readonly Dictionary<string, string> m_JobParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        protected readonly Dictionary<string, string> m_JobParams = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Stored procedure executor
