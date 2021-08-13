@@ -15,16 +15,14 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class clsBroadcastCmd
     {
-        #region "Properties"
-
         /// <summary>
         /// List of machines the received message applies to
         /// </summary>
         public List<string> MachineList { get; set; } = new List<string>();
 
-        // The command that was broadcast
+        /// <summary>
+        /// The command that was broadcast
+        /// </summary>
         public string MachCmd { get; set; }
-
-        #endregion
     }
 }

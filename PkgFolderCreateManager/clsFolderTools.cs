@@ -19,14 +19,8 @@ namespace PkgFolderCreateManager
     {
         // Ignore Spelling: cmd, msg
 
-        #region "Constants"
-
         private const bool WARN_IF_DIRECTORY_EXISTS = true;
         private const bool NO_WARN_IF_DIRECTORY_EXISTS = false;
-
-        #endregion
-
-        #region "Methods"
 
         /// <summary>
         /// Creates specified directory
@@ -172,7 +166,5 @@ namespace PkgFolderCreateManager
                 return false;
             }
         }
-
-        #endregion
     }
 }

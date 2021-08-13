@@ -20,8 +20,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal abstract class clsDbTask : clsLoggerBase
     {
-        #region "Enums"
-
         public enum EnumCloseOutType : short
         {
             CLOSEOUT_SUCCESS = 0,
@@ -44,16 +42,8 @@ namespace PkgFolderCreateManager
             ResultError = 2
         }
 
-        #endregion
-
-        #region "Constants"
-
         protected const int RET_VAL_OK = 0;
         protected const int RET_VAL_TASK_NOT_AVAILABLE = 53000;
-
-        #endregion
-
-        #region "Class variables"
 
         protected readonly MgrSettings m_MgrParams;
 
@@ -77,10 +67,6 @@ namespace PkgFolderCreateManager
         /// </summary>
         protected readonly IDBTools m_PipelineDBProcedureExecutor;
 
-        #endregion
-
-        #region "Properties"
-
         /// <summary>
         /// Manager name
         /// </summary>
@@ -89,10 +75,6 @@ namespace PkgFolderCreateManager
         public bool TaskWasAssigned => m_TaskWasAssigned;
 
         public Dictionary<string, string> TaskDictionary => m_JobParams;
-
-        #endregion
-
-        #region "Constructor"
 
         /// <summary>
         /// Constructor
@@ -115,10 +97,6 @@ namespace PkgFolderCreateManager
             // 4 means Info level (normal) logging; 5 for Debug level (verbose) logging
             m_DebugLevel = mgrParams.GetParam("DebugLevel", 4);
         }
-
-        #endregion
-
-        #region "Methods"
 
         /// <summary>
         /// Requests a capture pipeline task
@@ -183,10 +161,6 @@ namespace PkgFolderCreateManager
             return InpObj.ToString();
         }
 
-        #endregion
-
-        #region "Event handlers"
-
         private void PipelineDBProcedureExecutor_DBErrorEvent(string message, Exception ex)
         {
             var logToDb = message.Contains("permission was denied");
@@ -196,7 +170,5 @@ namespace PkgFolderCreateManager
             else
                 LogError(message, ex);
         }
-
-        #endregion
     }
 }

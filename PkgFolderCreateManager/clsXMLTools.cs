@@ -19,8 +19,6 @@ namespace PkgFolderCreateManager
     {
         // Ignore Spelling: cmd
 
-        #region "Methods"
-
         /// <summary>
         /// Converts command XML string into a dictionary of strings
         /// </summary>
@@ -111,7 +109,6 @@ namespace PkgFolderCreateManager
                 throw new Exception("Exception while parsing broadcast string", ex);
             }
         }
-
-        #endregion
+        
     }
 }

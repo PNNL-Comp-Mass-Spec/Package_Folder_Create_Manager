@@ -22,8 +22,6 @@ namespace PkgFolderCreateManager
     {
         // Ignore Spelling: yyyy-MM-dd, hh:mm:ss tt, T_Mgrs
 
-        #region "Enums"
-
         /// <summary>
         /// Manager status constants
         /// </summary>
@@ -61,10 +59,6 @@ namespace PkgFolderCreateManager
             No_Task
         }
 
-        #endregion
-
-        #region "Class variables"
-
         private DateTime m_LastFileWriteTime;
 
         private int m_WritingErrorCountSaved;
@@ -72,10 +66,6 @@ namespace PkgFolderCreateManager
         private readonly clsMessageHandler m_MsgHandler;
 
         private int m_MessageQueueExceptionCount;
-
-        #endregion
-
-        #region "Properties"
 
         /// <summary>
         /// Status file path
@@ -151,10 +141,6 @@ namespace PkgFolderCreateManager
         /// When true, the status XML is being sent to the manager status message queue
         /// </summary>
         public bool LogToMsgQueue { get; set; }
-
-        #endregion
-
-        #region "Methods"
 
         /// <summary>
         /// Constructor
@@ -613,7 +599,5 @@ namespace PkgFolderCreateManager
         {
             LogTools.LogError(message, ex);
         }
-
-        #endregion
     }
 }

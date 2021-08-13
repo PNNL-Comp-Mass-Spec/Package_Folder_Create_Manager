@@ -17,22 +17,13 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class clsFolderCreateTask : clsDbTask, ITaskParams
     {
-        #region "Constants"
-
         protected const string SP_NAME_SET_COMPLETE = "SetFolderCreateTaskComplete";
         protected const string SP_NAME_REQUEST_TASK = "RequestFolderCreateTask";
-
-        #endregion
-
-        #region "Class variables"
 
         private int mTaskID;
         private string mTaskParametersXML = string.Empty;
 
         private bool mConnectionInfoLogged;
-        #endregion
-
-        #region "Properties"
 
         public string TaskParametersXML
         {
@@ -44,10 +35,6 @@ namespace PkgFolderCreateManager
                 return mTaskParametersXML;
             }
         }
-
-        #endregion
-
-        #region "Methods"
 
         /// <summary>
         /// Constructor
@@ -284,7 +271,5 @@ namespace PkgFolderCreateManager
                 return false;
             }
         }
-
-        #endregion
     }
 }

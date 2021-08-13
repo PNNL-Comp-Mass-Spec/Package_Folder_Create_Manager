@@ -24,8 +24,6 @@ namespace PkgFolderCreateManager
     {
         // Ignore Spelling: cmd, dd, yyyy, HH:mm:ss
 
-        #region "Constants and Enums"
-
         private const string DEFAULT_BASE_LOGFILE_NAME = @"Logs\FolderCreate";
 
         private enum BroadcastCmdType
@@ -34,10 +32,6 @@ namespace PkgFolderCreateManager
             ReadConfig
         }
 
-        #endregion
-
-        #region "Class variables"
-
         private MgrSettings m_MgrSettings;
         private clsStatusFile m_StatusFile;
         private clsMessageHandler m_MsgHandler;
@@ -45,10 +39,6 @@ namespace PkgFolderCreateManager
         private bool m_MgrActive;
         private BroadcastCmdType m_BroadcastCmdType;
         private clsFolderCreateTask m_Task;
-
-        #endregion
-
-        #region "Methods"
 
         public bool CheckDBQueue()
         {
@@ -537,10 +527,6 @@ namespace PkgFolderCreateManager
             m_StatusFile.TaskStatusDetail = clsStatusFile.EnumTaskStatusDetail.No_Task;
         }
 
-        #endregion
-
-        #region "Event Handlers"
-
         private void RegisterEvents(IEventNotifier sourceClass, bool writeDebugEventsToLog = true)
         {
             if (writeDebugEventsToLog)
@@ -581,8 +567,6 @@ namespace PkgFolderCreateManager
         {
             LogWarning(message);
         }
-
-        #endregion
     }
 }
 

@@ -17,8 +17,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     public static class clsUtilityMethods
     {
-        #region "Methods"
-
         /// <summary>
         /// Convert bytes to Gigabytes
         /// </summary>
@@ -136,7 +134,5 @@ namespace PkgFolderCreateManager
         {
             LogTools.LogDebug(message, writeToLog);
         }
-
-        #endregion
     }
 }

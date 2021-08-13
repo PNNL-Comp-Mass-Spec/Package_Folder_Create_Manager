@@ -16,13 +16,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal static class Program
     {
-        #region "Class variables"
-
         private static clsMainProg m_MainProcess;
-
-        #endregion
-
-        #region "Methods"
 
         /// <summary>
         /// The main entry point for the application.
@@ -52,7 +46,5 @@ namespace PkgFolderCreateManager
 
             PRISM.Logging.FileLogger.FlushPendingMessages();
         }
-
-        #endregion
     }
 }

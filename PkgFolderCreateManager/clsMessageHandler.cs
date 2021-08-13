@@ -27,7 +27,6 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class clsMessageHandler : clsLoggerBase, IDisposable
     {
-#region "Class variables"
         private MgrSettings m_MgrSettings;
 
         private IConnection m_Connection;
@@ -39,16 +38,8 @@ namespace PkgFolderCreateManager
         private bool m_IsDisposed;
         private bool m_HasConnection;
 
-        #endregion
-
-        #region "Events"
-
         public event MessageProcessorDelegate CommandReceived;
         public event MessageProcessorDelegate BroadcastReceived;
-
-        #endregion
-
-        #region "Properties"
 
         public MgrSettings MgrSettings
         {
@@ -62,10 +53,6 @@ namespace PkgFolderCreateManager
         public string BroadcastTopicName { get; set; }
 
         public string StatusTopicName { get; set; }
-
-        #endregion
-
-        #region "Methods"
 
         /// <summary>
         /// Create set of NMS connection objects necessary to talk to the ActiveMQ broker
@@ -242,10 +229,6 @@ namespace PkgFolderCreateManager
             }
         }
 
-        #endregion
-
-        #region "Cleanup"
-
         /// <summary>
         /// Cleans up a connection after error or when closing
         /// </summary>
@@ -280,7 +263,5 @@ namespace PkgFolderCreateManager
             m_CommandConsumer.Listener += OnCommandReceived;
             m_BroadcastConsumer.Listener += OnBroadcastReceived;
         }
-
-        #endregion
     }
 }
