@@ -27,23 +27,23 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class clsMessageHandler : clsLoggerBase, IDisposable
     {
-        private MgrSettings m_MgrSettings;
+        private MgrSettings mMgrSettings;
 
-        private IConnection m_Connection;
-        private ISession m_StatusSession;
-        private IMessageProducer m_StatusSender;
-        private IMessageConsumer m_CommandConsumer;
-        private IMessageConsumer m_BroadcastConsumer;
+        private IConnection mConnection;
+        private ISession mStatusSession;
+        private IMessageProducer mStatusSender;
+        private IMessageConsumer mCommandConsumer;
+        private IMessageConsumer mBroadcastConsumer;
 
-        private bool m_IsDisposed;
-        private bool m_HasConnection;
+        private bool mIsDisposed;
+        private bool mHasConnection;
 
         public event MessageProcessorDelegate CommandReceived;
         public event MessageProcessorDelegate BroadcastReceived;
 
         public MgrSettings MgrSettings
         {
-            set => m_MgrSettings = value;
+            set => mMgrSettings = value;
         }
 
         public string BrokerUri { get; set; }
@@ -61,7 +61,7 @@ namespace PkgFolderCreateManager
         /// <param name="timeoutSeconds">Number of seconds to wait for the broker to respond</param>
         protected void CreateConnection(int retryCount = 2, int timeoutSeconds = 15)
         {
-            if (m_HasConnection)
+            if (mHasConnection)
                 return;
 
             if (retryCount < 0)
@@ -79,11 +79,11 @@ namespace PkgFolderCreateManager
                 try
                 {
                     IConnectionFactory connectionFactory = new ConnectionFactory(BrokerUri);
-                    m_Connection = connectionFactory.CreateConnection();
-                    m_Connection.RequestTimeout = new TimeSpan(0, 0, timeoutSeconds);
-                    m_Connection.Start();
+                    mConnection = connectionFactory.CreateConnection();
+                    mConnection.RequestTimeout = new TimeSpan(0, 0, timeoutSeconds);
+                    mConnection.Start();
 
-                    m_HasConnection = true;
+                    mHasConnection = true;
 
                     var username = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
 
@@ -123,27 +123,27 @@ namespace PkgFolderCreateManager
         {
             try
             {
-                if (!m_HasConnection)
+                if (!mHasConnection)
                     CreateConnection();
 
-                if (!m_HasConnection)
+                if (!mHasConnection)
                     return false;
 
                 // queue for "make folder" commands from database via its STOMP message sender
-                var commandSession = m_Connection.CreateSession();
-                m_CommandConsumer = commandSession.CreateConsumer(new ActiveMQQueue(CommandQueueName));
+                var commandSession = mConnection.CreateSession();
+                mCommandConsumer = commandSession.CreateConsumer(new ActiveMQQueue(CommandQueueName));
                 //                    commandConsumer.Listener += new MessageListener(OnCommandReceived);
                 LogDebug("Command listener established");
 
                 // topic for commands broadcast to all folder makers
-                var broadcastSession = m_Connection.CreateSession();
-                m_BroadcastConsumer = broadcastSession.CreateConsumer(new ActiveMQTopic(BroadcastTopicName));
+                var broadcastSession = mConnection.CreateSession();
+                mBroadcastConsumer = broadcastSession.CreateConsumer(new ActiveMQTopic(BroadcastTopicName));
                 //                    broadcastConsumer.Listener += new MessageListener(OnBroadcastReceived);
                 LogDebug("Broadcast listener established");
 
                 // topic for the folder maker to send status information over
-                m_StatusSession = m_Connection.CreateSession();
-                m_StatusSender = m_StatusSession.CreateProducer(new ActiveMQTopic(StatusTopicName));
+                mStatusSession = mConnection.CreateSession();
+                mStatusSender = mStatusSession.CreateProducer(new ActiveMQTopic(StatusTopicName));
                 LogDebug("Status sender established");
 
                 return true;
@@ -208,15 +208,15 @@ namespace PkgFolderCreateManager
         /// <param name="message">Outgoing message string</param>
         public void SendMessage(string message)
         {
-            if (!m_IsDisposed)
+            if (!mIsDisposed)
             {
-                var textMessage = m_StatusSession.CreateTextMessage(message);
+                var textMessage = mStatusSession.CreateTextMessage(message);
                 textMessage.NMSTimeToLive = TimeSpan.FromMinutes(60);
                 textMessage.NMSDeliveryMode = MsgDeliveryMode.NonPersistent;
-                textMessage.Properties.SetString("ProcessorName", m_MgrSettings.ManagerName);
+                textMessage.Properties.SetString("ProcessorName", mMgrSettings.ManagerName);
                 try
                 {
-                    m_StatusSender.Send(textMessage);
+                    mStatusSender.Send(textMessage);
                 }
                 catch
                 {
@@ -234,10 +234,10 @@ namespace PkgFolderCreateManager
         /// </summary>
         protected void DestroyConnection()
         {
-            if (m_HasConnection)
+            if (mHasConnection)
             {
-                m_Connection.Dispose();
-                m_HasConnection = false;
+                mConnection.Dispose();
+                mHasConnection = false;
                 LogDebug("Message connection closed");
             }
         }
@@ -247,11 +247,11 @@ namespace PkgFolderCreateManager
         /// </summary>
         public void Dispose()
         {
-            if (m_IsDisposed)
+            if (mIsDisposed)
                 return;
 
             DestroyConnection();
-            m_IsDisposed = true;
+            mIsDisposed = true;
         }
 
         /// <summary>
@@ -260,8 +260,8 @@ namespace PkgFolderCreateManager
         /// </summary>
         public void RegisterListeners()
         {
-            m_CommandConsumer.Listener += OnCommandReceived;
-            m_BroadcastConsumer.Listener += OnBroadcastReceived;
+            mCommandConsumer.Listener += OnCommandReceived;
+            mBroadcastConsumer.Listener += OnBroadcastReceived;
         }
     }
 }

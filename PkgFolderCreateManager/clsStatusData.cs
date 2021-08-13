@@ -16,11 +16,11 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal static class clsStatusData
     {
-        private static string m_MostRecentLogMessage;
+        private static string mMostRecentLogMessage;
 
         public static string MostRecentLogMessage
         {
-            get => m_MostRecentLogMessage;
+            get => mMostRecentLogMessage;
             set
             {
                 // Filter out routine startup and shutdown messages
@@ -30,7 +30,7 @@ namespace PkgFolderCreateManager
                 }
                 else
                 {
-                    m_MostRecentLogMessage = value;
+                    mMostRecentLogMessage = value;
                 }
             }
         }

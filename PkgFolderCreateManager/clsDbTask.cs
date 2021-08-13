@@ -45,36 +45,36 @@ namespace PkgFolderCreateManager
         protected const int RET_VAL_OK = 0;
         protected const int RET_VAL_TASK_NOT_AVAILABLE = 53000;
 
-        protected readonly MgrSettings m_MgrParams;
+        protected readonly MgrSettings mMgrParams;
 
-        protected readonly string m_ConnStr;
+        protected readonly string mConnectingString;
 
-        protected bool m_TaskWasAssigned;
+        protected bool mTaskWasAssigned;
 
         /// <summary>
         /// Debug level
         /// </summary>
         /// <remarks>4 means Info level (normal) logging; 5 for Debug level (verbose) logging</remarks>
-        protected readonly int m_DebugLevel;
+        protected readonly int mDebugLevel;
 
         /// <summary>
         /// Job parameters
         /// </summary>
-        protected readonly Dictionary<string, string> m_JobParams = new(StringComparer.OrdinalIgnoreCase);
+        protected readonly Dictionary<string, string> mJobParams = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Stored procedure executor
         /// </summary>
-        protected readonly IDBTools m_PipelineDBProcedureExecutor;
+        protected readonly IDBTools mPipelineDBProcedureExecutor;
 
         /// <summary>
         /// Manager name
         /// </summary>
         public string ManagerName { get; }
 
-        public bool TaskWasAssigned => m_TaskWasAssigned;
+        public bool TaskWasAssigned => mTaskWasAssigned;
 
-        public Dictionary<string, string> TaskDictionary => m_JobParams;
+        public Dictionary<string, string> TaskDictionary => mJobParams;
 
         /// <summary>
         /// Constructor
@@ -82,20 +82,20 @@ namespace PkgFolderCreateManager
         /// <param name="mgrParams"></param>
         protected clsDbTask(MgrSettings mgrParams)
         {
-            m_MgrParams = mgrParams;
-            ManagerName = m_MgrParams.GetParam("MgrName", Environment.MachineName + "_Undefined-Manager");
+            mMgrParams = mgrParams;
+            ManagerName = mMgrParams.GetParam("MgrName", Environment.MachineName + "_Undefined-Manager");
 
             // Gigasax.DMS_Pipeline
-            var connectionString = m_MgrParams.GetParam("ConnectionString");
+            var connectionString = mMgrParams.GetParam("ConnectionString");
 
-            m_ConnStr = DbToolsFactory.AddApplicationNameToConnectionString(connectionString, ManagerName);
-            m_PipelineDBProcedureExecutor = DbToolsFactory.GetDBTools(m_ConnStr);
+            mConnectingString = DbToolsFactory.AddApplicationNameToConnectionString(connectionString, ManagerName);
+            mPipelineDBProcedureExecutor = DbToolsFactory.GetDBTools(mConnectingString);
 
-            m_PipelineDBProcedureExecutor.ErrorEvent += PipelineDBProcedureExecutor_DBErrorEvent;
+            mPipelineDBProcedureExecutor.ErrorEvent += PipelineDBProcedureExecutor_DBErrorEvent;
 
             // Cache the log level
             // 4 means Info level (normal) logging; 5 for Debug level (verbose) logging
-            m_DebugLevel = mgrParams.GetParam("DebugLevel", 4);
+            mDebugLevel = mgrParams.GetParam("DebugLevel", 4);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace PkgFolderCreateManager
                 msg.AppendLine();
             }
 
-            var writeToLog = m_DebugLevel >= 5;
+            var writeToLog = mDebugLevel >= 5;
             LogDebug(msg.ToString(), writeToLog);
         }
 

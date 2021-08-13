@@ -44,7 +44,7 @@ namespace PkgFolderCreateManager
             : base(mgrParams)
         {
             mTaskID = 0;
-            m_JobParams.Clear();
+            mJobParams.Clear();
         }
 
         /// <summary>
@@ -54,9 +54,9 @@ namespace PkgFolderCreateManager
         /// <returns>Parameter value if found, otherwise empty string</returns>
         public string GetParam(string name)
         {
-            if (m_JobParams.ContainsKey(name))
+            if (mJobParams.ContainsKey(name))
             {
-                return m_JobParams[name];
+                return mJobParams[name];
             }
 
             return string.Empty;
@@ -72,7 +72,7 @@ namespace PkgFolderCreateManager
         {
             try
             {
-                m_JobParams.Add(paramName, paramValue);
+                mJobParams.Add(paramName, paramValue);
                 return true;
             }
             catch (Exception ex)
@@ -91,7 +91,7 @@ namespace PkgFolderCreateManager
         public void SetParam(string keyName, string value)
         {
             value ??= string.Empty;
-            m_JobParams[keyName] = value;
+            mJobParams[keyName] = value;
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace PkgFolderCreateManager
 
             var retVal = RequestTaskDetailed();
 
-            m_TaskWasAssigned = retVal switch
+            mTaskWasAssigned = retVal switch
             {
                 EnumRequestTaskResult.TaskFound => true,
                 EnumRequestTaskResult.NoTaskFound => false,
@@ -125,7 +125,7 @@ namespace PkgFolderCreateManager
             try
             {
                 // Set up the command object prior to SP execution
-                var dbTools = m_PipelineDBProcedureExecutor;
+                var dbTools = mPipelineDBProcedureExecutor;
                 var cmd = dbTools.CreateCommand(SP_NAME_REQUEST_TASK, CommandType.StoredProcedure);
 
                 dbTools.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
@@ -138,7 +138,7 @@ namespace PkgFolderCreateManager
 
                 if (!mConnectionInfoLogged)
                 {
-                    var msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + m_ConnStr;
+                    var msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + mConnectingString;
                     LogDebug(msg);
 
                     LogDebug("clsCaptureTask.RequestTaskDetailed(), printing param list");
@@ -149,7 +149,7 @@ namespace PkgFolderCreateManager
                 }
 
                 // Execute the SP
-                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(cmd, out _);
+                var resCode = mPipelineDBProcedureExecutor.ExecuteSP(cmd, out _);
 
                 switch (resCode)
                 {
@@ -211,7 +211,7 @@ namespace PkgFolderCreateManager
         /// <param name="evalCode">Enum representing evaluation results</param>
         public override void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode)
         {
-            if (!SetFolderCreateTaskComplete(SP_NAME_SET_COMPLETE, m_ConnStr, (int)taskResult, closeoutMsg, (int)evalCode))
+            if (!SetFolderCreateTaskComplete(SP_NAME_SET_COMPLETE, mConnectingString, (int)taskResult, closeoutMsg, (int)evalCode))
             {
                 var msg = "Error setting task complete in database, task_id " + mTaskID;
                 LogError(msg);
@@ -237,7 +237,7 @@ namespace PkgFolderCreateManager
             try
             {
                 // Setup for execution of the stored procedure
-                var dbTools = m_PipelineDBProcedureExecutor;
+                var dbTools = mPipelineDBProcedureExecutor;
                 var cmd = dbTools.CreateCommand(spName, CommandType.StoredProcedure);
 
                 dbTools.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
@@ -253,7 +253,7 @@ namespace PkgFolderCreateManager
                 LogDebug(msg);
 
                 // Execute the SP
-                var resCode = m_PipelineDBProcedureExecutor.ExecuteSP(cmd);
+                var resCode = mPipelineDBProcedureExecutor.ExecuteSP(cmd);
 
                 if (resCode == 0)
                 {

@@ -16,7 +16,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal static class Program
     {
-        private static clsMainProg m_MainProcess;
+        private static clsMainProg mMainProcess;
 
         /// <summary>
         /// The main entry point for the application.
@@ -26,15 +26,15 @@ namespace PkgFolderCreateManager
             // Start the main program running
             try
             {
-                if (m_MainProcess == null)
+                if (mMainProcess == null)
                 {
-                    m_MainProcess = new clsMainProg();
-                    if (!m_MainProcess.InitMgr())
+                    mMainProcess = new clsMainProg();
+                    if (!mMainProcess.InitMgr())
                     {
                         PRISM.Logging.FileLogger.FlushPendingMessages();
                         return;
                     }
-                    m_MainProcess.DoDirectoryCreation();
+                    mMainProcess.DoDirectoryCreation();
                 }
             }
             catch (Exception ex)

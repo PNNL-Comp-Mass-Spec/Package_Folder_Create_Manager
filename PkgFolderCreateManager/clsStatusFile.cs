@@ -59,13 +59,13 @@ namespace PkgFolderCreateManager
             No_Task
         }
 
-        private DateTime m_LastFileWriteTime;
+        private DateTime mLastFileWriteTime;
 
-        private int m_WritingErrorCountSaved;
+        private int mWritingErrorCountSaved;
 
-        private readonly clsMessageHandler m_MsgHandler;
+        private readonly clsMessageHandler mMsgHandler;
 
-        private int m_MessageQueueExceptionCount;
+        private int mMessageQueueExceptionCount;
 
         /// <summary>
         /// Status file path
@@ -150,7 +150,7 @@ namespace PkgFolderCreateManager
             FileNamePath = statusFilePath;
             TaskStartTime = DateTime.UtcNow;
 
-            m_MsgHandler = msgHandler;
+            mMsgHandler = msgHandler;
 
             ClearCachedInfo();
         }
@@ -345,7 +345,7 @@ namespace PkgFolderCreateManager
         {
             const int MIN_FILE_WRITE_INTERVAL_SECONDS = 2;
 
-            if (!(DateTime.UtcNow.Subtract(m_LastFileWriteTime).TotalSeconds >= MIN_FILE_WRITE_INTERVAL_SECONDS))
+            if (!(DateTime.UtcNow.Subtract(mLastFileWriteTime).TotalSeconds >= MIN_FILE_WRITE_INTERVAL_SECONDS))
                 return;
 
             // We will write out the Status XML to a temporary file, then rename the temp file to the primary file
@@ -355,7 +355,7 @@ namespace PkgFolderCreateManager
 
             var tempStatusFilePath = Path.Combine(GetStatusFileDirectory(), Path.GetFileNameWithoutExtension(FileNamePath) + "_Temp.xml");
 
-            m_LastFileWriteTime = DateTime.UtcNow;
+            mLastFileWriteTime = DateTime.UtcNow;
 
             var success = WriteStatusFileToDisk(tempStatusFilePath, xmlText);
             if (success)
@@ -406,20 +406,20 @@ namespace PkgFolderCreateManager
                 }
 
                 // Reset the error counter
-                m_WritingErrorCountSaved = 0;
+                mWritingErrorCountSaved = 0;
 
                 success = true;
             }
             catch (Exception ex)
             {
                 // Increment the error counter
-                m_WritingErrorCountSaved++;
+                mWritingErrorCountSaved++;
 
-                if (m_WritingErrorCountSaved >= WRITE_FAILURE_LOG_THRESHOLD)
+                if (mWritingErrorCountSaved >= WRITE_FAILURE_LOG_THRESHOLD)
                 {
                     // 5 or more errors in a row have occurred
                     // Post an entry to the log, only when writingErrorCountSaved is 5, 10, 20, 30, etc.
-                    if (m_WritingErrorCountSaved == WRITE_FAILURE_LOG_THRESHOLD || m_WritingErrorCountSaved % 10 == 0)
+                    if (mWritingErrorCountSaved == WRITE_FAILURE_LOG_THRESHOLD || mWritingErrorCountSaved % 10 == 0)
                     {
                         var msg = "Error writing status file " + Path.GetFileName(statusFilePath) + ": " + ex.Message;
                         OnWarningEvent(msg);
@@ -508,13 +508,13 @@ namespace PkgFolderCreateManager
         /// <param name="strStatusXML">A string containing the XML to write</param>
         protected void LogStatusToMessageQueue(string strStatusXML)
         {
-            if (m_MsgHandler == null)
+            if (mMsgHandler == null)
                 return;
 
             try
             {
-                m_MsgHandler.SendMessage(strStatusXML);
-                m_MessageQueueExceptionCount = 0;
+                mMsgHandler.SendMessage(strStatusXML);
+                mMessageQueueExceptionCount = 0;
             }
             catch (Exception ex)
             {
@@ -530,8 +530,8 @@ namespace PkgFolderCreateManager
                 //      T_ParamType PT ON PV.TypeID = PT.ParamID
                 // WHERE (PT.ParamName = 'LogStatusToMessageQueue') AND (MT.MT_TypeName = 'FolderCreate')
 
-                m_MessageQueueExceptionCount++;
-                var msg = "Exception sending status message to broker; count = " + m_MessageQueueExceptionCount;
+                mMessageQueueExceptionCount++;
+                var msg = "Exception sending status message to broker; count = " + mMessageQueueExceptionCount;
 
                 if (DateTime.Now.TimeOfDay.Hours == 0 && DateTime.Now.TimeOfDay.Minutes >= 0 && DateTime.Now.TimeOfDay.Minutes <= 5)
                 {
@@ -540,7 +540,7 @@ namespace PkgFolderCreateManager
                 }
                 else
                 {
-                    if (m_MessageQueueExceptionCount < 5 || m_MessageQueueExceptionCount % 20 == 0)
+                    if (mMessageQueueExceptionCount < 5 || mMessageQueueExceptionCount % 20 == 0)
                         LogError(msg);
                 }
             }
