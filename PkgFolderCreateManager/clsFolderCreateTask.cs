@@ -116,18 +116,13 @@ namespace PkgFolderCreateManager
             mTaskID = 0;
 
             var retVal = RequestTaskDetailed();
-            switch (retVal)
+
+            m_TaskWasAssigned = retVal switch
             {
-                case EnumRequestTaskResult.TaskFound:
-                    m_TaskWasAssigned = true;
-                    break;
-                case EnumRequestTaskResult.NoTaskFound:
-                    m_TaskWasAssigned = false;
-                    break;
-                default:
-                    m_TaskWasAssigned = false;
-                    break;
-            }
+                EnumRequestTaskResult.TaskFound => true,
+                EnumRequestTaskResult.NoTaskFound => false,
+                _ => false
+            };
 
             return retVal;
         }
