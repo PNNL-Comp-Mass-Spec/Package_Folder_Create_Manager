@@ -12,6 +12,7 @@ using System.IO;
 using System.Reflection;
 using PRISM.AppSettings;
 using PRISM.Logging;
+using PRISMDatabaseUtils;
 using PRISMDatabaseUtils.AppSettings;
 
 namespace PkgFolderCreateManager
@@ -191,7 +192,11 @@ namespace PkgFolderCreateManager
             // we remove this logger than make a new one using the connection string read from the Manager Control DB
             var defaultDmsConnectionString = Properties.Settings.Default.MgrCnfgDbConnectStr;
 
-            LogTools.CreateDbLogger(defaultDmsConnectionString, "FolderCreate: " + System.Net.Dns.GetHostName());
+            var hostName = System.Net.Dns.GetHostName();
+            var applicationName = "PkgFolderCreateManager_" + hostName;
+            var defaultDbLoggerConnectionString = DbToolsFactory.AddApplicationNameToConnectionString(defaultDmsConnectionString, applicationName);
+
+            LogTools.CreateDbLogger(defaultDbLoggerConnectionString, "FolderCreate: " + hostName);
 
             // Get the manager settings
             try
@@ -238,7 +243,10 @@ namespace PkgFolderCreateManager
             // Data Source=gigasax;Initial Catalog=DMS_Pipeline;Integrated Security=SSPI;
             var logCnStr = m_MgrSettings.GetParam("ConnectionString");
             var moduleName = m_MgrSettings.GetParam("ModuleName");
-            LogTools.CreateDbLogger(logCnStr, moduleName);
+
+            var dbLoggerConnectionString = DbToolsFactory.AddApplicationNameToConnectionString(logCnStr, m_MgrSettings.ManagerName);
+
+            LogTools.CreateDbLogger(dbLoggerConnectionString, moduleName);
 
             LogTools.MessageLogged += MessageLoggedHandler;
 
