@@ -252,7 +252,7 @@ namespace PkgFolderCreateManager
 
             // Make the initial log entry
             var appVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            var msg = "=== Started Package Folder Creation Manager V" + appVersion + " ===== ";
+            var msg = "=== Started Package Folder Creation Manager V" + appVersion + " === ";
 
             LogTools.LogMessage(msg);
 
