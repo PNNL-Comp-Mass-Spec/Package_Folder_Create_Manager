@@ -103,8 +103,9 @@ namespace PkgFolderCreateManager
             ManagerName = m_MgrParams.GetParam("MgrName", Environment.MachineName + "_Undefined-Manager");
 
             // Gigasax.DMS_Pipeline
-            m_ConnStr = m_MgrParams.GetParam("ConnectionString");
+            var connectionString = m_MgrParams.GetParam("ConnectionString");
 
+            m_ConnStr = DbToolsFactory.AddApplicationNameToConnectionString(connectionString, ManagerName);
             m_PipelineDBProcedureExecutor = DbToolsFactory.GetDBTools(m_ConnStr);
 
             m_PipelineDBProcedureExecutor.ErrorEvent += PipelineDBProcedureExecutor_DBErrorEvent;
