@@ -21,17 +21,15 @@ namespace PkgFolderCreateManager
         /// Convert bytes to Gigabytes
         /// </summary>
         /// <param name="bytes"></param>
-        /// <returns></returns>
         public static double BytesToGB(long bytes)
         {
             return bytes / 1024.0 / 1024.0 / 1024.0;
         }
 
         /// <summary>
-        /// Convert string to bool; default false if an error
+        /// Convert string to boolean; return false if an error
         /// </summary>
         /// <param name="value"></param>
-        /// <returns></returns>
         public static bool CBoolSafe(string value)
         {
             return CBoolSafe(value, false);
@@ -42,7 +40,6 @@ namespace PkgFolderCreateManager
         /// </summary>
         /// <param name="value"></param>
         /// <param name="defaultValue"></param>
-        /// <returns></returns>
         public static bool CBoolSafe(string value, bool defaultValue)
         {
             if (string.IsNullOrEmpty(value))
@@ -59,7 +56,6 @@ namespace PkgFolderCreateManager
         /// </summary>
         /// <param name="value"></param>
         /// <param name="defaultValue"></param>
-        /// <returns></returns>
         public static int CIntSafe(string value, int defaultValue)
         {
             if (string.IsNullOrEmpty(value))

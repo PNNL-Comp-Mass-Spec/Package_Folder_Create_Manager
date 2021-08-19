@@ -200,8 +200,6 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Return the ProcessID of the Analysis manager
         /// </summary>
-        /// <returns></returns>
-        /// <remarks></remarks>
         public int GetProcessID()
         {
             var processID = Process.GetCurrentProcess().Id;
@@ -211,7 +209,6 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Get the directory path for the status file tracked by FileNamePath
         /// </summary>
-        /// <returns></returns>
         private string GetStatusFileDirectory()
         {
             var statusFileDirectory = Path.GetDirectoryName(FileNamePath);
@@ -550,7 +547,6 @@ namespace PkgFolderCreateManager
         /// Total time the job has been running
         /// </summary>
         /// <returns>Number of hours manager has been processing job</returns>
-        /// <remarks></remarks>
         private float GetRunTime()
         {
             return (float)DateTime.UtcNow.Subtract(TaskStartTime).TotalHours;
