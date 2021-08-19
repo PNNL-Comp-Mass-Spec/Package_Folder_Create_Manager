@@ -10,6 +10,8 @@ using System;
 using PRISM;
 using PRISM.Logging;
 
+// ReSharper disable UnusedMember.Global
+
 namespace PkgFolderCreateManager
 {
     /// <summary>
