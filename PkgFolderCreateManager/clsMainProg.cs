@@ -156,15 +156,13 @@ namespace PkgFolderCreateManager
 
         private Dictionary<string, string> GetLocalManagerSettings()
         {
-            var localSettings = new Dictionary<string, string>
+            return new Dictionary<string, string>
             {
                 {MgrSettings.MGR_PARAM_MGR_CFG_DB_CONN_STRING, Properties.Settings.Default.MgrCnfgDbConnectStr},
                 {MgrSettings.MGR_PARAM_MGR_ACTIVE_LOCAL, Properties.Settings.Default.MgrActive_Local},
                 {MgrSettings.MGR_PARAM_MGR_NAME, Properties.Settings.Default.MgrName},
                 {MgrSettings.MGR_PARAM_USING_DEFAULTS, Properties.Settings.Default.UsingDefaults}
             };
-
-            return localSettings;
         }
 
         /// <summary>
