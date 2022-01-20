@@ -93,9 +93,14 @@ namespace PkgFolderCreateManager
                 doc.LoadXml(InputXML);
 
                 // Get list of managers this command applies to
-                foreach (XmlNode xn in doc.SelectNodes("//Managers/*"))
+                var managerNodes = doc.SelectNodes("//Managers/*");
+
+                if (managerNodes != null)
                 {
-                    returnedData.MachineList.Add(xn.InnerText);
+                    foreach (XmlNode xn in managerNodes)
+                    {
+                        returnedData.MachineList.Add(xn.InnerText);
+                    }
                 }
 
                 // Get command contained in message
