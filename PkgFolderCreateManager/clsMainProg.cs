@@ -22,7 +22,7 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class MainProgram : clsLoggerBase
     {
-        // Ignore Spelling: cmd, dd, yyyy, HH:mm:ss
+        // Ignore Spelling: cmd, dd, HH:mm:ss
 
         private const string DEFAULT_BASE_LOGFILE_NAME = @"Logs\FolderCreate";
 

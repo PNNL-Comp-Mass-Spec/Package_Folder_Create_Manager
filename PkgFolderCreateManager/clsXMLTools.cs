@@ -114,6 +114,5 @@ namespace PkgFolderCreateManager
                 throw new Exception("Exception while parsing broadcast string", ex);
             }
         }
-        
     }
 }
