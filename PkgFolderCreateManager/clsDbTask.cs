@@ -20,6 +20,8 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal abstract class clsDbTask : clsLoggerBase
     {
+        // ReSharper disable UnusedMember.Global
+
         public enum EnumCloseOutType : short
         {
             CLOSEOUT_SUCCESS = 0,
@@ -34,6 +36,8 @@ namespace PkgFolderCreateManager
             EVAL_CODE_FAILED = 1,
             EVAL_CODE_NOT_EVALUATED = 2
         }
+
+        // ReSharper restore UnusedMember.Global
 
         public enum EnumRequestTaskResult : short
         {
@@ -72,6 +76,7 @@ namespace PkgFolderCreateManager
         /// </summary>
         public string ManagerName { get; }
 
+        // ReSharper disable once UnusedMember.Global
         public bool TaskWasAssigned => mTaskWasAssigned;
 
         public Dictionary<string, string> TaskDictionary => mJobParams;
@@ -102,12 +107,14 @@ namespace PkgFolderCreateManager
         /// Requests a capture pipeline task
         /// </summary>
         /// <returns>RequestTaskResult enum specifying call result</returns>
+        // ReSharper disable once UnusedMemberInSuper.Global
         public abstract EnumRequestTaskResult RequestTask();
 
         /// <summary>
         /// Closes a capture pipeline task (Overloaded)
         /// </summary>
         /// <param name="taskResult">Enum representing task state</param>
+        // ReSharper disable once UnusedMemberInSuper.Global
         public abstract void CloseTask(EnumCloseOutType taskResult);
 
         /// <summary>
@@ -115,6 +122,7 @@ namespace PkgFolderCreateManager
         /// </summary>
         /// <param name="taskResult">Enum representing task state</param>
         /// <param name="closeoutMsg">Message related to task closeout</param>
+        // ReSharper disable once UnusedMemberInSuper.Global
         public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg);
 
         /// <summary>
@@ -123,6 +131,7 @@ namespace PkgFolderCreateManager
         /// <param name="taskResult">Enum representing task state</param>
         /// <param name="closeoutMsg">Message related to task closeout</param>
         /// <param name="evalCode">Enum representing evaluation results</param>
+        // ReSharper disable once UnusedMemberInSuper.Global
         public abstract void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode);
 
         /// <summary>

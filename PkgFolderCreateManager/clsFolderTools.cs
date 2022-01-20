@@ -19,7 +19,9 @@ namespace PkgFolderCreateManager
     {
         // Ignore Spelling: cmd, msg
 
+        // ReSharper disable once UnusedMember.Local
         private const bool WARN_IF_DIRECTORY_EXISTS = true;
+
         private const bool NO_WARN_IF_DIRECTORY_EXISTS = false;
 
         /// <summary>

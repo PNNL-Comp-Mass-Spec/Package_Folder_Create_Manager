@@ -34,6 +34,8 @@ namespace PkgFolderCreateManager
             Disabled_MC
         }
 
+        // ReSharper disable UnusedMember.Global
+
         /// <summary>
         /// Task status constants
         /// </summary>
@@ -58,6 +60,8 @@ namespace PkgFolderCreateManager
             Delivering_Results,
             No_Task
         }
+
+        // ReSharper restore UnusedMember.Global
 
         private DateTime mLastFileWriteTime;
 
@@ -85,6 +89,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Overall CPU utilization of all threads
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public int CpuUtilization { get; set; }
 
         /// <summary>
@@ -432,6 +437,7 @@ namespace PkgFolderCreateManager
         /// (Overload to update when completion percentage is the only change)
         /// </summary>
         /// <param name="percentComplete">Job completion percentage (value between 0 and 100)</param>
+        // ReSharper disable once UnusedMember.Global
         public void UpdateAndWrite(float percentComplete)
         {
             Progress = percentComplete;
@@ -444,6 +450,7 @@ namespace PkgFolderCreateManager
         /// </summary>
         /// <param name="status">Job status enum</param>
         /// <param name="percentComplete">Job completion percentage (value between 0 and 100)</param>
+        // ReSharper disable once UnusedMember.Global
         public void UpdateAndWrite(EnumTaskStatusDetail status, float percentComplete)
         {
             TaskStatusDetail = status;
@@ -456,6 +463,7 @@ namespace PkgFolderCreateManager
         /// Sets status file to show manager not running
         /// </summary>
         /// <param name="mgrError">TRUE if manager not running due to error; FALSE otherwise</param>
+        // ReSharper disable once UnusedMember.Global
         public void UpdateStopped(bool mgrError)
         {
             ClearCachedInfo();
@@ -479,6 +487,7 @@ namespace PkgFolderCreateManager
         /// Updates status file to show manager disabled
         /// </summary>
         /// <param name="disabledLocally">TRUE if manager disabled locally, otherwise FALSE</param>
+        // ReSharper disable once UnusedMember.Global
         public void UpdateDisabled(bool disabledLocally)
         {
             ClearCachedInfo();
