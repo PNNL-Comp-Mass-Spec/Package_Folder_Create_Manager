@@ -538,7 +538,7 @@ namespace PkgFolderCreateManager
                 mMessageQueueExceptionCount++;
                 var msg = "Exception sending status message to broker; count = " + mMessageQueueExceptionCount;
 
-                if (DateTime.Now.TimeOfDay.Hours == 0 && DateTime.Now.TimeOfDay.Minutes >= 0 && DateTime.Now.TimeOfDay.Minutes <= 5)
+                if (DateTime.Now.TimeOfDay.Hours == 0 && DateTime.Now.TimeOfDay.Minutes is >= 0 and <= 5)
                 {
                     // The time of day is between 12:00 am and 12:10 am, so write the full exception to the log
                     LogError(msg, ex);
