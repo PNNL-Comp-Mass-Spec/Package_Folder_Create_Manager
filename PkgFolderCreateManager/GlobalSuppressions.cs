@@ -15,7 +15,6 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Allowed name", Scope = "type", Target = "~T:PkgFolderCreateManager.clsFolderCreateTask")]
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Allowed name", Scope = "type", Target = "~T:PkgFolderCreateManager.clsFolderTools")]
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Allowed name", Scope = "type", Target = "~T:PkgFolderCreateManager.clsLoggerBase")]
-[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Allowed name", Scope = "type", Target = "~T:PkgFolderCreateManager.clsMainProg")]
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Allowed name", Scope = "type", Target = "~T:PkgFolderCreateManager.clsMessageHandler")]
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Allowed name", Scope = "type", Target = "~T:PkgFolderCreateManager.clsStatusData")]
 [assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Allowed name", Scope = "type", Target = "~T:PkgFolderCreateManager.clsStatusFile")]

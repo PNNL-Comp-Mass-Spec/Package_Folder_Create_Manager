@@ -20,7 +20,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Main program class for application
     /// </summary>
-    internal class clsMainProg : clsLoggerBase
+    internal class MainProgram : clsLoggerBase
     {
         // Ignore Spelling: cmd, dd, yyyy, HH:mm:ss
 
