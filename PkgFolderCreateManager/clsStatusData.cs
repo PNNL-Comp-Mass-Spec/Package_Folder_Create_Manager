@@ -35,7 +35,7 @@ namespace PkgFolderCreateManager
             }
         }
 
-        public static Queue<string> ErrorQueue { get; } = new Queue<string>();
+        public static Queue<string> ErrorQueue { get; } = new();
 
         public static void AddErrorMessage(string ErrMsg)
         {

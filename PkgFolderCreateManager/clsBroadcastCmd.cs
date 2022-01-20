@@ -18,7 +18,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// List of machines the received message applies to
         /// </summary>
-        public List<string> MachineList { get; set; } = new List<string>();
+        public List<string> MachineList { get; set; } = new();
 
         /// <summary>
         /// The command that was broadcast
