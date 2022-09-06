@@ -15,7 +15,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Performs folder creation
     /// </summary>
-    public class clsFolderTools : clsLoggerBase
+    public class FolderTools : LoggerBase
     {
         // Ignore Spelling: cmd, msg
 

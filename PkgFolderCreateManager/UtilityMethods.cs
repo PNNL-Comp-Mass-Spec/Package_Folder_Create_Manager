@@ -17,7 +17,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Holds static utility methods that are put here to avoid cluttering up other classes
     /// </summary>
-    public static class clsUtilityMethods
+    public static class UtilityMethods
     {
         /// <summary>
         /// Convert bytes to Gigabytes

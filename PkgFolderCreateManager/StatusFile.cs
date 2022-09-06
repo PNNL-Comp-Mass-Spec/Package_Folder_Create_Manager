@@ -18,7 +18,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Provides tools for creating and updating a task status file
     /// </summary>
-    internal class clsStatusFile : EventNotifier
+    internal class StatusFile : EventNotifier
     {
         // Ignore Spelling: yyyy-MM-dd, hh:mm:ss tt, T_Mgrs
 
@@ -67,7 +67,7 @@ namespace PkgFolderCreateManager
 
         private int mWritingErrorCountSaved;
 
-        private readonly clsMessageHandler mMsgHandler;
+        private readonly MessageHandler mMsgHandler;
 
         private int mMessageQueueExceptionCount;
 
@@ -150,7 +150,7 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Constructor
         /// </summary>
-        public clsStatusFile(string statusFilePath, clsMessageHandler msgHandler)
+        public StatusFile(string statusFilePath, MessageHandler msgHandler)
         {
             FileNamePath = statusFilePath;
             TaskStartTime = DateTime.UtcNow;
@@ -255,7 +255,7 @@ namespace PkgFolderCreateManager
         }
 
         private string GenerateStatusXML(
-            clsStatusFile status,
+            StatusFile status,
             DateTime lastUpdate,
             int processId,
             int cpuUtilization,
@@ -300,7 +300,7 @@ namespace PkgFolderCreateManager
             writer.WriteElementString("ProcessID", processId.ToString());
             writer.WriteStartElement("RecentErrorMessages");
 
-            foreach (var errMsg in clsStatusData.ErrorQueue)
+            foreach (var errMsg in StatusData.ErrorQueue)
             {
                 writer.WriteElementString("ErrMsg", errMsg);
             }
@@ -321,7 +321,7 @@ namespace PkgFolderCreateManager
             writer.WriteElementString("Job", status.JobNumber.ToString());
             writer.WriteElementString("Step", status.JobStep.ToString());
             writer.WriteElementString("Dataset", status.Dataset);
-            writer.WriteElementString("MostRecentLogMessage", clsStatusData.MostRecentLogMessage);
+            writer.WriteElementString("MostRecentLogMessage", StatusData.MostRecentLogMessage);
             writer.WriteElementString("MostRecentJobInfo", status.MostRecentJobInfo);
             writer.WriteEndElement(); // TaskDetails
             writer.WriteEndElement(); // Task
@@ -577,7 +577,7 @@ namespace PkgFolderCreateManager
                 Doc.LoadXml(XmlStr);
 
                 // Get the most recent log message
-                clsStatusData.MostRecentLogMessage = Doc.SelectSingleNode("//Task/TaskDetails/MostRecentLogMessage")?.InnerText;
+                StatusData.MostRecentLogMessage = Doc.SelectSingleNode("//Task/TaskDetails/MostRecentLogMessage")?.InnerText;
 
                 // Get the most recent job info
                 MostRecentJobInfo = Doc.SelectSingleNode("//Task/TaskDetails/MostRecentJobInfo")?.InnerText;
@@ -589,7 +589,7 @@ namespace PkgFolderCreateManager
                     // Get the error messages
                     foreach (XmlNode Xn in recentErrorMessages)
                     {
-                        clsStatusData.AddErrorMessage(Xn.InnerText);
+                        StatusData.AddErrorMessage(Xn.InnerText);
                     }
                 }
             }

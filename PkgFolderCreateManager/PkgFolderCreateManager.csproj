@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -62,35 +62,25 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
+    <Reference Include="System.Core" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="clsBroadcastCmd.cs" />
-    <Compile Include="clsDbTask.cs" />
-    <Compile Include="clsFolderCreateTask.cs" />
-    <Compile Include="clsFolderTools.cs" />
-    <Compile Include="clsLoggerBase.cs" />
-    <Compile Include="clsMainProg.cs" />
-    <Compile Include="clsMessageHandler.cs" />
-    <Compile Include="clsStatusData.cs" />
-    <Compile Include="clsStatusFile.cs" />
-    <Compile Include="clsUtilityMethods.cs" />
-    <Compile Include="clsXMLTools.cs" />
+    <Compile Include="BroadcastCmd.cs" />
+    <Compile Include="DbTask.cs" />
+    <Compile Include="FolderCreateTask.cs" />
+    <Compile Include="FolderTools.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="ITaskParams.cs" />
+    <Compile Include="LoggerBase.cs" />
+    <Compile Include="MainProg.cs" />
+    <Compile Include="MessageHandler.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="StatusData.cs" />
+    <Compile Include="StatusFile.cs" />
+    <Compile Include="UtilityMethods.cs" />
+    <Compile Include="XMLTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

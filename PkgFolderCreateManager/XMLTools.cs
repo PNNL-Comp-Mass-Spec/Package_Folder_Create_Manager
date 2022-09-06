@@ -15,7 +15,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Tools for parsing input XML
     /// </summary>
-    internal static class clsXMLTools
+    internal static class XMLTools
     {
         // Ignore Spelling: cmd
 
@@ -83,9 +83,9 @@ namespace PkgFolderCreateManager
         /// </summary>
         /// <param name="InputXML">XML string to parse</param>
         /// <returns>String dictionary of broadcast sections</returns>
-        public static clsBroadcastCmd ParseBroadcastXML(string InputXML)
+        public static BroadcastCmd ParseBroadcastXML(string InputXML)
         {
-            var returnedData = new clsBroadcastCmd();
+            var returnedData = new BroadcastCmd();
 
             try
             {

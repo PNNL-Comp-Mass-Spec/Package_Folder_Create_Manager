@@ -25,7 +25,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Handles sending and receiving of control and status messages
     /// </summary>
-    internal class clsMessageHandler : clsLoggerBase, IDisposable
+    internal class MessageHandler : LoggerBase, IDisposable
     {
         private MgrSettings mMgrSettings;
 

@@ -2,7 +2,7 @@
 
 namespace PkgFolderCreateManager
 {
-    public abstract class clsLoggerBase
+    public abstract class LoggerBase
     {
         /// <summary>
         /// Show a status message at the console and optionally include in the log file, tagging it as a debug message
@@ -12,7 +12,7 @@ namespace PkgFolderCreateManager
         /// <param name="writeToLog">True to write to the log file; false to only display at console</param>
         protected static void LogDebug(string statusMessage, bool writeToLog = true)
         {
-            clsUtilityMethods.LogDebug(statusMessage, writeToLog);
+            UtilityMethods.LogDebug(statusMessage, writeToLog);
         }
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace PkgFolderCreateManager
         /// <param name="logToDb">When true, log the message to the database and the local log file</param>
         protected static void LogError(string errorMessage, bool logToDb = false)
         {
-            clsUtilityMethods.LogError(errorMessage, logToDb);
+            UtilityMethods.LogError(errorMessage, logToDb);
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace PkgFolderCreateManager
         /// <param name="ex">Exception to log</param>
         protected static void LogError(string errorMessage, Exception ex)
         {
-            clsUtilityMethods.LogError(errorMessage, ex);
+            UtilityMethods.LogError(errorMessage, ex);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace PkgFolderCreateManager
         /// <param name="writeToLog">True to write to the log file; false to only display at console</param>
         public static void LogMessage(string statusMessage, bool isError = false, bool writeToLog = true)
         {
-            clsUtilityMethods.LogMessage(statusMessage, isError, writeToLog);
+            UtilityMethods.LogMessage(statusMessage, isError, writeToLog);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace PkgFolderCreateManager
         /// <param name="logToDb">When true, log the message to the database and the local log file</param>
         protected static void LogWarning(string warningMessage, bool logToDb = false)
         {
-            clsUtilityMethods.LogWarning(warningMessage, logToDb);
+            UtilityMethods.LogWarning(warningMessage, logToDb);
         }
     }
 }

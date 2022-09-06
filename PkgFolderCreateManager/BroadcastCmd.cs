@@ -13,7 +13,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Class to hold data received from Broadcast command queue for control of manager
     /// </summary>
-    internal class clsBroadcastCmd
+    internal class BroadcastCmd
     {
         /// <summary>
         /// List of machines the received message applies to

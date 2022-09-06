@@ -18,7 +18,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     ///  Base class for handling task-related data
     /// </summary>
-    internal abstract class clsDbTask : clsLoggerBase
+    internal abstract class DbTask : LoggerBase
     {
         // ReSharper disable UnusedMember.Global
 
@@ -85,7 +85,7 @@ namespace PkgFolderCreateManager
         /// Constructor
         /// </summary>
         /// <param name="mgrParams"></param>
-        protected clsDbTask(MgrSettings mgrParams)
+        protected DbTask(MgrSettings mgrParams)
         {
             mMgrParams = mgrParams;
             ManagerName = mMgrParams.GetParam("MgrName", Environment.MachineName + "_Undefined-Manager");

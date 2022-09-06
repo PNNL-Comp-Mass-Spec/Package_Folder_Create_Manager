@@ -15,7 +15,7 @@ namespace PkgFolderCreateManager
     /// <summary>
     /// Provides database access and tools for one folder create task
     /// </summary>
-    internal class clsFolderCreateTask : clsDbTask, ITaskParams
+    internal class FolderCreateTask : DbTask, ITaskParams
     {
         protected const string SP_NAME_SET_COMPLETE = "SetFolderCreateTaskComplete";
         protected const string SP_NAME_REQUEST_TASK = "RequestFolderCreateTask";
@@ -40,7 +40,7 @@ namespace PkgFolderCreateManager
         /// Constructor
         /// </summary>
         /// <param name="mgrParams">Manager params for use by class</param>
-        public clsFolderCreateTask(MgrSettings mgrParams)
+        public FolderCreateTask(MgrSettings mgrParams)
             : base(mgrParams)
         {
             mTaskID = 0;
