@@ -163,11 +163,11 @@ namespace PkgFolderCreateManager
         /// <param name="message">Incoming message</param>
         private void OnCommandReceived(IMessage message)
         {
-            LogTools.LogDebug("clsMessageHandler(), Command message received");
+            LogTools.LogDebug("MessageHandler(), Command message received");
             if (CommandReceived != null)
             {
                 // Call the delegate to process the command
-                LogTools.LogDebug("clsMessageHandler().OnCommandReceived: At lease one event handler assigned");
+                LogTools.LogDebug("MessageHandler().OnCommandReceived: At lease one event handler assigned");
                 if (message is ITextMessage textMessage)
                 {
                     CommandReceived(textMessage.Text);
@@ -175,7 +175,7 @@ namespace PkgFolderCreateManager
             }
             else
             {
-                LogTools.LogDebug("clsMessageHandler().OnCommandReceived: No event handlers assigned");
+                LogTools.LogDebug("MessageHandler().OnCommandReceived: No event handlers assigned");
             }
         }
 
@@ -186,11 +186,11 @@ namespace PkgFolderCreateManager
         /// <param name="message">Incoming message</param>
         private void OnBroadcastReceived(IMessage message)
         {
-            LogTools.LogDebug("clsMessageHandler(), Broadcast message received");
+            LogTools.LogDebug("MessageHandler(), Broadcast message received");
             if (BroadcastReceived != null)
             {
                 // Call the delegate to process the command
-                LogTools.LogDebug("clsMessageHandler().OnBroadcastReceived: At lease one event handler assigned");
+                LogTools.LogDebug("MessageHandler().OnBroadcastReceived: At lease one event handler assigned");
                 if (message is ITextMessage textMessage)
                 {
                     BroadcastReceived(textMessage.Text);
@@ -198,7 +198,7 @@ namespace PkgFolderCreateManager
             }
             else
             {
-                LogTools.LogDebug("clsMessageHandler().OnBroadcastReceived: No event handlers assigned");
+                LogTools.LogDebug("MessageHandler().OnBroadcastReceived: No event handlers assigned");
             }
         }
 

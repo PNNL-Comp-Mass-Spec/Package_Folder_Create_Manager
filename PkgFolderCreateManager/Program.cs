@@ -41,7 +41,7 @@ namespace PkgFolderCreateManager
             {
                 var errMsg = "Critical exception starting application: " + ex.Message;
                 ConsoleMsgUtils.ShowWarning(errMsg + "; " + StackTraceFormatter.GetExceptionStackTrace(ex));
-                ConsoleMsgUtils.ShowWarning("Exiting clsMainProcess.Main with error code = 1");
+                ConsoleMsgUtils.ShowWarning("Exiting Program.Main with error code = 1");
             }
 
             PRISM.Logging.FileLogger.FlushPendingMessages();

@@ -143,7 +143,7 @@ namespace PkgFolderCreateManager
             }
             catch (Exception ex)
             {
-                errorMessage = "Exception calling clsFolderTools.CreateDirectory";
+                errorMessage = "Exception calling FolderTools.CreateDirectory";
                 var msg = errorMessage + " with XML command string: " + cmdText;
                 LogError(msg, ex);
                 mStatusFile.TaskStatus = StatusFile.EnumTaskStatus.Failed;
@@ -208,7 +208,7 @@ namespace PkgFolderCreateManager
             }
             catch
             {
-                // Failures are logged by clsMgrSettings to local emergency log file
+                // Failures are logged by MgrSettings to local emergency log file
                 return false;
             }
 
@@ -305,7 +305,7 @@ namespace PkgFolderCreateManager
         /// <param name="cmdText">Text of received message</param>
         private void OnMsgHandler_BroadcastReceived(string cmdText)
         {
-            var msg = "clsMainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
+            var msg = "MainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
             LogDebug(msg);
 
             BroadcastCmd receivedCmd;
@@ -362,7 +362,7 @@ namespace PkgFolderCreateManager
         {
             try
             {
-                var msg = "clsMainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
+                var msg = "MainProgram.OnMsgHandler_OnMsgHandler_CommandReceived: Command message received: " + cmdText;
                 LogDebug(msg);
 
                 mStatusFile.TaskStatus = StatusFile.EnumTaskStatus.Running;

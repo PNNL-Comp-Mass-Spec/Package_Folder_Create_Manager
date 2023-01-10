@@ -138,10 +138,10 @@ namespace PkgFolderCreateManager
 
                 if (!mConnectionInfoLogged)
                 {
-                    var msg = "clsCaptureTask.RequestTaskDetailed(), connection string: " + mConnectingString;
+                    var msg = "CaptureTask.RequestTaskDetailed(), connection string: " + mConnectingString;
                     LogDebug(msg);
 
-                    LogDebug("clsCaptureTask.RequestTaskDetailed(), printing param list");
+                    LogDebug("CaptureTask.RequestTaskDetailed(), printing param list");
 
                     PrintCommandParams(cmd);
 
@@ -168,7 +168,7 @@ namespace PkgFolderCreateManager
                     default:
                         // There was an SP error
                         var errMsg = string.Format(
-                            "clsFolderCreateTask.RequestTaskDetailed(), SP execution error {0}; Message text = {1}",
+                            "FolderCreateTask.RequestTaskDetailed(), SP execution error {0}; Message text = {1}",
                             resCode, (string)messageParam.Value);
 
                         LogError(errMsg);
