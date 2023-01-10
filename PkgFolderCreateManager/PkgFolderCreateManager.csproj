@@ -74,7 +74,7 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="ITaskParams.cs" />
     <Compile Include="LoggerBase.cs" />
-    <Compile Include="MainProg.cs" />
+    <Compile Include="MainProgram.cs" />
     <Compile Include="MessageHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="StatusData.cs" />
