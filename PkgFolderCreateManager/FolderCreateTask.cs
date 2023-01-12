@@ -21,10 +21,15 @@ namespace PkgFolderCreateManager
         protected const string SP_NAME_REQUEST_TASK = "RequestFolderCreateTask";
 
         private int mTaskID;
+
         private string mTaskParametersXML = string.Empty;
 
         private bool mConnectionInfoLogged;
 
+        /// <summary>
+        /// XML with information on the directory to create
+        /// </summary>
+        /// <remarks>See CreateDirectory for example XML</remarks>
         public string TaskParametersXML => string.IsNullOrEmpty(mTaskParametersXML) ? string.Empty : mTaskParametersXML;
 
         /// <summary>

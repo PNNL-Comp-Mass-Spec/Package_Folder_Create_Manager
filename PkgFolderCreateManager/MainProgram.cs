@@ -34,7 +34,12 @@ namespace PkgFolderCreateManager
 
         private MgrSettings mMgrSettings;
         private StatusFile mStatusFile;
+
+        /// <summary>
+        /// Message queue handler
+        /// </summary>
         private MessageHandler mMsgHandler;
+
         private bool mRunning;
         private bool mMgrActive;
         private BroadcastCmdType mBroadcastCmdType;
@@ -49,8 +54,7 @@ namespace PkgFolderCreateManager
             {
                 while (continueLooping)
                 {
-                    var taskReturn = mTask.RequestTask();
-                    switch (taskReturn)
+                    switch (mTask.RequestTask())
                     {
                         case DbTask.EnumRequestTaskResult.NoTaskFound:
                             continueLooping = false;
@@ -95,8 +99,31 @@ namespace PkgFolderCreateManager
             return success;
         }
 
+        /// <summary>
+        /// Create a directory
+        /// </summary>
+        /// <param name="cmdText">XML settings (see below for example XML)</param>
+        /// <param name="errorMessage"></param>
+        /// <param name="source"></param>
+        /// <returns>True if successful, false if an error</returns>
         protected bool CreateDirectory(string cmdText, out string errorMessage, string source)
         {
+            // ReSharper disable CommentTypo
+
+            // Example contents of cmdText
+
+            // <root>
+            // <package>264</package>
+            // <Path_Local_Root>F:\DataPkgs</Path_Local_Root>
+            // <Path_Shared_Root>\\protoapps\DataPkgs\</Path_Shared_Root>
+            // <Path_Folder>2011\Public\264_PNWRCE_Dengue_iTRAQ</Path_Folder>
+            // <cmd>add</cmd>
+            // <Source_DB>DMS_Data_Package</Source_DB>
+            // <Source_Table>T_Data_Package</Source_Table>
+            // </root>
+
+            // ReSharper restore CommentTypo
+
             Dictionary<string, string> cmdParams;
             errorMessage = string.Empty;
 
