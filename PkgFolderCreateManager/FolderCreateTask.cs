@@ -111,16 +111,15 @@ namespace PkgFolderCreateManager
             try
             {
                 // Set up the command object prior to SP execution
-                var dbTools = mPipelineDBProcedureExecutor;
-                var cmd = dbTools.CreateCommand(SP_NAME_REQUEST_TASK, CommandType.StoredProcedure);
+                var cmd = mPipelineDBProcedureExecutor.CreateCommand(SP_NAME_REQUEST_TASK, CommandType.StoredProcedure);
 
-                dbTools.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
-                dbTools.AddParameter(cmd, "@processorName", SqlType.VarChar, 128, ManagerName);
-                var taskParam = dbTools.AddParameter(cmd, "@taskID", SqlType.Int, ParameterDirection.Output);
-                var taskParamsParam = dbTools.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, ParameterDirection.Output);
-                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
-                dbTools.AddParameter(cmd, "@infoOnly", SqlType.TinyInt).Value = 0;
-                dbTools.AddParameter(cmd, "@taskCountToPreview", SqlType.Int).Value = 10;
+                mPipelineDBProcedureExecutor.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
+                mPipelineDBProcedureExecutor.AddParameter(cmd, "@processorName", SqlType.VarChar, 128, ManagerName);
+                var taskParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskID", SqlType.Int, ParameterDirection.Output);
+                var taskParamsParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, ParameterDirection.Output);
+                var messageParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
+                mPipelineDBProcedureExecutor.AddParameter(cmd, "@infoOnly", SqlType.TinyInt).Value = 0;
+                mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskCountToPreview", SqlType.Int).Value = 10;
 
                 if (!mConnectionInfoLogged)
                 {
