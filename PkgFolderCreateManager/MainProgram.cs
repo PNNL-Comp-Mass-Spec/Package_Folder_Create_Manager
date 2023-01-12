@@ -244,7 +244,9 @@ namespace PkgFolderCreateManager
 
             LogTools.LogMessage(msg);
 
-            // Setup the message queue
+            // Setup the message queue handler
+            // The handler is unused in 2023 since manager parameter LogStatusToMessageQueue is False and OnMsgHandler_CommandReceived and OnMsgHandler_BroadcastReceived are no longer used
+
             mMsgHandler = new MessageHandler
             {
                 BrokerUri = mMgrSettings.GetParam("MessageQueueURI"),
@@ -263,9 +265,9 @@ namespace PkgFolderCreateManager
 
             LogDebug("Message handler initialized");
 
-            // Connect message handler events
-            mMsgHandler.CommandReceived += OnMsgHandler_CommandReceived;
-            mMsgHandler.BroadcastReceived += OnMsgHandler_BroadcastReceived;
+            // Connect message handler events (retired in 2023)
+            // mMsgHandler.CommandReceived += OnMsgHandler_CommandReceived;
+            // mMsgHandler.BroadcastReceived += OnMsgHandler_BroadcastReceived;
 
             // Setup the status file class
             var appPath = PRISM.FileProcessor.ProcessFilesOrDirectoriesBase.GetAppPath();
@@ -303,6 +305,8 @@ namespace PkgFolderCreateManager
         /// Handles broadcast messages for control of the manager
         /// </summary>
         /// <param name="cmdText">Text of received message</param>
+        [Obsolete("Deprecated in 2023")]
+        // ReSharper disable once UnusedMember.Local
         private void OnMsgHandler_BroadcastReceived(string cmdText)
         {
             var msg = "MainProgram.OnMsgHandler_BroadcastReceived: Broadcast message received: " + cmdText;
@@ -358,6 +362,8 @@ namespace PkgFolderCreateManager
         /// Handles receipt of command to make a directory
         /// </summary>
         /// <param name="cmdText">XML string containing command</param>
+        [Obsolete("Deprecated in 2023")]
+        // ReSharper disable once UnusedMember.Local
         private void OnMsgHandler_CommandReceived(string cmdText)
         {
             try
@@ -443,6 +449,7 @@ namespace PkgFolderCreateManager
                 case BroadcastCmdType.ReadConfig:
                     // TODO: Add code for reloading the configuration
                     break;
+
                 case BroadcastCmdType.Shutdown:
                     // Shutdown command was received
                     if (mMgrActive)
@@ -466,6 +473,7 @@ namespace PkgFolderCreateManager
                     logMsg = "=== Exiting Package Folder Creation Manager ===";
                     LogMessage(logMsg);
                     break;
+
                 default:
                     logMsg = "DoDirectoryCreation(); Invalid command type received: " + mBroadcastCmdType.ToString();
                     LogError(logMsg);

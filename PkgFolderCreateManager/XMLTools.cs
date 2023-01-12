@@ -83,6 +83,7 @@ namespace PkgFolderCreateManager
         /// </summary>
         /// <param name="InputXML">XML string to parse</param>
         /// <returns>String dictionary of broadcast sections</returns>
+        [Obsolete("Deprecated in 2023")]
         public static BroadcastCmd ParseBroadcastXML(string InputXML)
         {
             var returnedData = new BroadcastCmd();
