@@ -25,16 +25,7 @@ namespace PkgFolderCreateManager
 
         private bool mConnectionInfoLogged;
 
-        public string TaskParametersXML
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(mTaskParametersXML))
-                    return string.Empty;
-
-                return mTaskParametersXML;
-            }
-        }
+        public string TaskParametersXML => string.IsNullOrEmpty(mTaskParametersXML) ? string.Empty : mTaskParametersXML;
 
         /// <summary>
         /// Constructor
@@ -54,12 +45,7 @@ namespace PkgFolderCreateManager
         /// <returns>Parameter value if found, otherwise empty string</returns>
         public string GetParam(string name)
         {
-            if (mJobParams.ContainsKey(name))
-            {
-                return mJobParams[name];
-            }
-
-            return string.Empty;
+            return mJobParams.ContainsKey(name) ? mJobParams[name] : string.Empty;
         }
 
         /// <summary>

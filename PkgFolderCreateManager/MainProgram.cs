@@ -130,8 +130,7 @@ namespace PkgFolderCreateManager
             {
                 mStatusFile.TaskStatusDetail = StatusFile.EnumTaskStatusDetail.Running_Tool;
 
-                var dumStr = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
-                mStatusFile.MostRecentJobInfo = dumStr;
+                mStatusFile.MostRecentJobInfo = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "; Package " + cmdParams["package"];
                 mStatusFile.WriteStatusFile();
 
                 FolderTools.CreateDirectory(mMgrSettings.GetParam("perspective"), cmdParams, source);
@@ -191,7 +190,8 @@ namespace PkgFolderCreateManager
             {
                 var localSettings = GetLocalManagerSettings();
 
-                mMgrSettings = new MgrSettingsDB {
+                mMgrSettings = new MgrSettingsDB
+                {
                     TraceMode = false
                 };
                 RegisterEvents(mMgrSettings);
@@ -273,11 +273,7 @@ namespace PkgFolderCreateManager
             var appPath = PRISM.FileProcessor.ProcessFilesOrDirectoriesBase.GetAppPath();
             var fInfo = new FileInfo(appPath);
 
-            string statusFileNameLoc;
-            if (fInfo.DirectoryName == null)
-                statusFileNameLoc = "Status.xml";
-            else
-                statusFileNameLoc = Path.Combine(fInfo.DirectoryName, "Status.xml");
+            var statusFileNameLoc = fInfo.DirectoryName == null ? "Status.xml" : Path.Combine(fInfo.DirectoryName, "Status.xml");
 
             mStatusFile = new StatusFile(statusFileNameLoc, mMsgHandler)
             {
