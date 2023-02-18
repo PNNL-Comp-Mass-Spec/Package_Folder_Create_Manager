@@ -17,8 +17,8 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class FolderCreateTask : DbTask, ITaskParams
     {
-        protected const string SP_NAME_SET_COMPLETE = "SetFolderCreateTaskComplete";
-        protected const string SP_NAME_REQUEST_TASK = "RequestFolderCreateTask";
+        protected const string SP_NAME_SET_COMPLETE = "set_folder_create_task_complete";
+        protected const string SP_NAME_REQUEST_TASK = "request_folder_create_task";
 
         private int mTaskID;
 
