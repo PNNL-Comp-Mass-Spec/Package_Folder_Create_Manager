@@ -297,7 +297,7 @@ namespace PkgFolderCreateManager
             // mMsgHandler.BroadcastReceived += OnMsgHandler_BroadcastReceived;
 
             // Setup the status file class
-            var appPath = PRISM.FileProcessor.ProcessFilesOrDirectoriesBase.GetAppPath();
+            var appPath = PRISM.AppUtils.GetAppPath();
             var fInfo = new FileInfo(appPath);
 
             var statusFileNameLoc = fInfo.DirectoryName == null ? "Status.xml" : Path.Combine(fInfo.DirectoryName, "Status.xml");
@@ -582,6 +582,7 @@ namespace PkgFolderCreateManager
         {
             LogDebug(statusMessage);
         }
+
         private void ErrorEventHandler(string message, Exception ex)
         {
             LogError(message);
@@ -598,4 +599,3 @@ namespace PkgFolderCreateManager
         }
     }
 }
-
