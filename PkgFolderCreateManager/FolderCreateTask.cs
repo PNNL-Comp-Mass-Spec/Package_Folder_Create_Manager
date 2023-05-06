@@ -50,7 +50,7 @@ namespace PkgFolderCreateManager
         /// <returns>Parameter value if found, otherwise empty string</returns>
         public string GetParam(string name)
         {
-            return mJobParams.ContainsKey(name) ? mJobParams[name] : string.Empty;
+            return mJobParams.TryGetValue(name, out var param) ? param : string.Empty;
         }
 
         /// <summary>
