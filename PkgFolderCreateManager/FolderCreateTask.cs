@@ -123,10 +123,15 @@ namespace PkgFolderCreateManager
                 var returnParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
 
                 mPipelineDBProcedureExecutor.AddParameter(cmd, "@processorName", SqlType.VarChar, 128, ManagerName);
-                mPipelineDBProcedureExecutor.AddParameter(cmd, "@infoOnly", SqlType.TinyInt).Value = 0;
                 var taskParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskID", SqlType.Int, ParameterDirection.InputOutput);
                 var taskParamsParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, ParameterDirection.InputOutput);
                 var messageParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.InputOutput);
+
+                if (mPipelineDBProcedureExecutor.DbServerType == DbServerTypes.PostgreSQL)
+                    mPipelineDBProcedureExecutor.AddParameter(cmd, "@infoOnly", SqlType.Boolean).Value = false;
+                else
+                    mPipelineDBProcedureExecutor.AddParameter(cmd, "@infoOnly", SqlType.TinyInt).Value = 0;
+
                 mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskCountToPreview", SqlType.Int).Value = 10;
 
                 if (!mConnectionInfoLogged)
