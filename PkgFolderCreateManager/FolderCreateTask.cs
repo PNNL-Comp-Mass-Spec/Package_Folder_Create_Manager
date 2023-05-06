@@ -118,12 +118,15 @@ namespace PkgFolderCreateManager
                 // Set up the command object prior to SP execution
                 var cmd = mPipelineDBProcedureExecutor.CreateCommand(SP_NAME_REQUEST_TASK, CommandType.StoredProcedure);
 
-                mPipelineDBProcedureExecutor.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
+                // Define parameter for procedure's return value
+                // If querying a Postgres DB, mPipelineDBProcedureExecutor will auto-change "@return" to "_returnCode"
+                var returnParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
+
                 mPipelineDBProcedureExecutor.AddParameter(cmd, "@processorName", SqlType.VarChar, 128, ManagerName);
-                var taskParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskID", SqlType.Int, ParameterDirection.Output);
-                var taskParamsParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, ParameterDirection.Output);
-                var messageParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
                 mPipelineDBProcedureExecutor.AddParameter(cmd, "@infoOnly", SqlType.TinyInt).Value = 0;
+                var taskParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskID", SqlType.Int, ParameterDirection.InputOutput);
+                var taskParamsParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@parameters", SqlType.VarChar, 4000, ParameterDirection.InputOutput);
+                var messageParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.InputOutput);
                 mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskCountToPreview", SqlType.Int).Value = 10;
 
                 if (!mConnectionInfoLogged)
@@ -139,9 +142,11 @@ namespace PkgFolderCreateManager
                 }
 
                 // Execute the SP
-                var resCode = mPipelineDBProcedureExecutor.ExecuteSP(cmd, out _);
+                mPipelineDBProcedureExecutor.ExecuteSP(cmd, out _);
 
-                switch (resCode)
+                var returnCode = DBToolsBase.GetReturnCode(returnParam);
+
+                switch (returnCode)
                 {
                     case RET_VAL_OK:
                         // No errors found in SP call, so see if any step tasks were found
@@ -151,15 +156,17 @@ namespace PkgFolderCreateManager
 
                         outcome = EnumRequestTaskResult.TaskFound;
                         break;
+
                     case RET_VAL_TASK_NOT_AVAILABLE:
                         // No jobs found
                         outcome = EnumRequestTaskResult.NoTaskFound;
                         break;
+
                     default:
                         // There was an SP error
                         var errMsg = string.Format(
                             "FolderCreateTask.RequestTaskDetailed(), SP execution error {0}; Message text = {1}",
-                            resCode, (string)messageParam.Value);
+                            returnCode, (string)messageParam.Value);
 
                         LogError(errMsg);
                         outcome = EnumRequestTaskResult.ResultError;
@@ -224,28 +231,31 @@ namespace PkgFolderCreateManager
         /// <returns>TRUE for success; FALSE for failure</returns>
         public bool SetFolderCreateTaskComplete(string spName, string connStr, int compCode, string compMsg, int evalCode)
         {
+            var spName = AddSchemaIfPostgres(SP_NAME_SET_COMPLETE);
+
             try
             {
                 // Setup for execution of the stored procedure
-                var dbTools = mPipelineDBProcedureExecutor;
-                var cmd = dbTools.CreateCommand(spName, CommandType.StoredProcedure);
+                var cmd = mPipelineDBProcedureExecutor.CreateCommand(spName, CommandType.StoredProcedure);
 
-                dbTools.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
-                dbTools.AddParameter(cmd, "@taskID", SqlType.Int).Value = mTaskID;
-                dbTools.AddParameter(cmd, "@completionCode", SqlType.Int).Value = compCode;
-                var messageParam = dbTools.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
+                // Define parameter for procedure's return value
+                // If querying a Postgres DB, mPipelineDBProcedureExecutor will auto-change "@return" to "_returnCode"
+                var returnParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@Return", SqlType.Int, ParameterDirection.ReturnValue);
 
-                LogDebug("Calling stored procedure " + spName);
+                mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskID", SqlType.Int).Value = mTaskID;
+                mPipelineDBProcedureExecutor.AddParameter(cmd, "@completionCode", SqlType.Int).Value = compCode;
+                var messageParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
 
-                var msg = "Parameters: TaskID=" + mTaskID +
-                          ", completionCode=" + compCode;
+                LogDebug(string.Format("Calling stored procedure {0}", spName));
 
-                LogDebug(msg);
+                LogDebug(string.Format("Parameters: TaskID={0}, completionCode={1}", mTaskID, compCode));
 
                 // Execute the SP
-                var resCode = mPipelineDBProcedureExecutor.ExecuteSP(cmd);
+                mPipelineDBProcedureExecutor.ExecuteSP(cmd);
 
-                if (resCode == 0)
+                var returnCode = DBToolsBase.GetReturnCode(returnParam);
+
+                if (returnCode == 0)
                 {
                     return true;
                 }
