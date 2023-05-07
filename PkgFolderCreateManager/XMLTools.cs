@@ -74,7 +74,7 @@ namespace PkgFolderCreateManager
             }
             catch (Exception ex)
             {
-                throw new Exception("", ex);    // Message parameter left blank because it is handled at higher level
+                throw new Exception(string.Empty, ex);    // Message parameter left blank because it is handled at higher level
             }
         }
 

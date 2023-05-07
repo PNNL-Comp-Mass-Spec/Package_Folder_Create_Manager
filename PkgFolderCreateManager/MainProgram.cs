@@ -526,7 +526,7 @@ namespace PkgFolderCreateManager
             mStatusFile.Tool = "NA";
             mStatusFile.TaskStatus = StatusFile.EnumTaskStatus.No_Task;
             mStatusFile.Dataset = "NA";
-            mStatusFile.CurrentOperation = "";
+            mStatusFile.CurrentOperation = string.Empty;
             mStatusFile.TaskStatusDetail = StatusFile.EnumTaskStatusDetail.No_Task;
         }
 
@@ -539,7 +539,7 @@ namespace PkgFolderCreateManager
             mStatusFile.Tool = "NA";
             mStatusFile.TaskStatus = StatusFile.EnumTaskStatus.No_Task;
             mStatusFile.Dataset = "NA";
-            mStatusFile.CurrentOperation = "";
+            mStatusFile.CurrentOperation = string.Empty;
             mStatusFile.TaskStatusDetail = StatusFile.EnumTaskStatusDetail.No_Task;
         }
 
@@ -552,7 +552,7 @@ namespace PkgFolderCreateManager
             mStatusFile.Tool = "NA";
             mStatusFile.TaskStatus = StatusFile.EnumTaskStatus.No_Task;
             mStatusFile.Dataset = "NA";
-            mStatusFile.CurrentOperation = "";
+            mStatusFile.CurrentOperation = string.Empty;
             mStatusFile.TaskStatusDetail = StatusFile.EnumTaskStatusDetail.No_Task;
         }
 

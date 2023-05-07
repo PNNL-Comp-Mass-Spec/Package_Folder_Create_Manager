@@ -202,7 +202,7 @@ namespace PkgFolderCreateManager
         /// <param name="taskResult">Enum representing task state</param>
         public override void CloseTask(EnumCloseOutType taskResult)
         {
-            CloseTask(taskResult, "", EnumEvalCode.EVAL_CODE_SUCCESS);
+            CloseTask(taskResult, string.Empty, EnumEvalCode.EVAL_CODE_SUCCESS);
         }
 
         /// <summary>
