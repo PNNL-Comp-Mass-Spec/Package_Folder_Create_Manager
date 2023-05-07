@@ -170,34 +170,30 @@ namespace PkgFolderCreateManager
                     case RET_VAL_OK:
                         // No errors found in SP call, so see if any step tasks were found
                         mTaskID = (int)taskParam.Value;
-
                         mTaskParametersXML = (string)taskParamsParam.Value;
-
-                        outcome = EnumRequestTaskResult.TaskFound;
-                        break;
+                        return EnumRequestTaskResult.TaskFound;
 
                     case RET_VAL_TASK_NOT_AVAILABLE:
                         // No jobs found
-                        outcome = EnumRequestTaskResult.NoTaskFound;
-                        break;
+                        return EnumRequestTaskResult.NoTaskFound;
 
                     default:
                         // There was an SP error
                         var errMsg = string.Format(
                             "FolderCreateTask.RequestTaskDetailed(), SP execution error {0}; Message text = {1}",
-                            returnCode, (string)messageParam.Value);
+                            returnCode,
+                            string.IsNullOrWhiteSpace((string)messageParam.Value) ? "Unknown error" : messageParam.Value);
 
                         LogError(errMsg);
-                        outcome = EnumRequestTaskResult.ResultError;
-                        break;
+                        return EnumRequestTaskResult.ResultError;
                 }
             }
             catch (Exception ex)
             {
                 var errorMsg = string.Format("Exception requesting folder create task using {0}", spName);
                 LogError(errorMsg, ex);
+                return EnumRequestTaskResult.ResultError;
             }
-            return outcome;
         }
 
         /// <summary>
