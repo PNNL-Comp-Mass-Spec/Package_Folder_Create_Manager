@@ -17,8 +17,8 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal class FolderCreateTask : DbTask, ITaskParams
     {
-        protected const string SP_NAME_SET_COMPLETE = "set_folder_create_task_complete";
         protected const string SP_NAME_REQUEST_TASK = "request_folder_create_task";
+        protected const string SP_NAME_SET_COMPLETE = "set_folder_create_task_complete";
 
         private int mTaskID;
 
@@ -64,6 +64,19 @@ namespace PkgFolderCreateManager
             }
         }
 
+        /// <summary>
+        /// Prefix the stored procedure name using "sw." if the connection string is for a PostgreSQL server
+        /// </summary>
+        /// <param name="procedureName"></param>
+        /// <returns>Stored procedure name to use</returns>
+        private string AddSchemaIfPostgres(string procedureName)
+        {
+            var serverType = DbToolsFactory.GetServerTypeFromConnectionString(mConnectingString);
+
+            return serverType == DbServerTypes.PostgreSQL
+                ? string.Format("sw.{0}", procedureName)
+                : procedureName;
+        }
 
         /// <summary>
         /// Gets a stored parameter
@@ -112,12 +125,12 @@ namespace PkgFolderCreateManager
         /// <returns>RequestTaskResult enum</returns>
         private EnumRequestTaskResult RequestTaskDetailed()
         {
-            EnumRequestTaskResult outcome;
+            var spName = AddSchemaIfPostgres(SP_NAME_REQUEST_TASK);
 
             try
             {
                 // Set up the command object prior to SP execution
-                var cmd = mPipelineDBProcedureExecutor.CreateCommand(SP_NAME_REQUEST_TASK, CommandType.StoredProcedure);
+                var cmd = mPipelineDBProcedureExecutor.CreateCommand(spName, CommandType.StoredProcedure);
 
                 // Define parameter for procedure's return value
                 // If querying a Postgres DB, mPipelineDBProcedureExecutor will auto-change "@return" to "_returnCode"
@@ -181,8 +194,8 @@ namespace PkgFolderCreateManager
             }
             catch (Exception ex)
             {
-                LogError("Exception requesting folder create task: " + ex.Message);
-                outcome = EnumRequestTaskResult.ResultError;
+                var errorMsg = string.Format("Exception requesting folder create task using {0}", spName);
+                LogError(errorMsg, ex);
             }
             return outcome;
         }
@@ -214,7 +227,9 @@ namespace PkgFolderCreateManager
         /// <param name="evalCode">Enum representing evaluation results</param>
         public override void CloseTask(EnumCloseOutType taskResult, string closeoutMsg, EnumEvalCode evalCode)
         {
-            if (!SetFolderCreateTaskComplete(SP_NAME_SET_COMPLETE, mConnectingString, (int)taskResult, closeoutMsg, (int)evalCode))
+            // Note that closeoutMsg and evalCode are unused
+
+            if (!SetFolderCreateTaskComplete((int)taskResult))
             {
                 var msg = "Error setting task complete in database, task_id " + mTaskID;
                 LogError(msg);
@@ -227,15 +242,11 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
-        /// Database calls to set a folder create task complete
+        /// Call procedure to set the folder create task complete
         /// </summary>
-        /// <param name="spName">Name of SetComplete stored procedure</param>
-        /// <param name="connStr">Db connection string</param>
         /// <param name="compCode">Integer representation of completion code</param>
-        /// <param name="compMsg"></param>
-        /// <param name="evalCode"></param>
-        /// <returns>TRUE for success; FALSE for failure</returns>
-        public bool SetFolderCreateTaskComplete(string spName, string connStr, int compCode, string compMsg, int evalCode)
+        /// <returns>True if successful, false if an error</returns>
+        public bool SetFolderCreateTaskComplete(int compCode)
         {
             var spName = AddSchemaIfPostgres(SP_NAME_SET_COMPLETE);
 
@@ -266,13 +277,18 @@ namespace PkgFolderCreateManager
                     return true;
                 }
 
-                var errorMsg = "Error " + resCode + " setting task complete; Message = " + messageParam.Value;
+                var errorMsg = string.Format(
+                    "Error {0} setting task complete: {1}",
+                    returnCode,
+                    string.IsNullOrWhiteSpace((string)messageParam.Value) ? "Unknown error" : messageParam.Value);
+
                 LogError(errorMsg);
+
                 return false;
             }
             catch (Exception ex)
             {
-                var errorMsg = "Exception calling stored procedure " + spName;
+                var errorMsg = string.Format("Exception setting folder create task complete using {0}", spName);
                 LogError(errorMsg, ex);
                 return false;
             }
