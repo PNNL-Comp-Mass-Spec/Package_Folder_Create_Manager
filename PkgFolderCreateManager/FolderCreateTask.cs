@@ -44,16 +44,6 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
-        /// Gets a stored parameter
-        /// </summary>
-        /// <param name="name">Parameter name</param>
-        /// <returns>Parameter value if found, otherwise empty string</returns>
-        public string GetParam(string name)
-        {
-            return mJobParams.TryGetValue(name, out var param) ? param : string.Empty;
-        }
-
-        /// <summary>
         /// Adds a parameter
         /// </summary>
         /// <param name="paramName">Name of parameter</param>
@@ -72,6 +62,17 @@ namespace PkgFolderCreateManager
                 LogError(msg, ex);
                 return false;
             }
+        }
+
+
+        /// <summary>
+        /// Gets a stored parameter
+        /// </summary>
+        /// <param name="name">Parameter name</param>
+        /// <returns>Parameter value if found, otherwise empty string</returns>
+        public string GetParam(string name)
+        {
+            return mJobParams.TryGetValue(name, out var param) ? param : string.Empty;
         }
 
         /// <summary>
