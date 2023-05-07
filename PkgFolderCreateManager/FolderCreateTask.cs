@@ -257,7 +257,7 @@ namespace PkgFolderCreateManager
 
                 mPipelineDBProcedureExecutor.AddParameter(cmd, "@taskID", SqlType.Int).Value = mTaskID;
                 mPipelineDBProcedureExecutor.AddParameter(cmd, "@completionCode", SqlType.Int).Value = compCode;
-                var messageParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.Output);
+                var messageParam = mPipelineDBProcedureExecutor.AddParameter(cmd, "@message", SqlType.VarChar, 512, ParameterDirection.InputOutput);
 
                 LogDebug(string.Format("Calling stored procedure {0}", spName));
 
