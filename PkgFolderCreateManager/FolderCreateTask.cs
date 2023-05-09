@@ -179,12 +179,11 @@ namespace PkgFolderCreateManager
 
                     default:
                         // There was an SP error
-                        var errMsg = string.Format(
-                            "FolderCreateTask.RequestTaskDetailed(), SP execution error {0}; Message text = {1}",
-                            returnCode,
-                            string.IsNullOrWhiteSpace((string)messageParam.Value) ? "Unknown error" : messageParam.Value);
+                        var outputMessage = messageParam.Value.CastDBVal<string>();
+                        var message = string.IsNullOrWhiteSpace(outputMessage) ? " Unknown error" : outputMessage;
 
-                        LogError(errMsg);
+                        LogError(string.Format("Error requesting task , {0} returned {1}: {2}", spName, returnCode, message));
+
                         return EnumRequestTaskResult.ResultError;
                 }
             }
@@ -273,10 +272,10 @@ namespace PkgFolderCreateManager
                     return true;
                 }
 
-                var errorMsg = string.Format(
-                    "Error {0} setting task complete: {1}",
-                    returnCode,
-                    string.IsNullOrWhiteSpace((string)messageParam.Value) ? "Unknown error" : messageParam.Value);
+                var outputMessage = messageParam.Value.CastDBVal<string>();
+                var message = string.IsNullOrWhiteSpace(outputMessage) ? " Unknown error" : outputMessage;
+
+                var errorMsg = string.Format("Error setting task complete, {0} returned {1}: {2}", spName, returnCode, message);
 
                 LogError(errorMsg);
 
