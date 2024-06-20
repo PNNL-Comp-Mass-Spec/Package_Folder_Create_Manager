@@ -137,20 +137,20 @@ namespace PkgFolderCreateManager
         /// <summary>
         /// Debugging routine for printing SP calling params
         /// </summary>
-        /// <param name="inpCmd">SQL command object containing params</param>
-        protected virtual void PrintCommandParams(DbCommand inpCmd)
+        /// <param name="cmd">SQL command object containing params</param>
+        protected virtual void PrintCommandParams(DbCommand cmd)
         {
             // Verify there really are command parameters
-            if (inpCmd == null)
+            if (cmd == null)
                 return;
 
-            if (inpCmd.Parameters.Count < 1)
+            if (cmd.Parameters.Count < 1)
                 return;
 
             var msg = new StringBuilder();
             msg.AppendLine("Parameter list:");
 
-            foreach (DbParameter myParam in inpCmd.Parameters)
+            foreach (DbParameter myParam in cmd.Parameters)
             {
                 msg.AppendFormat("  Name= {0,-20}, Value= {1}", myParam.ParameterName, DbCStr(myParam.Value));
                 msg.AppendLine();
@@ -160,14 +160,14 @@ namespace PkgFolderCreateManager
             LogDebug(msg.ToString(), writeToLog);
         }
 
-        private string DbCStr(object InpObj)
+        private string DbCStr(object value)
         {
             // If input object is DbNull, returns string.Empty, otherwise returns String representation of object
-            if (InpObj == null || ReferenceEquals(InpObj, DBNull.Value))
+            if (value == null || ReferenceEquals(value, DBNull.Value))
             {
                 return string.Empty;
             }
-            return InpObj.ToString();
+            return value.ToString();
         }
 
         private void PipelineDBProcedureExecutor_DBErrorEvent(string message, Exception ex)

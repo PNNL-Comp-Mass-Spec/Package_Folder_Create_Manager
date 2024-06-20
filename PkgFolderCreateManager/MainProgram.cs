@@ -271,7 +271,7 @@ namespace PkgFolderCreateManager
 
             LogTools.LogMessage(msg);
 
-            // Setup the message queue handler
+            // Set up the message queue handler
             // The handler is unused in 2023 since manager parameter LogStatusToMessageQueue is False and OnMsgHandler_CommandReceived and OnMsgHandler_BroadcastReceived are no longer used
 
             mMsgHandler = new MessageHandler
@@ -296,7 +296,7 @@ namespace PkgFolderCreateManager
             // mMsgHandler.CommandReceived += OnMsgHandler_CommandReceived;
             // mMsgHandler.BroadcastReceived += OnMsgHandler_BroadcastReceived;
 
-            // Setup the status file class
+            // Set up the status file class
             var appPath = PRISM.AppUtils.GetAppPath();
             var fInfo = new FileInfo(appPath);
 
