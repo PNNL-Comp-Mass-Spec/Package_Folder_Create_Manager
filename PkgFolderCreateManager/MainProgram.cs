@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using PRISM;
 using PRISM.AppSettings;
 using PRISM.Logging;
 using PRISMDatabaseUtils;
@@ -33,6 +34,8 @@ namespace PkgFolderCreateManager
         }
 
         private MgrSettings mMgrSettings;
+        private readonly string mMgrExeName;
+        private readonly string mMgrDirectoryPath;
         private StatusFile mStatusFile;
 
         /// <summary>
@@ -44,6 +47,18 @@ namespace PkgFolderCreateManager
         private bool mMgrActive;
         private BroadcastCmdType mBroadcastCmdType;
         private FolderCreateTask mTask;
+
+        /// <summary>
+        /// When true, show additional messages at the console
+        /// </summary>
+        public bool TraceMode { get; set; }
+
+        public MainProgram()
+        {
+            var exeInfo = new FileInfo(AppUtils.GetAppPath());
+            mMgrExeName = exeInfo.Name;
+            mMgrDirectoryPath = exeInfo.DirectoryName;
+        }
 
         public bool CheckDBQueue()
         {
@@ -180,17 +195,6 @@ namespace PkgFolderCreateManager
             return true;
         }
 
-        private Dictionary<string, string> GetLocalManagerSettings()
-        {
-            return new Dictionary<string, string>
-            {
-                {MgrSettings.MGR_PARAM_MGR_CFG_DB_CONN_STRING, Properties.Settings.Default.MgrCnfgDbConnectStr},
-                {MgrSettings.MGR_PARAM_MGR_ACTIVE_LOCAL, Properties.Settings.Default.MgrActive_Local},
-                {MgrSettings.MGR_PARAM_MGR_NAME, Properties.Settings.Default.MgrName},
-                {MgrSettings.MGR_PARAM_USING_DEFAULTS, Properties.Settings.Default.UsingDefaults}
-            };
-        }
-
         /// <summary>
         /// Initializes the manager
         /// </summary>
@@ -204,7 +208,21 @@ namespace PkgFolderCreateManager
             // Create a database logger connected to the Manager Control DB
             // Once the initial parameters have been successfully read,
             // we remove this logger than make a new one using the connection string read from the Manager Control DB
-            var defaultDmsConnectionString = Properties.Settings.Default.MgrCnfgDbConnectStr;
+            string defaultDmsConnectionString;
+
+            // Open AnalysisManagerProg.exe.config to look for setting DefaultDMSConnString, so we know which server to log to by default
+            var dmsConnectionStringFromConfig = GetXmlConfigDefaultMgrConnectionString();
+
+            if (string.IsNullOrWhiteSpace(dmsConnectionStringFromConfig))
+            {
+                // Use the hard-coded default that points to Gigasax
+                defaultDmsConnectionString = Properties.Settings.Default.MgrCnfgDbConnectStr;
+            }
+            else
+            {
+                // Use the connection string from PkgFolderCreateManager.exe.config
+                defaultDmsConnectionString = dmsConnectionStringFromConfig;
+            }
 
             var hostName = System.Net.Dns.GetHostName();
             var applicationName = "PkgFolderCreateManager_" + hostName;
@@ -215,12 +233,13 @@ namespace PkgFolderCreateManager
             // Get the manager settings
             try
             {
-                var localSettings = GetLocalManagerSettings();
-
                 mMgrSettings = new MgrSettingsDB
                 {
-                    TraceMode = false
+                    TraceMode = TraceMode
                 };
+
+                var localSettings = LoadMgrSettingsFromFile();
+
                 RegisterEvents(mMgrSettings);
                 mMgrSettings.CriticalErrorEvent += ErrorEventHandler;
 
@@ -297,10 +316,7 @@ namespace PkgFolderCreateManager
             // mMsgHandler.BroadcastReceived += OnMsgHandler_BroadcastReceived;
 
             // Set up the status file class
-            var appPath = PRISM.AppUtils.GetAppPath();
-            var fInfo = new FileInfo(appPath);
-
-            var statusFileNameLoc = fInfo.DirectoryName == null ? "Status.xml" : Path.Combine(fInfo.DirectoryName, "Status.xml");
+            var statusFileNameLoc = mMgrDirectoryPath == null ? "Status.xml" : Path.Combine(mMgrDirectoryPath, "Status.xml");
 
             mStatusFile = new StatusFile(statusFileNameLoc, mMsgHandler)
             {
@@ -322,6 +338,115 @@ namespace PkgFolderCreateManager
 
             // Everything worked
             return true;
+        }
+
+        /// <summary>
+        /// Extract the value DefaultDMSConnString from PkgFolderCreateManager.exe.config
+        /// </summary>
+        private string GetXmlConfigDefaultMgrConnectionString()
+        {
+            return GetXmlConfigFileSetting("MgrCnfgDbConnectStr");
+        }
+
+        /// <summary>
+        /// Extract the value for the given setting from PkgFolderCreateManager.exe.config
+        /// If the setting name is MgrCnfgDbConnectStr or DefaultDMSConnString, first checks file PkgFolderCreateManager.exe.db.config
+        /// </summary>
+        /// <remarks>Uses a simple text reader in case the file has malformed XML</remarks>
+        /// <returns>Setting value if found, otherwise an empty string</returns>
+        private string GetXmlConfigFileSetting(string settingName)
+        {
+            if (string.IsNullOrWhiteSpace(settingName))
+                throw new ArgumentException("Setting name cannot be blank", nameof(settingName));
+
+            var configFilePaths = new List<string>();
+
+            if (settingName.Equals("MgrCnfgDbConnectStr", StringComparison.OrdinalIgnoreCase) ||
+                settingName.Equals("DefaultDMSConnString", StringComparison.OrdinalIgnoreCase))
+            {
+                configFilePaths.Add(Path.Combine(mMgrDirectoryPath, mMgrExeName + ".db.config"));
+            }
+
+            configFilePaths.Add(Path.Combine(mMgrDirectoryPath, mMgrExeName + ".config"));
+
+            var mgrSettings = new MgrSettings();
+            RegisterEvents(mgrSettings);
+
+            var valueFound = mgrSettings.GetXmlConfigFileSetting(configFilePaths, settingName, out var settingValue);
+
+            if (valueFound)
+                return settingValue;
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Loads the initial settings from application config file AnalysisManagerProg.exe.config
+        /// </summary>
+        /// <remarks>This method is public because CodeTest uses it</remarks>
+        /// <returns>String dictionary containing initial settings if successful; null on error</returns>
+        public Dictionary<string, string> LoadMgrSettingsFromFile()
+        {
+            // Note: When you are editing this project using the Visual Studio IDE, if you edit the values
+            //  ->My Project>Settings.settings, then when you run the program (from within the IDE), it
+            //  will update file AnalysisManagerProg.exe.config with your settings
+            // The manager will exit if the "UsingDefaults" value is "True", thus you need to have
+            //  "UsingDefaults" be "False" to run (and/or debug) the application
+
+            // We should be able to load settings auto-magically using "Properties.Settings.Default.MgrCnfgDbConnectStr" and "Properties.Settings.Default.MgrName"
+            // But that mechanism only works if the AnalysisManagerProg.exe.config is of the form:
+            //   <applicationSettings>
+            //     <AnalysisManagerProg.Properties.Settings>
+            //       <setting name="MgrActive_Local" serializeAs="String">
+
+            // Older VB.NET based versions of the AnalysisManagerProg.exe.config file have:
+            //   <applicationSettings>
+            //     <My.MySettings>
+            //       <setting name="MgrActive_Local" serializeAs="String">
+
+            // Method ReadMgrSettingsFile() works with both versions of the .exe.config file
+
+            // Construct the path to the config document
+            var configFilePath = Path.Combine(mMgrDirectoryPath, mMgrExeName + ".config");
+
+            var mgrSettings = (mMgrSettings as MgrSettingsDB)?.LoadMgrSettingsFromFile(configFilePath);
+
+            if (mgrSettings == null)
+                return null;
+
+            // Manager Config DB connection string
+            if (!mgrSettings.ContainsKey(MgrSettings.MGR_PARAM_MGR_CFG_DB_CONN_STRING))
+            {
+                mgrSettings.Add(MgrSettings.MGR_PARAM_MGR_CFG_DB_CONN_STRING, Properties.Settings.Default.MgrCnfgDbConnectStr);
+            }
+
+            // Manager active flag
+            if (!mgrSettings.ContainsKey(MgrSettings.MGR_PARAM_MGR_ACTIVE_LOCAL))
+            {
+                mgrSettings.Add(MgrSettings.MGR_PARAM_MGR_ACTIVE_LOCAL, "False");
+            }
+
+            // Manager name
+            // The manager name may contain $ComputerName$
+            // If it does, InitializeMgrSettings in MgrSettings will replace "$ComputerName$ with the local host name
+            if (!mgrSettings.ContainsKey(MgrSettings.MGR_PARAM_MGR_NAME))
+            {
+                mgrSettings.Add(MgrSettings.MGR_PARAM_MGR_NAME, "LoadMgrSettingsFromFile__Undefined_manager_name");
+            }
+
+            // Default settings in use flag
+            if (!mgrSettings.ContainsKey(MgrSettings.MGR_PARAM_USING_DEFAULTS))
+            {
+                mgrSettings.Add(MgrSettings.MGR_PARAM_USING_DEFAULTS, Properties.Settings.Default.UsingDefaults);
+            }
+
+            if (TraceMode)
+            {
+                ShowTrace("Settings loaded from " + PathUtils.CompactPathString(configFilePath, 60));
+                MgrSettings.ShowDictionaryTrace(mgrSettings);
+            }
+
+            return mgrSettings;
         }
 
         /// <summary>
@@ -554,6 +679,29 @@ namespace PkgFolderCreateManager
             mStatusFile.Dataset = "NA";
             mStatusFile.CurrentOperation = string.Empty;
             mStatusFile.TaskStatusDetail = StatusFile.EnumTaskStatusDetail.No_Task;
+        }
+
+        /// <summary>
+        /// Show a trace message only if TraceMode is true
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="emptyLinesBeforeMessage"></param>
+        private void ShowTrace(string message, int emptyLinesBeforeMessage = 1)
+        {
+            if (!TraceMode)
+                return;
+
+            ShowTraceMessage(message, emptyLinesBeforeMessage);
+        }
+
+        /// <summary>
+        /// Show a message at the console, preceded by a time stamp
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="emptyLinesBeforeMessage"></param>
+        public static void ShowTraceMessage(string message, int emptyLinesBeforeMessage = 1)
+        {
+            BaseLogger.ShowTraceMessage(message, false, "  ", emptyLinesBeforeMessage);
         }
 
         private void RegisterEvents(IEventNotifier sourceClass, bool writeDebugEventsToLog = true)
