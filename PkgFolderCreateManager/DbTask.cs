@@ -20,6 +20,8 @@ namespace PkgFolderCreateManager
     /// </summary>
     internal abstract class DbTask : LoggerBase
     {
+        // Ignore Spelling: RET
+
         // ReSharper disable UnusedMember.Global
 
         public enum EnumCloseOutType : short
@@ -46,8 +48,12 @@ namespace PkgFolderCreateManager
             ResultError = 2
         }
 
+        // ReSharper disable InconsistentNaming
+
         protected const int RET_VAL_OK = 0;
         protected const int RET_VAL_TASK_NOT_AVAILABLE = 53000;
+
+        // ReSharper restore InconsistentNaming
 
         protected readonly MgrSettings mMgrParams;
 
@@ -90,7 +96,7 @@ namespace PkgFolderCreateManager
             mMgrParams = mgrParams;
             ManagerName = mMgrParams.GetParam("MgrName", Environment.MachineName + "_Undefined-Manager");
 
-            // Gigasax.DMS_Pipeline
+            // This connection string points to the DMS database on prismdb2 (previously, DMS_Pipeline on Gigasax)
             var connectionString = mMgrParams.GetParam("ConnectionString");
 
             mConnectingString = DbToolsFactory.AddApplicationNameToConnectionString(connectionString, ManagerName);
