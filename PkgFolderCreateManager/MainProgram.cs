@@ -15,6 +15,7 @@ using PRISM.AppSettings;
 using PRISM.Logging;
 using PRISMDatabaseUtils;
 using PRISMDatabaseUtils.AppSettings;
+using PRISMDatabaseUtils.Logging;
 
 namespace PkgFolderCreateManager
 {
@@ -115,6 +116,34 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
+        /// Initializes the database logger in static class PRISM.Logging.LogTools
+        /// </summary>
+        /// <remarks>Supports both SQL Server and Postgres connection strings</remarks>
+        /// <param name="connectionString">Database connection string</param>
+        /// <param name="moduleName">Module name used by logger</param>
+        /// <param name="traceMode">When true, show additional debug messages at the console</param>
+        /// <param name="logLevel">Log threshold level</param>
+        private void CreateDbLogger(
+            string connectionString,
+            string moduleName,
+            bool traceMode = false,
+            BaseLogger.LogLevels logLevel = BaseLogger.LogLevels.INFO)
+        {
+            var databaseType = DbToolsFactory.GetServerTypeFromConnectionString(connectionString);
+
+            DatabaseLogger dbLogger = databaseType switch
+            {
+                DbServerTypes.MSSQLServer => new SQLServerDatabaseLogger(),
+                DbServerTypes.PostgreSQL => new PostgresDatabaseLogger(),
+                _ => throw new Exception("Unsupported database connection string: should be SQL Server or Postgres")
+            };
+
+            dbLogger.ChangeConnectionInfo(moduleName, connectionString);
+
+            LogTools.SetDbLogger(dbLogger, logLevel, traceMode);
+        }
+
+        /// <summary>
         /// Create a directory
         /// </summary>
         /// <param name="cmdText">XML settings (see below for example XML)</param>
@@ -205,17 +234,18 @@ namespace PkgFolderCreateManager
             // This will get updated below
             LogTools.CreateFileLogger(DEFAULT_BASE_LOGFILE_NAME, BaseLogger.LogLevels.DEBUG);
 
-            // Create a database logger connected to the Manager Control DB
+            // Create a database logger connected to the DMS database on prismdb2 (previously, Manager_Control on Proteinseqs)
+
             // Once the initial parameters have been successfully read,
             // we remove this logger than make a new one using the connection string read from the Manager Control DB
             string defaultDmsConnectionString;
 
-            // Open AnalysisManagerProg.exe.config to look for setting DefaultDMSConnString, so we know which server to log to by default
+            // Open PkgFolderCreateManager.exe.db.config to look for setting MgrCnfgDbConnectStr, so we know which server to log to by default
             var dmsConnectionStringFromConfig = GetXmlConfigDefaultMgrConnectionString();
 
             if (string.IsNullOrWhiteSpace(dmsConnectionStringFromConfig))
             {
-                // Use the hard-coded default that points to Gigasax
+                // Use the hard-coded default that points to the DMS database on prismdb2 (previously, DMS5 on Gigasax)
                 defaultDmsConnectionString = Properties.Settings.Default.MgrCnfgDbConnectStr;
             }
             else
@@ -228,7 +258,7 @@ namespace PkgFolderCreateManager
             var applicationName = "PkgFolderCreateManager_" + hostName;
             var defaultDbLoggerConnectionString = DbToolsFactory.AddApplicationNameToConnectionString(defaultDmsConnectionString, applicationName);
 
-            LogTools.CreateDbLogger(defaultDbLoggerConnectionString, "FolderCreate: " + hostName);
+            CreateDbLogger(defaultDbLoggerConnectionString, "PkgFolderCreate: " + hostName, TraceMode);
 
             // Get the manager settings
             try
@@ -273,14 +303,13 @@ namespace PkgFolderCreateManager
 
             LogTools.CreateFileLogger(logFileNameBase, logLevel);
 
-            // Typically:
-            // Data Source=gigasax;Initial Catalog=DMS_Pipeline;Integrated Security=SSPI;
+            // This connection string points to the DMS database on prismdb2 (previously, DMS_Pipeline on Gigasax)
             var logCnStr = mMgrSettings.GetParam("ConnectionString");
             var moduleName = mMgrSettings.GetParam("ModuleName");
 
             var dbLoggerConnectionString = DbToolsFactory.AddApplicationNameToConnectionString(logCnStr, mMgrSettings.ManagerName);
 
-            LogTools.CreateDbLogger(dbLoggerConnectionString, moduleName);
+            CreateDbLogger(dbLoggerConnectionString, moduleName);
 
             LogTools.MessageLogged += MessageLoggedHandler;
 
@@ -341,7 +370,7 @@ namespace PkgFolderCreateManager
         }
 
         /// <summary>
-        /// Extract the value DefaultDMSConnString from PkgFolderCreateManager.exe.config
+        /// Extract the value DefaultDMSConnString from PkgFolderCreateManager.exe.config (or from PkgFolderCreateManager.exe.db.config)
         /// </summary>
         private string GetXmlConfigDefaultMgrConnectionString()
         {
