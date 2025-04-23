@@ -130,7 +130,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Apache.NMS.ActiveMQ">
-      <Version>2.1.0</Version>
+      <Version>2.1.1</Version>
     </PackageReference>
     <PackageReference Include="PRISM-DatabaseUtils">
       <Version>1.4.35</Version>
